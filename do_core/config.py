@@ -37,7 +37,7 @@ class Configuration(object, metaclass=Singleton):
             self._ORCH_TIMEOUT = config.get('openstack_orchestrator','timeout')
             self._OPENSTACK_IP = config.get('openstack_orchestrator','openstack_ip')
             self._DEBUG_MODE = config.getboolean('openstack_orchestrator', 'debug_mode')
-            self._IDENTITY_VERSION = config.get('openstack_orchestrator','identity_version')
+            self._IDENTITY_API_VERSION = config.getint('openstack_orchestrator','identity_api_version')
 
             self._TOKEN_EXPIRATION = config.get('authentication','token_expiration')
             
@@ -66,7 +66,14 @@ class Configuration(object, metaclass=Singleton):
 
             #self._DEFAULT_PRIORITY = config.get('flowrule', "default_priority")
             self._TEMPLATE_SOURCE = config.get('templates','source')
-            self._TEMPLATE_PATH = config.get('templates','path')
+            if config.has_option('templates', 'path'):
+                self._TEMPLATE_PATH = config.get('templates','path')
+            else:
+                self._TEMPLATE_PATH = None
+            if config.has_option('templates', 'repository_url'):
+                self._TEMPLATE_REPOSITORY_URL = config.get('templates', 'repository_url')
+            else:
+                self._TEMPLATE_REPOSITORY_URL = None
                 
         except Exception as ex:
             raise WrongConfigurationFile(str(ex))
@@ -76,8 +83,8 @@ class Configuration(object, metaclass=Singleton):
         return self._ORCH_TIMEOUT
     
     @property
-    def IDENTITY_VERSION(self):
-        return self._IDENTITY_VERSION
+    def IDENTITY_API_VERSION(self):
+        return self._IDENTITY_API_VERSION
         
     @property
     def TOKEN_EXPIRATION(self):
@@ -122,6 +129,10 @@ class Configuration(object, metaclass=Singleton):
     @property
     def TEMPLATE_PATH(self):
         return self._TEMPLATE_PATH
+    
+    @property
+    def TEMPLATE_REPOSITORY_URL(self):
+        return self._TEMPLATE_REPOSITORY_URL
     """
     @property
     def DEFAULT_PRIORITY(self):

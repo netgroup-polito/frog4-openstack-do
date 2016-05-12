@@ -288,3 +288,12 @@ class connectionsError(Exception):
     
     def get_mess(self):
         return self.message
+
+class VNFRepositoryError(Exception):
+    def __init__(self, message):
+        self.message = message
+        # Call the base class constructor with the parameters it needs
+        super(VNFRepositoryError, self).__init__(message)
+
+    def get_mess(self):
+        return self.message

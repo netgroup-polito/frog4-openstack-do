@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "" > FrogOrchestrator.log
+echo "" > OpenstackOrchestrator.log
 python3 gunicorn.py

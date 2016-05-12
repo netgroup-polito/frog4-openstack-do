@@ -9,8 +9,10 @@ from vnf_template_library.validator import ValidateTemplate
 from do_core.config import Configuration
 from nffg_library.validator import ValidateNF_FG
 from nffg_library.nffg import NF_FG, Match, Action
+from do_core.exception import VNFRepositoryError, WrongConfigurationFile
 
 TEMPLATE_SOURCE = Configuration().TEMPLATE_SOURCE
+TEMPLATE_REPOSITORY_URL = Configuration().TEMPLATE_REPOSITORY_URL
 TEMPLATE_PATH = Configuration().TEMPLATE_PATH
 SWITCH_NAME = Configuration().SWITCH_NAME
 CONTROL_SWITCH_NAME = Configuration().CONTROL_SWITCH_NAME
@@ -19,8 +21,8 @@ SWITCH_TEMPLATE = Configuration().SWITCH_TEMPLATE
 class NFFG_Manager(object):
     
     def __init__(self, nffg):
-        self.nffg = nffg    
-    
+        self.nffg = nffg
+        self.stored_templates = {}
     # Templates
         
     def addTemplates(self):
@@ -38,7 +40,7 @@ class NFFG_Manager(object):
         The two graph will be connected together,
         accordingly to the original connection of the VNF that has been expanded.
         '''
-        logging.debug("Getting manifest: "+str(uri)+" of vnf :"+str(vnf.name)) 
+        logging.debug("Getting manifest: "+str(uri)+" of vnf: "+str(vnf.name))
         template = self.getTemplate(uri)
         
         if template.checkExpansion() is True:
@@ -59,10 +61,10 @@ class NFFG_Manager(object):
             vnf.checkPortsAgainstTemplate() 
     
     def getTemplate(self, uri):
-        temlate_dict = self.getTemplateDict(uri)
-        ValidateTemplate().validate(temlate_dict)
+        template_dict = self.getTemplateDict(uri)
+        ValidateTemplate().validate(template_dict)
         template = Template()
-        template.parseDict(temlate_dict)
+        template.parseDict(template_dict)
         return template
     
     def getNFFGDict(self, filename): 
@@ -70,21 +72,41 @@ class NFFG_Manager(object):
         return self.getDictFromFile(base_folder+"/graphs/", filename)
     
     def getTemplateDict(self, uri):  
-        if TEMPLATE_SOURCE == "glance":
-            return self.getDictFromGlance(uri)
-        else:
+        if TEMPLATE_SOURCE == "vnf-repository":
+            if uri in self.stored_templates:
+                return self.stored_templates[uri]
+            return self.getDictFromVNFRepository(uri)
+        #elif TEMPLATE_SOURCE == "glance":
+        #    return self.getDictFromGlance(uri)
+        elif TEMPLATE_SOURCE == "file":
             base_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0])).rpartition('/')[0]
             return self.getDictFromFile(base_folder+'/'+TEMPLATE_PATH, uri)
+        else:
+            raise WrongConfigurationFile("source configuration inside the templates section has a value not allowed")
         
     def getDictFromFile(self, path, filename):
         json_data=open(path+filename).read()
         return json.loads(json_data)
-    
+    """
     def getDictFromGlance(self, uri):
         headers = {'Accept': 'application/json', 'Content-Type': 'application/json', 'X-Auth-Token': self.token}
         resp = requests.get(uri, headers=headers)
         resp.raise_for_status()
         return json.loads(resp.text)
+    """
+    def getDictFromVNFRepository(self, uri):
+        try:
+            actual_uri = uri
+            if uri.endswith(".json"):
+                actual_uri = uri[:-len(".json")]
+            headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
+            resp = requests.get(TEMPLATE_REPOSITORY_URL + actual_uri, headers=headers)
+            resp.raise_for_status()
+            template_dict = json.loads(json.loads(resp.text))
+            self.stored_templates[uri] = template_dict
+            return template_dict
+        except Exception as ex:
+            raise VNFRepositoryError("An error occurred while contacting the VNF Repository")
     
     # Graph optimization
     def mergeUselessVNFs(self):
@@ -197,4 +219,3 @@ class NFFG_Manager(object):
         self.nffg.addFlowRule(flowrule_1)
         self.nffg.addFlowRule(flowrule_2)
         
-    

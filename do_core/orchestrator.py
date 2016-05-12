@@ -44,7 +44,9 @@ class NFFGStatus(object):
             logging.exception(err.message)
             raise falcon.HTTPInternalServerError('ManifestValidationError',err.message)
         except (unauthorizedRequest, UserNotFound) as err:
-            logging.debug("Unauthorized access attempt from user "+request.get_header("X-Auth-User"))
+            if request.get_header("X-Auth-User") is not None:
+                logging.debug("Unauthorized access attempt from user "+request.get_header("X-Auth-User"))
+            logging.debug(err.message)                
             raise falcon.HTTPUnauthorized("Unauthorized", err.message)
         except Exception as ex:
             logging.exception(ex)
@@ -54,7 +56,6 @@ class OpenstackOrchestrator(object):
     '''
     Admin class that intercept the REST call through the WSGI server
     '''
-        
     def on_delete(self, request, response, nffg_id):
         try:
             user_data = UserAuthentication().authenticateUserFromRESTRequest(request)
@@ -81,7 +82,9 @@ class OpenstackOrchestrator(object):
             logging.debug("User token is expired")
             raise falcon.HTTPUnauthorized("User token expired", err.message)        
         except (unauthorizedRequest, UserNotFound) as err:
-            logging.debug("Unauthorized access attempt from user "+request.get_header("X-Auth-User"))
+            if request.get_header("X-Auth-User") is not None:
+                logging.debug("Unauthorized access attempt from user "+request.get_header("X-Auth-User"))
+            logging.debug(err.message)                
             raise falcon.HTTPUnauthorized("Unauthorized", err.message)
         except Exception as ex:
             logging.exception(ex)
@@ -118,7 +121,9 @@ class OpenstackOrchestrator(object):
             logging.debug("User token is expired")
             raise falcon.HTTPUnauthorized("User token expired", err.message)        
         except (unauthorizedRequest, UserNotFound) as err:
-            logging.debug("Unauthorized access attempt from user "+request.get_header("X-Auth-User"))
+            if request.get_header("X-Auth-User") is not None:
+                logging.debug("Unauthorized access attempt from user "+request.get_header("X-Auth-User"))
+            logging.debug(err.message)
             raise falcon.HTTPUnauthorized("Unauthorized", err.message)
         except Exception as ex:
             logging.exception(ex)
@@ -148,7 +153,9 @@ class OpenstackOrchestrator(object):
             logging.debug("User token is expired")
             raise falcon.HTTPUnauthorized("User token expired", err.message)
         except (unauthorizedRequest, UserNotFound) as err:
-            logging.debug("Unauthorized access attempt from user "+request.get_header("X-Auth-User"))
+            if request.get_header("X-Auth-User") is not None:
+                logging.debug("Unauthorized access attempt from user "+request.get_header("X-Auth-User"))
+            logging.debug(err.message)                
             raise falcon.HTTPUnauthorized("Unauthorized", err.message)
         except requests.HTTPError as err:
             logging.exception(err)
@@ -174,7 +181,8 @@ class UserAuth(object):
             logging.exception(err)
             raise falcon.HTTPBadRequest("Bad Request", err.description)
         except (unauthorizedRequest, UserNotFound) as err:
-            logging.debug("Unauthorized access attempt from user "+request.get_header("X-Auth-User"))
+            if request.get_header("X-Auth-User") is not None:
+                logging.debug("Unauthorized access attempt from user "+request.get_header("X-Auth-User"))
             raise falcon.HTTPUnauthorized("Unauthorized", err.message)
         except Exception as err:
             logging.exception(err)

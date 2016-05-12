@@ -216,7 +216,7 @@ class Net(object):
         '''
         self.name = name
         self.subnet = subnet
-        self.dhcp = True
+        self.dhcp = False
         self.network_id = None
     
     def getNetResourceJSON(self):

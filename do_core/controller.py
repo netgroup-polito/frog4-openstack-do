@@ -109,6 +109,8 @@ class OpenstackOrchestratorController(object):
         
         logging.error("Update not yet implemented")
         
+        
+        Session().updateStatus(session.id, 'complete')
         return session.id
 
         
@@ -132,7 +134,6 @@ class OpenstackOrchestratorController(object):
             
         logging.debug("Graph " + str(nf_fg_id) + " correctly deleted!") 
         logging.debug('Session deleted: '+str(session.id))
-        # Set the field ended in the table session to the actual datatime        
         Graph().delete_session(session.id)
         Session().set_ended(session.id)
         

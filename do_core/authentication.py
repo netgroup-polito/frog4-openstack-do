@@ -16,10 +16,6 @@ from do_core.exception import WrongConfigurationFile
 
 IDENTITY_API_VERSION = Configuration().IDENTITY_API_VERSION
 
-#ADMIN_TENANT_NAME = Configuration().ADMIN_TENANT_NAME
-#ADMIN_USER = Configuration().ADMIN_USER
-#ADMIN_PASSWORD = Configuration().ADMIN_PASSWORD
-
 class KeystoneAuthentication(object):
     '''
     Class used to store the user keystone information and executes the REST call to OpenStack API

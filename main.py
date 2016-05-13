@@ -3,10 +3,9 @@ import logging
 import os
 import inspect
 
-from threading import Thread
 from do_core.config import Configuration
 from do_core.orchestrator import OpenstackOrchestrator, NFFGStatus, UserAuth
-#from do_core.dd_server import DD_Server
+from do_core.messaging import Messaging
 
 conf = Configuration()
 
@@ -39,16 +38,11 @@ nffg_status = NFFGStatus()
 user_auth = UserAuth()
 
 
-app.add_route('/NF-FG', upper_layer_API)
+#app.add_route('/NF-FG', upper_layer_API)
 app.add_route('/NF-FG/{nffg_id}', upper_layer_API)
 app.add_route('/NF-FG/status/{nffg_id}', nffg_status)
 app.add_route('/login', user_auth)
 
+Messaging().publishDomainDescription()
 
-"""
-base_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile(inspect.currentframe()))[0]))
-dd_server = DD_Server(conf.DD_NAME, conf.BROKER_ADDRESS, conf.DD_CUSTOMER, conf.DD_KEYFILE)
-thread = Thread(target=dd_server.start)
-thread.start()
-"""
 logging.info("Falcon Successfully started")

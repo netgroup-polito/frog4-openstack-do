@@ -62,6 +62,7 @@ class UserAuthentication(object):
         #passwordhash_check = self.getPasswordHash(password)
         if user.password == password:
             if user.token is not None and self.isAnExpiredToken(user.token_timestamp) is False:
+                logging.debug("User successfully authenticated")
                 return user.token
             else:
                 # generate token and return 

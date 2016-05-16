@@ -129,7 +129,7 @@ class OpenstackOrchestrator(object):
             logging.exception(ex)
             raise falcon.HTTPInternalServerError('Contact the admin. ',str(ex))
         
-    def on_put(self, request, response, nffg_id):
+    def on_put(self, request, response, nffg_id = None):
         """
         Take as body request the NF-FG      
         """

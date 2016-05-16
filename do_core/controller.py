@@ -39,15 +39,12 @@ class OpenstackOrchestratorController(object):
         self.num_net = 0
               
     def getAuthTokenAndEndpoints(self):
-        #self.node_endpoint = Node().getNode(node.openstack_controller).domain_id # IP Openstack
-        #self.compute_node_address = node.domain_id # IP compute node, not needed
-        
         self.node_endpoint = OPENSTACK_IP # IP Openstack
         
         self.keystoneEndpoint = 'http://' + self.node_endpoint + ':35357'
         self.token = KeystoneAuthentication(self.keystoneEndpoint, self.userdata.username, self.userdata.password, self.userdata.tenant)
         self.novaEndpoint = self.token.get_endpoint_URL('compute', 'public')
-        self.glanceEndpoint = self.token.get_endpoint_URL('image','public')
+        #self.glanceEndpoint = self.token.get_endpoint_URL('image','public')
         self.neutronEndpoint = self.token.get_endpoint_URL('network','public')
         
     def get(self, nffg_id):
@@ -280,7 +277,7 @@ class OpenstackOrchestratorController(object):
         for endpoint in profile_graph.endpoints.values():
             if endpoint.status == "new":
                 Graph().setEndpointLocation(self.graph_id, endpoint.id, endpoint.interface)
-        """ 
+
         
         for flowrule in profile_graph.flowrules.values():
             if flowrule.status =='new':
@@ -305,10 +302,9 @@ class OpenstackOrchestratorController(object):
                                 else:
                                     continue
                             endp1 = profile_graph.endpoints[port1_id]
-                            """ TODO
                             if endp1.type == 'interface':        
                                 self.processFlowrule(endp1, flowrule, profile_graph) 
-                            """   
+        """
     '''
     ######################################################################################################
     #############################    Resources preparation phase        ##################################
@@ -334,6 +330,7 @@ class OpenstackOrchestratorController(object):
         profile_graph.setId(nf_fg.id)
         
         #Remove from the pool of available openstack networks vlans used in endpoints of type vlan
+        """
         for endpoint in nf_fg.end_points:
             if endpoint.type == 'vlan':
                 if endpoint.vlan_id.isdigit() is False:
@@ -342,6 +339,7 @@ class OpenstackOrchestratorController(object):
                     name = "exp" + str(endpoint.vlan_id)
                 if name in OPENSTACK_NETWORKS:              
                     OPENSTACK_NETWORKS.remove(name)
+        """
         
         for vnf in nf_fg.vnfs:
             nf = self.buildVNF(vnf)
@@ -375,7 +373,8 @@ class OpenstackOrchestratorController(object):
             status = vnf.status
         #TODO: add image location to the database
         ##return VNF(vnf.id, vnf, image, flavor, vnf.availability_zone, status)
-        return VNF(vnf.id, vnf, image, flavor, "nova", status)
+        #TODO: availability zone
+        return VNF(vnf.id, vnf, image, flavor, "AZ_TI", status)
     
     def setVNFNetwork(self, nf_fg, nf, profile_graph):
         for port in nf.ports.values():
@@ -383,6 +382,7 @@ class OpenstackOrchestratorController(object):
                 for flowrule in nf_fg.getFlowRulesSendingTrafficFromPort(nf.id, port.id):
                     logging.debug(flowrule.getDict(True))
                     if flowrule.match is not None:
+                        """
                         #check if vlan_id is constrained by a local or a remote endpoint
                         for action in flowrule.actions:
                             if action.output is not None:
@@ -411,10 +411,10 @@ class OpenstackOrchestratorController(object):
                                         if name in OPENSTACK_NETWORKS:              
                                             OPENSTACK_NETWORKS.remove(name)                                                   
                                         break   
+                        """
                         #Choose a network arbitrarily (no constraints)    
                         if port.net is None:
                             name, net = self.getNetwork(port, profile_graph)
-                            #name, net_id = self.getUnusedNetwork()
                             if name is None:
                                 raise StackError("No available network found")
                             port.net = net
@@ -426,22 +426,11 @@ class OpenstackOrchestratorController(object):
                                     port1_id = tmp[2]
                                     port1 = profile_graph.functions[vnf_id].ports[port1_id]
                                     port1.net = net   
-                            # TODO: check if this is needed, forse basta fare una insert, se dà eccezione amen       
-                            """                       
-                            networks = Graph().getAllNetworks()
-                            found = False
-                            for net in networks:
-                                if net.id == net_id:
-                                    found = True
-                                    break
-                            if found is False:
-                                Graph().addOSNetwork(net_id, name, 'complete', None) 
-                            """
               
                 
     def buildEndpoint(self, endpoint):
         if endpoint.status is None:
-            status = "new"
+            endpoint.status = "new"
         else:
             status = endpoint.status
         """
@@ -453,7 +442,8 @@ class OpenstackOrchestratorController(object):
         else:
             return Endpoint(endpoint.id, endpoint.name, endpoint.type, endpoint.vlan_id, endpoint.switch_id, endpoint.interface, status)
         """
-        return Endpoint(endpoint.id, endpoint.name, endpoint.type, endpoint.vlan_id, endpoint.node_id, endpoint.interface, status)
+        #return Endpoint(endpoint.id, endpoint.name, endpoint.type, endpoint.vlan_id, endpoint.node_id, endpoint.interface, status)
+        return endpoint
     '''
     ######################################################################################################
     ###############################    Interactions with OpenStack       #################################

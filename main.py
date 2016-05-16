@@ -38,7 +38,7 @@ nffg_status = NFFGStatus()
 user_auth = UserAuth()
 
 
-#app.add_route('/NF-FG', upper_layer_API)
+app.add_route('/NF-FG', upper_layer_API)
 app.add_route('/NF-FG/{nffg_id}', upper_layer_API)
 app.add_route('/NF-FG/status/{nffg_id}', nffg_status)
 app.add_route('/login', user_auth)

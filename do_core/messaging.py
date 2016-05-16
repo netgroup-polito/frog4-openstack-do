@@ -38,6 +38,7 @@ class DD_client(ClientSafe):
         print(msgstr)
 
     def on_reg(self):
+        self._registered = True
         self.publish(self.topic, self.message)
 
     def on_discon(self):

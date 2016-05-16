@@ -154,7 +154,7 @@ class VNF(object):
             if port.internal_id is not None:
                 resource['server']['networks'].append({ "port": port.internal_id})
         return resource
-
+"""
 class Endpoint(object):
     def __init__(self, end_id, name, end_type, vlan_id, switch_id, interface, status, remote_graph = None, remote_id = None):
         self.id = end_id
@@ -166,6 +166,7 @@ class Endpoint(object):
         self.status = status
         self.remote_graph = remote_graph
         self.remote_id = remote_id
+"""
     
 class ProfileGraph(object):
     def __init__(self):

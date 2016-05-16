@@ -42,7 +42,7 @@ class Configuration(object, metaclass=Singleton):
             self._TOKEN_EXPIRATION = config.get('authentication','token_expiration')
             
             if config.has_option('networks', 'openstack_networks'):
-                self._OPENSTACK_NETWORKS = config.get('networks','openstack_networks')
+                self._OPENSTACK_NETWORKS = [e.strip() for e in config.get('networks', 'openstack_networks').split(',')]
             else:
                 self._OPENSTACK_NETWORKS = None
                 

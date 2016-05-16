@@ -460,6 +460,8 @@ class Neutron(object):
         '''
         headers = {'Accept': 'application/json', 'Content-Type': 'application/json', 'X-Auth-Token': token}
         resp = requests.delete(neutronEndpoint + self.get_ports + "/" + port_id, headers=headers)
+        if resp.status_code == 404:
+            return None
         resp.raise_for_status()
         return resp
     

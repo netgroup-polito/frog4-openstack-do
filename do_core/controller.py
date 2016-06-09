@@ -1,10 +1,10 @@
 '''
 @author: stefanopetrangeli
 '''
-
 import json
 import logging
 import uuid
+import time
 
 from do_core.exception import sessionNotFound, GraphError, StackError
 from do_core.nffg_manager import NFFG_Manager
@@ -18,14 +18,20 @@ from requests.exceptions import HTTPError, ConnectionError
 
 
 from do_core.authentication import KeystoneAuthentication
-from do_core.rest import Glance, Nova, Neutron
-from do_core.resources import ProfileGraph, VNF, Endpoint, Net
+from do_core.rest import Glance, Nova, Neutron, ODL
+from do_core.resources import ProfileGraph, VNF, Net, Match, Action, Flow
 from do_core.nffg_manager import NFFG_Manager
+from do_core.ovsdb import OVSDB
+from nffg_library.nffg import FlowRule
 
 
 OPENSTACK_IP = Configuration().OPENSTACK_IP
 DEBUG_MODE = Configuration().DEBUG_MODE
 OPENSTACK_NETWORKS = Configuration().OPENSTACK_NETWORKS
+INGRESS_SWITCH = Configuration().INGRESS_SWITCH
+EXIT_SWITCH = Configuration().EXIT_SWITCH
+INTEGRATION_BRIDGE= Configuration().INTEGRATION_BRIDGE
+
 
 class OpenstackOrchestratorController(object):
     def __init__(self, user_data):
@@ -46,6 +52,11 @@ class OpenstackOrchestratorController(object):
         self.novaEndpoint = self.token.get_endpoint_URL('compute', 'public')
         #self.glanceEndpoint = self.token.get_endpoint_URL('image','public')
         self.neutronEndpoint = self.token.get_endpoint_URL('network','public')
+        
+        self.odlendpoint = "http://" + Configuration().ODL_ADDRESS
+        self.odlusername = Configuration().ODL_USERNAME
+        self.odlpassword = Configuration().ODL_PASSWORD
+        self.ovsdb = OVSDB (self.odlendpoint, self.odlusername, self.odlpassword)
         
     def get(self, nffg_id):
         session = Session().get_active_user_session_by_nf_fg_id(nffg_id, error_aware=False)
@@ -74,14 +85,16 @@ class OpenstackOrchestratorController(object):
             self.getAuthTokenAndEndpoints()
             
             logging.debug("Forwarding graph: " + nf_fg.getJSON(extended=True))
-            try:            
+            try:
                 self.prepareNFFG(nf_fg)
                 
                 Graph().addNFFG(nf_fg, session_id)
 
                 #Read the nf_fg JSON structure and map it into the proper objects and db entries
                 profile_graph = self.buildProfileGraph(nf_fg)
+                self.instantiateEndpoints(nf_fg)
                 self.openstackResourcesInstantiation(profile_graph, nf_fg)
+                self.instantiateFlowrules(profile_graph, nf_fg.db_id)
                 logging.debug("Graph " + profile_graph.id + " correctly instantiated!")
                 
                 Session().updateStatus(session_id, 'complete')
@@ -124,6 +137,7 @@ class OpenstackOrchestratorController(object):
             
             try:
                 self.openstackResourcesDeletion(graph_ref.id)
+                self.deleteEndpoints(nffg)
             except Exception as ex:
                 logging.exception(ex)
                 Session().set_error(session.id)
@@ -237,6 +251,12 @@ class OpenstackOrchestratorController(object):
         return status
     
     def openstackResourcesDeletion(self, graph_id):
+        flows = Graph().getFlowRules(graph_id)
+        for flow in flows:
+            if flow.type == "external" and flow.status == "complete":
+                if flow.table_id is None:
+                    flow.table_id = 0
+                ODL().deleteFlow(self.odlendpoint, self.odlusername, self.odlpassword, flow.node_id, flow.internal_id, flow.table_id)
         token_id = self.token.get_token()
         vnfs = Graph().getVNFs(graph_id)
         for vnf in vnfs:
@@ -250,7 +270,100 @@ class OpenstackOrchestratorController(object):
             Neutron().deleteSubNet(self.neutronEndpoint, token_id, subnet.id)
         networks = Graph().getNetworks(graph_id)               
         for network in networks:
-            Neutron().deleteNetwork(self.neutronEndpoint, token_id, network.id)                               
+            Neutron().deleteNetwork(self.neutronEndpoint, token_id, network.id) 
+    
+    def deleteEndpoints(self, nffg):
+        for endpoint in nffg.end_points[:]:
+            self.deleteEndpoint(endpoint, nffg)
+          
+    def deleteEndpoint(self, endpoint, nffg):
+        logging.debug("Deleting endpoint type: "+str(endpoint.type))
+        if endpoint.type == 'interface-out':
+            self.deleteExitEndpoint(nffg, endpoint)
+        """
+        if endpoint.remote_endpoint_id is True:
+            self.disconnectEndpoint(endpoint, nffg)
+        """
+        nffg.end_points.remove(endpoint)         
+        
+    def deleteExitEndpoint(self, nffg, endpoint):
+        port_to_int_bridge = nffg.id + "-" + endpoint.id + "-to-" + INTEGRATION_BRIDGE
+        port_to_exit_switch =  nffg.id + "-" + endpoint.id + "-to-" + EXIT_SWITCH
+        
+        ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+        
+        self.ovsdb.deletePort(ovs_id, port_to_int_bridge, EXIT_SWITCH)
+        
+        self.ovsdb.deletePort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE)     
+            
+            
+    def instantiateEndpoints(self, nffg):
+        for end_point in nffg.end_points[:]:
+            if end_point.status == 'new' or end_point.status == 'to_be_updated':
+                self.instantiateEndPoint(nffg, end_point)
+    
+    def instantiateEndPoint(self, nffg, end_point):
+        """
+        if end_point.prepare_connection_to_remote_endpoint_ids is not None:
+            self.prepareEndPointConnection(nffg, end_point)
+        if end_point.remote_endpoint_id is not None:
+            self.connectEndPoints(nffg, end_point)
+        """
+        if 'interface' in end_point.type:
+            self.manageIngressEndpoint(end_point)
+        if 'interface-out' in end_point.type:
+            self.manageExitEndpoint(nffg, end_point)
+        """
+        elif 'interface' in end_point.type:
+            self.manageIngressEndpoint(end_point)
+        elif 'gre' in end_point.type:
+            raise NotImplementedError()
+        elif  'internal' in end_point.type:
+            # TODO: Set the flow-rule of the end-point as 'shall_not_be_installed'
+            # TODO: Delete the following line
+            self.deleteEndPointConnection(nffg, end_point)
+        """
+    def manageIngressEndpoint(self, ingress_end_point):
+        port_to_int_bridge = "to-" + INTEGRATION_BRIDGE
+        port_to_ingress_switch =  "to-" + INGRESS_SWITCH
+        
+        ovs_id = self.ovsdb.getOVSId(ingress_end_point.node_id)
+
+        self.ovsdb.createBridge(ovs_id, INGRESS_SWITCH)
+        
+        self.ovsdb.createPort(ovs_id, ingress_end_point.interface, INGRESS_SWITCH)
+        
+        self.ovsdb.createPort(ovs_id, port_to_int_bridge, INGRESS_SWITCH, patch_peer = port_to_ingress_switch)
+        
+        self.ovsdb.createPort(ovs_id, port_to_ingress_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)
+        
+        ingress_end_point.interface_internal_id = port_to_ingress_switch
+        
+        """
+        bridge_datapath_id = self.ovsdb.getBridgeDatapath_id(ingress_end_point.node, ingress_end_point.interface)
+        if bridge_datapath_id is None:
+            raise Exception("Bridge datapath id not found for this interface: "+str(ingress_end_point.interface))
+        ingress_end_point.interface_internal_id = "INGRESS_"+bridge_datapath_id+":"+ingress_end_point.interface
+        """
+        
+        #self.createVirtualIngressNetwork(self.compute_node_address)
+        # TODO: set port internal ID in db
+        
+    def manageExitEndpoint(self, nffg, egress_end_point):
+        port_to_int_bridge = nffg.id + "-" + egress_end_point.id + "-to-" + INTEGRATION_BRIDGE
+        port_to_exit_switch =  nffg.id + "-" + egress_end_point.id + "-to-" + EXIT_SWITCH
+        
+        ovs_id = self.ovsdb.getOVSId(egress_end_point.node_id)
+
+        self.ovsdb.createBridge(ovs_id, EXIT_SWITCH)
+        
+        self.ovsdb.createPort(ovs_id, egress_end_point.interface, EXIT_SWITCH)
+                
+        self.ovsdb.createPort(ovs_id, port_to_int_bridge, EXIT_SWITCH, patch_peer = port_to_exit_switch)
+        
+        self.ovsdb.createPort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)        
+        
+        egress_end_point.interface_internal_id =  port_to_exit_switch
         
     def openstackResourcesInstantiation(self, profile_graph, nf_fg):
         for network in profile_graph.networks:
@@ -270,41 +383,127 @@ class OpenstackOrchestratorController(object):
                 for port in vnf.listPort:
                     if port.status == "new":
                         self.addPorttoVNF(port, vnf, nf_fg)
-        
-                   
-        #Create flow on the SDN network for graphs interconnection
         """
         for endpoint in profile_graph.endpoints.values():
             if endpoint.status == "new":
                 Graph().setEndpointLocation(self.graph_id, endpoint.id, endpoint.interface)
-
+        """
+                                
+    def instantiateFlowrules(self, profile_graph, graph_id):
+        # Wait for VNFs being up, then instantiate flows
+        while True:
+            complete = True
+            resources_status = {}
+            resources_status['vnfs'] = {}
+            """
+            resources_status['ports'] = {}
+            ports = Graph().getPorts(graph_id)
+            for port in ports:
+                if port.type == 'openstack':
+                    resources_status['ports'][port.id] = Neutron().getPortStatus(self.neutronEndpoint, self.token.get_token(), port.internal_id)
+            """
+            vnfs = Graph().getVNFs(graph_id)
+            for vnf in vnfs:
+                resources_status['vnfs'][vnf.internal_id] = Nova().getServerStatus(self.novaEndpoint, self.token.get_token(), vnf.internal_id)
+            for value in resources_status['vnfs'].values():
+                if value != 'ACTIVE':
+                    complete = False
+            if complete is True:
+                break
+            time.sleep(1)
+            print("sleep")
         
         for flowrule in profile_graph.flowrules.values():
             if flowrule.status =='new':
-                #TODO: check priority
-                if flowrule.match is not None:
-                    if flowrule.match.port_in is not None:
-                        tmp1 = flowrule.match.port_in.split(':')
-                        port1_type = tmp1[0]
-                        port1_id = tmp1[1]
-                        if port1_type == 'vnf':
-                            if len(flowrule.actions) > 1 or flowrule.actions[0].output is None:
-                                raise GraphError("Multiple actions or action different from output are not supported between vnfs")
-                        elif port1_type == 'endpoint':
-                            endpoint_to_vnf = False
-                            for action in flowrule.actions:
-                                if action.output is not None and action.output.split(':')[0] == "vnf":
-                                    endpoint_to_vnf= True
-                                    break
-                            if endpoint_to_vnf is True:
-                                if len(flowrule.actions) > 1:
-                                    raise GraphError("Multiple actions are not supported between an endpoint and a vnf")
-                                else:
-                                    continue
-                            endp1 = profile_graph.endpoints[port1_id]
-                            if endp1.type == 'interface':        
-                                self.processFlowrule(endp1, flowrule, profile_graph) 
-        """
+                self.instantiateFlowrule(profile_graph, graph_id, flowrule)
+                
+    
+    def instantiateFlowrule(self, profile_graph, graph_id, flowrule):
+        if flowrule.match.port_in is not None:
+            tmp1 = flowrule.match.port_in.split(':')
+            port1_type = tmp1[0]
+            #port1_id = tmp1[1]
+            if port1_type == 'vnf':
+                if len(flowrule.actions) > 1 or flowrule.actions[0].output is None:
+                    raise GraphError("Multiple actions or action different from output are not supported between vnfs")
+                for action in flowrule.actions:
+                    if action.output is not None and action.output.split(':')[0] == "endpoint":
+                        self.processFlowrule(profile_graph, graph_id, flowrule)
+            elif port1_type == 'endpoint':
+                for action in flowrule.actions:
+                    if action.output is not None and action.output.split(':')[0] == "vnf":
+                        self.processFlowrule(profile_graph, graph_id, flowrule)
+                        
+    def processFlowrule(self, profile_graph, graph_id, flowrule):
+        tmp1 = flowrule.match.port_in.split(':',2)
+        port1_type = tmp1[0]
+        port1_id = tmp1[1]
+        if port1_type == "vnf":
+            vnf = profile_graph.functions[port1_id]
+            vnf_port = vnf.ports[tmp1[2]]
+            for action in flowrule.actions:
+                if action.output is not None and action.output.split(':')[0] == "endpoint":
+                    endpoint = profile_graph.endpoints[action.output.split(':')[1]]
+                    break
+            match = Match(flowrule.match)
+            
+            ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+            integration_bridge_dpid = self.ovsdb.getBridgeDPID(ovs_id, INTEGRATION_BRIDGE)
+            integration_bridge_dpid = integration_bridge_dpid.replace(":", "")
+            of_switch_id = "openflow:" + str(int(integration_bridge_dpid,16))
+            if vnf_port.of_port is None:
+                input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_port.internal_id[0:8])
+                vnf_port.of_port = str(input_port)
+            match.setInputMatch(vnf_port.of_port)
+
+            output_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, endpoint.interface_internal_id)
+            action = Action()
+            action.setOutputAction(str(output_port), 65535)
+            
+            flowj = Flow(flowrule.id, flowrule.id, table_id=110, priority=16390+flowrule.priority, actions=[action], match=match)        
+            json_req = flowj.getJSON()
+            #print (json_req)
+
+            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flowrule.id, flowj.table_id)
+            
+            flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flowrule.id, table_id=110)  
+            Graph().addFlowRule(graph_id, flow_rule, None)
+            
+        elif port1_type == "endpoint":
+            endpoint = profile_graph.endpoints[port1_id]
+            for action in flowrule.actions:
+                if action.output is not None:
+                    output = action.output.split(':',2)
+                    if output[0] == "vnf":
+                        vnf = profile_graph.functions[output[1]]
+                        vnf_port = vnf.ports[output[2]]
+                        break
+                    
+            match = Match(flowrule.match)
+
+            ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+            integration_bridge_dpid = self.ovsdb.getBridgeDPID(ovs_id, INTEGRATION_BRIDGE)
+            integration_bridge_dpid = integration_bridge_dpid.replace(":", "")
+            of_switch_id = "openflow:" + str(int(integration_bridge_dpid,16))
+
+            input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, endpoint.interface_internal_id) 
+            match.setInputMatch(str(input_port))
+            if vnf_port.of_port is None:
+                output_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_port.internal_id[0:8])
+                vnf_port.of_port = str(output_port)
+            action = Action()
+            action.setOutputAction(vnf_port.of_port, 65535)
+            
+            flowj = Flow(flowrule.id, flowrule.id, table_id=110, priority=16390+flowrule.priority, actions=[action], match=match)        
+            json_req = flowj.getJSON()
+            #print (json_req)
+
+            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flowrule.id, flowj.table_id)
+            
+            flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flowrule.id, table_id=110)  
+            Graph().addFlowRule(graph_id, flow_rule, None)
+            
+        
     '''
     ######################################################################################################
     #############################    Resources preparation phase        ##################################
@@ -373,8 +572,7 @@ class OpenstackOrchestratorController(object):
             status = vnf.status
         #TODO: add image location to the database
         ##return VNF(vnf.id, vnf, image, flavor, vnf.availability_zone, status)
-        #TODO: availability zone
-        return VNF(vnf.id, vnf, image, flavor, "AZ_TI", status)
+        return VNF(vnf.id, vnf, image, flavor, Configuration().AVAILABILITY_ZONE, status)
     
     def setVNFNetwork(self, nf_fg, nf, profile_graph):
         for port in nf.ports.values():
@@ -382,18 +580,20 @@ class OpenstackOrchestratorController(object):
                 for flowrule in nf_fg.getFlowRulesSendingTrafficFromPort(nf.id, port.id):
                     logging.debug(flowrule.getDict(True))
                     if flowrule.match is not None:
-                        """
                         #check if vlan_id is constrained by a local or a remote endpoint
                         for action in flowrule.actions:
                             if action.output is not None:
                                 if action.output.split(":")[0] == 'endpoint':
                                     endp = nf_fg.getEndPoint(action.output.split(":")[1])
+                                    """
                                     if endp.type =='vlan' or endp.remote_endpoint_id is not None:
                                         if endp.type =='vlan':
                                             net_vlan = endp.vlan_id
+                                        '''
                                         elif endp.remote_endpoint_id is not None:
                                             remote_endp = Graph().get_nffg(endp.remote_endpoint_id.split(':')[0]).getEndPoint(endp.remote_endpoint_id.split(':')[1])
                                             net_vlan = remote_endp.vlan_id
+                                        '''
                                         if net_vlan.isdigit() is False:
                                             name = net_vlan
                                         else:                                
@@ -410,8 +610,8 @@ class OpenstackOrchestratorController(object):
                                             Graph().addOSNetwork(net_id, name, 'complete', net_vlan)
                                         if name in OPENSTACK_NETWORKS:              
                                             OPENSTACK_NETWORKS.remove(name)                                                   
-                                        break   
-                        """
+                                        break
+                                    """
                         #Choose a network arbitrarily (no constraints)    
                         if port.net is None:
                             name, net = self.getNetwork(port, profile_graph)
@@ -588,5 +788,3 @@ class OpenstackOrchestratorController(object):
                     findFlavor = flavor
                     minData = flavor['vcpus'] - CPUrequirements + (flavor['ram'] - memorySize)/1024 + flavor['disk'] - rootFileSystemSize - int(ephemeralFileSystemSize or 0)
         return findFlavor      
-    
-

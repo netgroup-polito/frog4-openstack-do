@@ -38,6 +38,7 @@ class Configuration(object, metaclass=Singleton):
             self._OPENSTACK_IP = config.get('openstack_orchestrator','openstack_ip')
             self._DEBUG_MODE = config.getboolean('openstack_orchestrator', 'debug_mode')
             self._IDENTITY_API_VERSION = config.getint('openstack_orchestrator','identity_api_version')
+            self._AVAILABILITY_ZONE = config.get('openstack_orchestrator','availability_zone')
 
             self._TOKEN_EXPIRATION = config.get('authentication','token_expiration')
             
@@ -45,6 +46,18 @@ class Configuration(object, metaclass=Singleton):
                 self._OPENSTACK_NETWORKS = [e.strip() for e in config.get('networks', 'openstack_networks').split(',')]
             else:
                 self._OPENSTACK_NETWORKS = None
+
+            if config.has_option('odl', 'address'):
+                self._ODL_ADDRESS = config.get('odl','address')
+                self._ODL_USERNAME = config.get('odl','username')
+                self._ODL_PASSWORD = config.get('odl','password')
+                
+            if config.has_option('odl', 'integration_bridge'):
+                self._INTEGRATION_BRIDGE = config.get('odl','integration_bridge')
+            if config.has_option('odl', 'exit_switch'):
+                self._EXIT_SWITCH = config.get('odl','exit_switch')
+            if config.has_option('odl', 'ingress_switch'):
+                self._INGRESS_SWITCH = config.get('odl','ingress_switch')            
                 
             self._LOG_FILE = config.get('log', 'log_file')
             self._VERBOSE = config.getboolean('log', 'verbose')
@@ -177,3 +190,32 @@ class Configuration(object, metaclass=Singleton):
     @property
     def SWITCH_TEMPLATE(self):
         return self._SWITCH_TEMPLATE
+    
+    @property
+    def EXIT_SWITCH(self):
+        return self._EXIT_SWITCH
+    
+    @property
+    def INGRESS_SWITCH(self):
+        return self._INGRESS_SWITCH
+    
+    @property
+    def INTEGRATION_BRIDGE(self):
+        return self._INTEGRATION_BRIDGE
+    
+    @property
+    def ODL_ADDRESS(self):
+        return self._ODL_ADDRESS
+    
+    @property
+    def ODL_USERNAME(self):
+        return self._ODL_USERNAME
+    
+    @property
+    def ODL_PASSWORD(self):
+        return self._ODL_PASSWORD
+    
+    @property
+    def AVAILABILITY_ZONE(self):
+        return self._AVAILABILITY_ZONE
+    

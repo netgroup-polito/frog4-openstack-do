@@ -5,9 +5,183 @@ Created on 15 apr 2016
 @author: stefanopetrangeli
 '''
 
-import requests
+import requests, urllib
 import json, logging
 
+######################################################################################################
+############################    OpenDaylight  REST calls        ################################
+######################################################################################################
+
+class ODL(object):
+    
+    def __init__(self):
+        self.odl_nodes_path = "/restconf/operational/opendaylight-inventory:nodes"
+        self.odl_topology_path = "/restconf/operational/network-topology:network-topology/"
+        self.odl_config_topology_path = "/restconf/config/network-topology:network-topology/"
+        self.odl_flows_path = "/restconf/config/opendaylight-inventory:nodes"
+        self.odl_node="/node/"
+        self.odl_flow="/table/%s/flow/"
+        self.odl_ovsdb_topology="topology/ovsdb:1"
+        self.odl_bridge_path = "%s/bridge/%s"
+        self.odl_port_path = "/termination-point/"
+
+    
+    def getNodes(self, odl_endpoint, odl_user, odl_pass):
+        '''
+        Deprecated with Cisco switches because response is not a valid JSON
+        '''
+        headers = {'Accept': 'application/json'}
+        url = odl_endpoint+self.odl_nodes_path
+        resp = requests.get(url, headers=headers, auth=(odl_user, odl_pass))
+        resp.raise_for_status()
+        return resp.text
+    
+    def getOVSDBTopology(self, odl_endpoint, odl_user, odl_pass):
+        '''
+        '''
+        headers = {'Accept': 'application/json'}
+        url = odl_endpoint + self.odl_topology_path + self.odl_ovsdb_topology
+        resp = requests.get(url, headers=headers, auth=(odl_user, odl_pass))
+        resp.raise_for_status()
+        return resp.text
+    """
+    def getTopology(self, odl_endpoint, odl_user, odl_pass):
+        '''
+        Get the entire topology comprensive of hosts, switches and links (JSON)
+        Exceptions:
+            raise the requests.HTTPError exception connected to the REST call in case of HTTP error
+        '''
+        headers = {'Accept': 'application/json'}
+        url = odl_endpoint+self.odl_topology_path
+        resp = requests.get(url, headers=headers, auth=(odl_user, odl_pass))
+        resp.raise_for_status()
+        return resp.text
+    """
+    
+    def getBridge(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name):
+        headers = {'Accept': 'application/json'}
+        bridge_path = self.odl_bridge_path % (ovs_id, bridge_name)
+        url = odl_endpoint +self.odl_topology_path + self.odl_ovsdb_topology+ self.odl_node + urllib.parse.quote(bridge_path, safe='')
+        resp = requests.get(url, headers=headers, auth=(odl_user, odl_pass))
+        if resp.status_code == 404:
+            return None
+        resp.raise_for_status()
+        return resp.text
+    
+    def getPort(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name, port_name):
+        headers = {'Accept': 'application/json'}
+        port_path = self.odl_bridge_path % (ovs_id, bridge_name) + self.odl_port_path + port_name
+        url = odl_endpoint +self.odl_topology_path + self.odl_ovsdb_topology+ self.odl_node + urllib.parse.quote(port_path, safe='')
+        resp = requests.get(url, headers=headers, auth=(odl_user, odl_pass))
+        if resp.status_code == 404:
+            return None
+        resp.raise_for_status()
+        return resp.text
+    
+    def createBridge(self, odl_endpoint, odl_user, odl_pass, ovs_id, name):
+        '''
+        Args:
+            name:
+                name of the bridge
+            ovs_id:
+                The endpoint to the node where the bridges are
+        '''
+        headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
+        bridge_path = self.odl_bridge_path % (ovs_id, name)
+        url = odl_endpoint +self.odl_config_topology_path + self.odl_ovsdb_topology+ self.odl_node + urllib.parse.quote(bridge_path, safe='')
+        body = {"network-topology:node": [{
+            "node-id": bridge_path,
+            "ovsdb:bridge-name": name,
+            "ovsdb:protocol-entry": [
+            {"protocol": "ovsdb:ovsdb-bridge-protocol-openflow-13"}
+            ],
+            "ovsdb:managed-by": "/network-topology:network-topology/network-topology:topology[network-topology:topology-id='ovsdb:1']/network-topology:node[network-topology:node-id='"+ovs_id+"']"}]}
+        resp = requests.put(url, data=json.dumps(body), headers=headers, auth=(odl_user, odl_pass))
+        resp.raise_for_status()
+        return resp.text
+    
+    def createPort(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name, port_name, patch_peer):
+        '''
+        Args:
+            name:
+                name of the bridge
+            ovs_id:
+                The endpoint to the node where the bridges are
+        '''
+        headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
+        bridge_path = self.odl_bridge_path % (ovs_id, bridge_name)
+        url = odl_endpoint +self.odl_config_topology_path + self.odl_ovsdb_topology+ self.odl_node + urllib.parse.quote(bridge_path, safe='') + self.odl_port_path + port_name
+        if patch_peer is None:
+            body = {"network-topology:termination-point": [{"ovsdb:name": port_name,"tp-id": port_name}]}
+        else:
+            body= {"network-topology:termination-point": [{
+              "ovsdb:options": [
+                {
+                  "ovsdb:option": "peer",
+                  "ovsdb:value" : patch_peer
+                }
+              ],
+              "ovsdb:name": port_name,
+              "ovsdb:interface-type": "ovsdb:interface-type-patch",
+              "tp-id": port_name}]}
+        resp = requests.put(url, data=json.dumps(body), headers=headers, auth=(odl_user, odl_pass))
+        resp.raise_for_status()
+        return resp.text
+    
+    def deletePort(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name, port_name):
+        '''
+        Args:
+            bridge_name:
+                name of the bridge
+            port_name:
+                name of the port to be deleted
+            ovs_id:
+                OVS ID of the bridge
+        '''
+        headers = {'Accept': 'application/json'}
+        bridge_path = self.odl_bridge_path % (ovs_id, bridge_name)
+        url = odl_endpoint +self.odl_config_topology_path + self.odl_ovsdb_topology+ self.odl_node + urllib.parse.quote(bridge_path, safe='') + self.odl_port_path + port_name
+        resp = requests.delete(url, headers=headers, auth=(odl_user, odl_pass))
+        resp.raise_for_status()
+        return resp.text
+    
+    def createFlow(self, odl_endpoint, odl_user, odl_pass, jsonFlow, switch_id, flow_id, table_id=0):
+        '''
+        Create a flow on the switch selected
+        Args:
+            jsonFlow:
+                JSON structure which describes the flow specifications
+            switch_id:
+                OpenDaylight id of the switch (example: openflow:1234567890)
+            flow_id:
+                OpenFlow id of the flow
+        Exceptions:
+            raise the requests.HTTPError exception connected to the REST call in case of HTTP error
+        '''
+        headers = {'Accept': 'application/json', 'Content-type':'application/json'}
+        url = odl_endpoint+self.odl_flows_path+self.odl_node+str(switch_id)+(self.odl_flow % table_id)+str(flow_id)
+        logging.debug(url+"\n"+jsonFlow)
+        resp = requests.put(url,jsonFlow,headers=headers, auth=(odl_user, odl_pass))
+        resp.raise_for_status()
+        return resp.text
+    
+    def deleteFlow(self, odl_endpoint, odl_user, odl_pass, switch_id, flow_id, table_id=0):
+        '''
+        Delete a flow
+        Args:
+            switch_id:
+                OpenDaylight id of the switch (example: openflow:1234567890)
+            flow_id:
+                OpenFlow id of the flow
+        Exceptions:
+            raise the requests.HTTPError exception connected to the REST call in case of HTTP error
+        '''
+        headers = {'Accept': 'application/json', 'Content-type':'application/json'}
+        url = odl_endpoint+self.odl_flows_path+self.odl_node+switch_id+(self.odl_flow % table_id)+str(flow_id)
+        logging.debug(url)
+        resp = requests.delete(url,headers=headers, auth=(odl_user, odl_pass))
+        resp.raise_for_status()
+        return resp.text
 '''
 ######################################################################################################
 ###############################   OpenStack Heat REST calls        ###################################

@@ -105,13 +105,14 @@ class FlowRuleModel(Base):
     Maps the database table node
     '''
     __tablename__ = 'flow_rule'
-    attributes = ['id', 'internal_id', 'graph_flow_rule_id', 'graph_id','node_id', 'type', 'priority','status', 'creation_date','last_update']
+    attributes = ['id', 'internal_id', 'graph_flow_rule_id', 'graph_id','node_id', 'type', 'table_id', 'priority','status', 'creation_date','last_update']
     id = Column(Integer, primary_key=True)
     internal_id = Column(VARCHAR(64)) # id of the infrastructure graph
     graph_flow_rule_id = Column(VARCHAR(64)) # id in the json
     graph_id = Column(VARCHAR(64))
     node_id = Column(VARCHAR(64))
     type = Column(VARCHAR(64))
+    table_id = Column(Integer)
     priority = Column(VARCHAR(64)) # openflow priority    
     status = Column(VARCHAR(64)) # initialization, complete, error
     creation_date = Column(VARCHAR(64))
@@ -239,7 +240,7 @@ class Graph(object):
             if complete is False and flow_rule_ref.type is not None and (flow_rule_ref.type == 'external' or 'connection_end_point' in flow_rule_ref.type):
                 continue
             flow_rule = FlowRule(_id=flow_rule_ref.graph_flow_rule_id, priority=int(flow_rule_ref.priority),
-                      db_id=flow_rule_ref.id, internal_id=flow_rule_ref.internal_id)
+                      db_id=flow_rule_ref.id, internal_id=flow_rule_ref.internal_id, table_id=flow_rule_ref.table_id)
             nffg.addFlowRule(flow_rule)
             try:
                 
@@ -386,7 +387,8 @@ class Graph(object):
             flow_rule_ref = FlowRuleModel(id=flow_rule_db_id, internal_id=flow_rule.internal_id, 
                                        graph_flow_rule_id=flow_rule.id, graph_id=graph_id,
                                        priority=flow_rule.priority,  status=flow_rule.status,
-                                       creation_date=datetime.datetime.now(), last_update=datetime.datetime.now(), type=flow_rule.type, node_id=flow_rule.node_id)
+                                       creation_date=datetime.datetime.now(), last_update=datetime.datetime.now(), 
+                                       type=flow_rule.type, node_id=flow_rule.node_id, table_id=flow_rule.table_id)
             session.add(flow_rule_ref)
             
             # Match

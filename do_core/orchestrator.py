@@ -143,7 +143,7 @@ class OpenstackOrchestrator(object):
             
             controller = OpenstackOrchestratorController(user_data)
             response.body = controller.put(nffg)
-
+            response.content_type = "text/plain"
             response.status = falcon.HTTP_202
             
         except wrongRequest as err:

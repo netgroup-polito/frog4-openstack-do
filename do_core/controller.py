@@ -309,9 +309,9 @@ class OpenstackOrchestratorController(object):
         if end_point.remote_endpoint_id is not None:
             self.connectEndPoints(nffg, end_point)
         """
-        if 'interface' in end_point.type:
+        if end_point.type == "interface":
             self.manageIngressEndpoint(end_point)
-        if 'interface-out' in end_point.type:
+        elif end_point.type == 'interface-out':
             self.manageExitEndpoint(nffg, end_point)
         """
         elif 'interface' in end_point.type:
@@ -345,8 +345,6 @@ class OpenstackOrchestratorController(object):
             raise Exception("Bridge datapath id not found for this interface: "+str(ingress_end_point.interface))
         ingress_end_point.interface_internal_id = "INGRESS_"+bridge_datapath_id+":"+ingress_end_point.interface
         """
-        
-        #self.createVirtualIngressNetwork(self.compute_node_address)
         # TODO: set port internal ID in db
         
     def manageExitEndpoint(self, nffg, egress_end_point):
@@ -411,7 +409,7 @@ class OpenstackOrchestratorController(object):
             if complete is True:
                 break
             time.sleep(1)
-            print("sleep")
+            #print("sleep")
         
         for flowrule in profile_graph.flowrules.values():
             if flowrule.status =='new':
@@ -460,13 +458,15 @@ class OpenstackOrchestratorController(object):
             action = Action()
             action.setOutputAction(str(output_port), 65535)
             
-            flowj = Flow(flowrule.id, flowrule.id, table_id=110, priority=16390+flowrule.priority, actions=[action], match=match)        
+            flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
+            
+            flowj = Flow(flow_id, table_id=110, priority=16390+flowrule.priority, actions=[action], match=match)        
             json_req = flowj.getJSON()
             #print (json_req)
 
-            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flowrule.id, flowj.table_id)
+            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
             
-            flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flowrule.id, table_id=110)  
+            flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=110)  
             Graph().addFlowRule(graph_id, flow_rule, None)
             
         elif port1_type == "endpoint":
@@ -494,13 +494,15 @@ class OpenstackOrchestratorController(object):
             action = Action()
             action.setOutputAction(vnf_port.of_port, 65535)
             
-            flowj = Flow(flowrule.id, flowrule.id, table_id=110, priority=16390+flowrule.priority, actions=[action], match=match)        
+            flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
+
+            flowj = Flow(flow_id, table_id=110, priority=16390+flowrule.priority, actions=[action], match=match)        
             json_req = flowj.getJSON()
             #print (json_req)
 
-            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flowrule.id, flowj.table_id)
+            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
             
-            flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flowrule.id, table_id=110)  
+            flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=110)  
             Graph().addFlowRule(graph_id, flow_rule, None)
             
         

@@ -15,13 +15,11 @@ import logging
 ######################################################################################################
 '''
 class Flow(object):
-    def __init__(self, name, flow_id, table_id = 0, priority = 5, installHw = True, 
+    def __init__(self, flow_id, table_id = 0, priority = 5, installHw = True, 
                  hard_timeout = 0, idle_timeout = 0, actions = None, match = None):
         '''
         Constructor for the Flow
         Args:
-            name:
-                flow name (not really useful)
             flow_id:
                 identifier of the flow (to be recorded for further deletion)
             table_id:
@@ -40,7 +38,6 @@ class Flow(object):
                 Match for this flow
         '''
         self.strict = False
-        self.name = name
         self.flow_id = flow_id
         self.table_id = table_id
         self.priority = priority
@@ -61,7 +58,6 @@ class Flow(object):
         
         j_flow['flow'] = {}
         j_flow['flow']['strict'] = self.strict
-        j_flow['flow']['flow-name'] = self.name
         j_flow['flow']['id'] = self.flow_id
         j_flow['flow']['table_id'] = self.table_id
         j_flow['flow']['priority'] = self.priority

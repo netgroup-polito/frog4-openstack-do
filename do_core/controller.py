@@ -7,14 +7,9 @@ import uuid
 import time
 
 from do_core.exception import sessionNotFound, GraphError, StackError
-from do_core.nffg_manager import NFFG_Manager
 from do_core.sql.session import Session
 from do_core.sql.graph import Graph
-from do_core.userAuthentication import UserData
 from do_core.config import Configuration
-from collections import OrderedDict
-from sqlalchemy.orm.exc import NoResultFound
-from requests.exceptions import HTTPError, ConnectionError
 
 
 from do_core.authentication import KeystoneAuthentication
@@ -176,7 +171,7 @@ class OpenstackOrchestratorController(object):
     def getResourcesStatus(self, session_id):
         graphs_ref = Graph().getGraphs(session_id)
         for graph_ref in graphs_ref:
-            # TODO: for the moment there is only a graph per session 
+            # For the moment there is only a graph per session 
             return self.openstackResourcesStatus(graph_ref.id)
         
     def getStatus(self, service_graph_id):
@@ -280,10 +275,8 @@ class OpenstackOrchestratorController(object):
         logging.debug("Deleting endpoint type: "+str(endpoint.type))
         if endpoint.type == 'interface-out':
             self.deleteExitEndpoint(nffg, endpoint)
-        """
-        if endpoint.remote_endpoint_id is True:
-            self.disconnectEndpoint(endpoint, nffg)
-        """
+        elif endpoint.type == 'internal':
+            self.deleteInternalEndpoint(nffg, endpoint)        
         nffg.end_points.remove(endpoint)         
         
     def deleteExitEndpoint(self, nffg, endpoint):
@@ -296,6 +289,20 @@ class OpenstackOrchestratorController(object):
         
         self.ovsdb.deletePort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE)     
             
+    def deleteInternalEndpoint(self, nffg, endpoint):
+        internal_bridge_id = "br-internal-"+ str(endpoint.internal_group)
+        port_to_internal_bridge = nffg.id + "-" + endpoint.id + "-to-" + internal_bridge_id
+        port_to_integration_bridge =  nffg.id + "-" + endpoint.id + "-to-" + INTEGRATION_BRIDGE
+        
+        ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+        
+        self.ovsdb.deletePort(ovs_id, port_to_integration_bridge, internal_bridge_id)
+        
+        self.ovsdb.deletePort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE)
+        
+        if len(self.ovsdb.getBridgePorts(ovs_id, internal_bridge_id)) == 1:
+            # There are no ports belonging to this bridge so we can delete it
+            self.ovsdb.deleteBridge(ovs_id, internal_bridge_id)        
             
     def instantiateEndpoints(self, nffg):
         for end_point in nffg.end_points[:]:
@@ -303,19 +310,13 @@ class OpenstackOrchestratorController(object):
                 self.instantiateEndPoint(nffg, end_point)
     
     def instantiateEndPoint(self, nffg, end_point):
-        """
-        if end_point.prepare_connection_to_remote_endpoint_ids is not None:
-            self.prepareEndPointConnection(nffg, end_point)
-        if end_point.remote_endpoint_id is not None:
-            self.connectEndPoints(nffg, end_point)
-        """
         if end_point.type == "interface":
             self.manageIngressEndpoint(end_point)
         elif end_point.type == 'interface-out':
             self.manageExitEndpoint(nffg, end_point)
+        elif end_point.type == "internal":
+            self.manageInternalEndpoint(nffg, end_point)
         """
-        elif 'interface' in end_point.type:
-            self.manageIngressEndpoint(end_point)
         elif 'gre' in end_point.type:
             raise NotImplementedError()
         elif  'internal' in end_point.type:
@@ -338,15 +339,7 @@ class OpenstackOrchestratorController(object):
         self.ovsdb.createPort(ovs_id, port_to_ingress_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)
         
         ingress_end_point.interface_internal_id = port_to_ingress_switch
-        
-        """
-        bridge_datapath_id = self.ovsdb.getBridgeDatapath_id(ingress_end_point.node, ingress_end_point.interface)
-        if bridge_datapath_id is None:
-            raise Exception("Bridge datapath id not found for this interface: "+str(ingress_end_point.interface))
-        ingress_end_point.interface_internal_id = "INGRESS_"+bridge_datapath_id+":"+ingress_end_point.interface
-        """
-        # TODO: set port internal ID in db
-        
+                
     def manageExitEndpoint(self, nffg, egress_end_point):
         port_to_int_bridge = nffg.id + "-" + egress_end_point.id + "-to-" + INTEGRATION_BRIDGE
         port_to_exit_switch =  nffg.id + "-" + egress_end_point.id + "-to-" + EXIT_SWITCH
@@ -362,6 +355,23 @@ class OpenstackOrchestratorController(object):
         self.ovsdb.createPort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)        
         
         egress_end_point.interface_internal_id =  port_to_exit_switch
+        
+    def manageInternalEndpoint(self, nffg, internal_end_point):
+        if internal_end_point.node_id is None:
+            raise Exception("Endpoint "+ internal_end_point.id + " must specify the compute node address in the node-id field")
+        internal_bridge_id = "br-internal-"+ str(internal_end_point.internal_group)
+        port_to_internal_bridge = nffg.id + "-" + internal_end_point.id + "-to-" + internal_bridge_id
+        port_to_integration_bridge =  nffg.id + "-" + internal_end_point.id + "-to-" + INTEGRATION_BRIDGE
+        
+        ovs_id = self.ovsdb.getOVSId(internal_end_point.node_id)
+
+        self.ovsdb.createBridge(ovs_id, internal_bridge_id)
+                
+        self.ovsdb.createPort(ovs_id, port_to_integration_bridge, internal_bridge_id, patch_peer = port_to_internal_bridge)
+        
+        self.ovsdb.createPort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE, patch_peer = port_to_integration_bridge)
+        
+        internal_end_point.interface_internal_id = port_to_internal_bridge
         
     def openstackResourcesInstantiation(self, profile_graph, nf_fg):
         for network in profile_graph.networks:
@@ -433,6 +443,7 @@ class OpenstackOrchestratorController(object):
                         self.processFlowrule(profile_graph, graph_id, flowrule)
                         
     def processFlowrule(self, profile_graph, graph_id, flowrule):
+        #TODO: check priority
         tmp1 = flowrule.match.port_in.split(':',2)
         port1_type = tmp1[0]
         port1_id = tmp1[1]
@@ -446,9 +457,7 @@ class OpenstackOrchestratorController(object):
             match = Match(flowrule.match)
             
             ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
-            integration_bridge_dpid = self.ovsdb.getBridgeDPID(ovs_id, INTEGRATION_BRIDGE)
-            integration_bridge_dpid = integration_bridge_dpid.replace(":", "")
-            of_switch_id = "openflow:" + str(int(integration_bridge_dpid,16))
+            of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
             if vnf_port.of_port is None:
                 input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_port.internal_id[0:8])
                 vnf_port.of_port = str(input_port)
@@ -460,7 +469,7 @@ class OpenstackOrchestratorController(object):
             
             flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
             
-            flowj = Flow(flow_id, table_id=110, priority=16390+flowrule.priority, actions=[action], match=match)        
+            flowj = Flow(flow_id, table_id=110, priority=16385+flowrule.priority, actions=[action], match=match)
             json_req = flowj.getJSON()
             #print (json_req)
 
@@ -482,9 +491,7 @@ class OpenstackOrchestratorController(object):
             match = Match(flowrule.match)
 
             ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
-            integration_bridge_dpid = self.ovsdb.getBridgeDPID(ovs_id, INTEGRATION_BRIDGE)
-            integration_bridge_dpid = integration_bridge_dpid.replace(":", "")
-            of_switch_id = "openflow:" + str(int(integration_bridge_dpid,16))
+            of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
 
             input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, endpoint.interface_internal_id) 
             match.setInputMatch(str(input_port))
@@ -496,7 +503,7 @@ class OpenstackOrchestratorController(object):
             
             flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
 
-            flowj = Flow(flow_id, table_id=110, priority=16390+flowrule.priority, actions=[action], match=match)        
+            flowj = Flow(flow_id, table_id=110, priority=16385+flowrule.priority, actions=[action], match=match)
             json_req = flowj.getJSON()
             #print (json_req)
 
@@ -510,8 +517,8 @@ class OpenstackOrchestratorController(object):
     ######################################################################################################
     #############################    Resources preparation phase        ##################################
     ######################################################################################################
-    '''      
-                            
+    '''
+
     def prepareNFFG(self, nffg):
         manager = NFFG_Manager(nffg)  
         
@@ -646,6 +653,20 @@ class OpenstackOrchestratorController(object):
         """
         #return Endpoint(endpoint.id, endpoint.name, endpoint.type, endpoint.vlan_id, endpoint.node_id, endpoint.interface, status)
         return endpoint
+    
+    def getOpenFlowSwitchID(self, ovs_id, bridge_name):
+        '''
+        Get the OF_switch_id (e.g, openflow:64647512366924) of the bridge requested
+        params:
+            ovs_id:
+                Openvswitch ID where the bridge is located
+            bridge_name:
+                Bridge for which we want to retrieve the OF_switchid
+        '''        
+        integration_bridge_dpid = self.ovsdb.getBridgeDPID(ovs_id, bridge_name)
+        integration_bridge_dpid = integration_bridge_dpid.replace(":", "")
+        of_switch_id = "openflow:" + str(int(integration_bridge_dpid,16))
+        return of_switch_id    
     '''
     ######################################################################################################
     ###############################    Interactions with OpenStack       #################################

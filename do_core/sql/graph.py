@@ -57,7 +57,7 @@ class PortModel(Base):
     '''
     __tablename__ = 'port'
     attributes = ['id', 'internal_id', 'graph_port_id', 'graph_id', 'name','vnf_id', 'location','type', 'virtual_switch', 'status', 'creation_date','last_update', 'os_network_id',
-                    'mac_address', 'ipv4_address', 'vlan_id','gre_key']
+                    'mac_address', 'ipv4_address', 'vlan_id','gre_key', 'internal_group']
     id = Column(Integer, primary_key=True)
     internal_id = Column(VARCHAR(64)) # id in the infrastructure
     graph_port_id = Column(VARCHAR(64)) # id in the json
@@ -75,6 +75,7 @@ class PortModel(Base):
     ipv4_address = Column(VARCHAR(64))
     vlan_id = Column(VARCHAR(64))
     gre_key = Column(VARCHAR(64))
+    internal_group = Column(VARCHAR(64)) 
     
 class EndpointModel(Base):
     '''
@@ -308,7 +309,7 @@ class Graph(object):
                         #continue
                         
                     end_point.node_id = port.location
-                    ##end_point.switch_id = port.virtual_switch
+                    end_point.internal_group = port.internal_group
                     end_point.interface = port.graph_port_id
                     end_point.vlan_id = port.vlan_id
                     
@@ -364,10 +365,10 @@ class Graph(object):
                 
                 # Add end-point resources
                 # End-point attached to something that is not another graph
-                if "interface" in endpoint.type or endpoint.type == "vlan":
+                if "interface" in endpoint.type or endpoint.type == "vlan" or endpoint.type == "internal":
                     port_ref = PortModel(id=self.port_id, graph_port_id = endpoint.interface, graph_id=nffg.db_id, 
                                          internal_id=endpoint.interface, name=endpoint.interface, location=endpoint.node_id,
-                                         virtual_switch=endpoint.node_id, vlan_id=endpoint.vlan_id, creation_date=datetime.datetime.now(), 
+                                         virtual_switch=endpoint.node_id, vlan_id=endpoint.vlan_id, internal_group=endpoint.internal_group, creation_date=datetime.datetime.now(), 
                                          last_update=datetime.datetime.now())
                     session.add(port_ref)
                     endpoint_resource_ref = EndpointResourceModel(endpoint_id=endpoint.db_id,

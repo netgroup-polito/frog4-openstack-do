@@ -1,6 +1,4 @@
 '''
-Created on 13/mag/2015
-
 @author: vida
 @author: stefanopetrangeli
 '''

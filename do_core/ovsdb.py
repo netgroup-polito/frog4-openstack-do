@@ -86,6 +86,12 @@ class OVSDB(object):
                 return termination_point['ovsdb:ofport']
         logging.debug(bridge_data)
         raise PortNotFound(port_id + " not found")
+    
+    def getBridgePorts(self, ovs_id, bridge_name):
+        bridge_data = ODL().getBridge(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name)
+        #logging.debug(bridge_data)
+        termination_points = json.loads(bridge_data)['node'][0]['termination-point']
+        return termination_points
         
     def createPort(self, ovs_id, port_name, bridge_name, patch_peer = None):
         if ODL().getPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name) is None:
@@ -98,7 +104,5 @@ class OVSDB(object):
     def deletePort(self, ovs_id, port_name, bridge_name):
         ODL().deletePort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name)
             
-    def deleteBridge(self, bridge_name):
-        bridge_id = self.getBridgeUUID(bridge_name)
-        if bridge_id is not None:
-            ODL().deleteBridge(self.odlendpoint, self.odlusername, self.odlpassword, bridge_id, self.node_ip, self.ovsdb_port)
+    def deleteBridge(self, ovs_id, bridge_name):
+        ODL().deleteBridge(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name)

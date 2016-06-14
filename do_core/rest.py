@@ -145,6 +145,23 @@ class ODL(object):
         resp.raise_for_status()
         return resp.text
     
+    def deleteBridge(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name):
+        '''
+        Args:
+            bridge_name:
+                name of the bridge
+            port_name:
+                name of the port to be deleted
+            ovs_id:
+                OVS ID of the bridge
+        '''
+        headers = {'Accept': 'application/json'}
+        bridge_path = self.odl_bridge_path % (ovs_id, bridge_name)
+        url = odl_endpoint +self.odl_config_topology_path + self.odl_ovsdb_topology+ self.odl_node + urllib.parse.quote(bridge_path, safe='')
+        resp = requests.delete(url, headers=headers, auth=(odl_user, odl_pass))
+        resp.raise_for_status()
+        return resp.text    
+    
     def createFlow(self, odl_endpoint, odl_user, odl_pass, jsonFlow, switch_id, flow_id, table_id=0):
         '''
         Create a flow on the switch selected

@@ -169,18 +169,6 @@ class ActionModel(Base):
     set_l4_dst_port = Column(VARCHAR(64))
     output_to_queue = Column(VARCHAR(64))
 
-
-class GraphConnectionModel(Base):
-    '''
-    Maps the database table graph_connection
-    '''
-    __tablename__ = 'graph_connection'
-    attributes = ['endpoint_id_1', 'endpoint_id_1_type', 'endpoint_id_2', 'endpoint_id_2_type']
-    endpoint_id_1 = Column(VARCHAR(64), primary_key=True)
-    endpoint_id_1_type = Column(VARCHAR(64), primary_key=True) # internal (the endpoint exists in the DB), external (the endpoint doesn't exist in the DB, its value will be graph_id:endpoint_graph_id)
-    endpoint_id_2 = Column(VARCHAR(64), primary_key=True)
-    endpoint_id_2_type = Column(VARCHAR(64), primary_key=True) # internal (the endpoint exists in the DB), external (the endpoint doesn't exist in the DB, its value will be graph_id:endpoint_graph_id)
-    
 class OpenstackNetworkModel(Base):
     '''
     Maps the database table node
@@ -312,22 +300,6 @@ class Graph(object):
                     end_point.internal_group = port.internal_group
                     end_point.interface = port.graph_port_id
                     end_point.vlan_id = port.vlan_id
-                    
-            graph_connections_ref = session.query(GraphConnectionModel).filter_by(endpoint_id_1 = str(graph_id)+':'+end_point_ref.graph_endpoint_id).filter_by(endpoint_id_1_type = 'external').all()
-            for graph_connection_ref in graph_connections_ref:
-                ext_endpoint = self._getEndpoint(graph_connection_ref.endpoint_id_2)
-                ext_nffg_id = ext_endpoint.graph_id
-                external_graph = self.get_nffg(ext_endpoint.graph_id, complete=True)
-                same_ext_endpoints = external_graph.getEndPointsFromName(ext_endpoint.name)
-                for same_ext_endpoint in same_ext_endpoints:
-                    if 'connection_end_point' not in same_ext_endpoint.type: 
-                        end_point.remote_endpoint_id = ext_nffg_id+':'+same_ext_endpoint.id
-            end_pont_connections_ref = self.getEndPointsFromName(graph_id, end_point_ref.name)
-            for end_pont_connection_ref in end_pont_connections_ref:
-                graph_connections_ref = session.query(GraphConnectionModel).filter_by(endpoint_id_2 = end_pont_connection_ref.id).filter_by(endpoint_id_2_type = 'internal').all()
-                for graph_connection_ref in graph_connections_ref:
-                    assert (graph_connection_ref.endpoint_id_1_type == 'external')
-                    end_point.prepare_connection_to_remote_endpoint_ids.append(graph_connection_ref.endpoint_id_1)
         for end_point in nffg.end_points:
             if complete is False and end_point.type == 'shadow':
                 same_end_points = nffg.getEndPointsFromName(end_point.name)
@@ -526,8 +498,6 @@ class Graph(object):
             session.query(FlowRuleModel).filter_by(graph_id = graph_id).delete()
             endpoints_ref = session.query(EndpointModel.id).filter_by(graph_id = graph_id).all()
             for endpoint_ref in endpoints_ref:
-                session.query(GraphConnectionModel).filter_by(endpoint_id_1 = endpoint_ref.id).filter_by(endpoint_id_1_type = 'internal').delete()
-                session.query(GraphConnectionModel).filter_by(endpoint_id_2 = endpoint_ref.id).filter_by(endpoint_id_2_type = 'internal').delete()
                 session.query(EndpointResourceModel).filter_by(endpoint_id = endpoint_ref.id).delete()
             session.query(EndpointModel).filter_by(graph_id = graph_id).delete()
         
@@ -740,22 +710,6 @@ class Graph(object):
         session = get_session()  
         with session.begin():
             session.query(FlowRuleModel).filter_by(id = flow_rule_id).update({"type": _type, "last_update":datetime.datetime.now()})
-       
-    def getGraphConnections(self, graph_id, endpoint_name):
-        #graph_id = self._getGraphID(service_graph_id)
-        endpoints = self.getEndpoints(graph_id)
-        connections = []
-        for endpoint in endpoints:
-            if endpoint.name == endpoint_name:
-                connections = connections + self.checkConnection(endpoint.id)
-        return connections
-    
-    def checkConnection(self, endpoint_id, endpoint_type='internal'):
-        session = get_session() 
-        connections = []
-        connections = connections+session.query(GraphConnectionModel).filter_by(endpoint_id_2 = endpoint_id).filter_by(endpoint_id_2_type = endpoint_type).all()
-        connections = connections+session.query(GraphConnectionModel).filter_by(endpoint_id_1 = endpoint_id).filter_by(endpoint_id_1_type = endpoint_type).all()
-        return connections
 
     def getNodeID(self, graph_id):
         session = get_session()
@@ -770,12 +724,6 @@ class Graph(object):
         session = get_session()  
         with session.begin():
             session.query(EndpointModel).filter_by(graph_id = graph_id).filter_by(graph_endpoint_id = graph_endpoint_id).update({"type": endpoint_type})
-
-    def addGraphConnection(self, endpoint_id_1, endpoint_id_2, endpoint_id_1_type, endpoint_id_2_type):
-        session = get_session()  
-        with session.begin():
-            graph_connection_ref = GraphConnectionModel(endpoint_id_1=endpoint_id_1, endpoint_id_2=endpoint_id_2, endpoint_id_1_type=endpoint_id_1_type, endpoint_id_2_type=endpoint_id_2_type)
-            session.add(graph_connection_ref)
 
     def addPort(self, graph_port_id, graph_id, name=None, vnf_id=None, location=None,_type=None,
                 virtual_switch=None, status=None, creation_date=datetime.datetime.now(),
@@ -960,17 +908,7 @@ class Graph(object):
                     resources.append(flow_rule)
                 #TODO: actions and match not considered
             return resources
-                        
-    def deleteGraphConnection(self, endpoint_id_2, endpoint_id_2_type='internal', endpoint_id_1=None):
-        session = get_session()
-        with session.begin():
-            if endpoint_id_1 is None:
-                session.query(GraphConnectionModel).filter_by(endpoint_id_2 = endpoint_id_2).filter_by(endpoint_id_2_type = endpoint_id_2_type).delete()
-            else:
-                #other parameters are ignored
-                session.query(GraphConnectionModel).filter_by(endpoint_id_1 = endpoint_id_1).delete()
 
-    
     def getPortFromInternalID(self, internal_id, graph_id):
         session = get_session()  
         try:

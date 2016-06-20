@@ -131,12 +131,12 @@ class ODL(object):
     def deletePort(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name, port_name):
         '''
         Args:
+            ovs_id:
+                OVS ID of the bridge        
             bridge_name:
                 name of the bridge
             port_name:
                 name of the port to be deleted
-            ovs_id:
-                OVS ID of the bridge
         '''
         headers = {'Accept': 'application/json'}
         bridge_path = self.odl_bridge_path % (ovs_id, bridge_name)
@@ -148,12 +148,10 @@ class ODL(object):
     def deleteBridge(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name):
         '''
         Args:
-            bridge_name:
-                name of the bridge
-            port_name:
-                name of the port to be deleted
             ovs_id:
-                OVS ID of the bridge
+                OVS ID of the bridge        
+            bridge_name:
+                name of the bridge to be deleted
         '''
         headers = {'Accept': 'application/json'}
         bridge_path = self.odl_bridge_path % (ovs_id, bridge_name)

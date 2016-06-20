@@ -45,7 +45,7 @@ class OpenstackOrchestratorController(object):
         self.keystoneEndpoint = 'http://' + self.node_endpoint + ':35357'
         self.token = KeystoneAuthentication(self.keystoneEndpoint, self.userdata.username, self.userdata.password, self.userdata.tenant)
         self.novaEndpoint = self.token.get_endpoint_URL('compute', 'public')
-        #self.glanceEndpoint = self.token.get_endpoint_URL('image','public')
+        #self.glanceEndpoint = self.token.get_endpoint_URL('image','public')  # not needed because it is read from the templates
         self.neutronEndpoint = self.token.get_endpoint_URL('network','public')
         
         self.odlendpoint = "http://" + Configuration().ODL_ADDRESS
@@ -302,7 +302,9 @@ class OpenstackOrchestratorController(object):
         
         if len(self.ovsdb.getBridgePorts(ovs_id, internal_bridge_id)) == 1:
             # There are no ports belonging to this bridge so we can delete it
-            self.ovsdb.deleteBridge(ovs_id, internal_bridge_id)        
+            self.ovsdb.deleteBridge(ovs_id, internal_bridge_id)
+            logging.debug("Deleting internal bridge: "+str(internal_bridge_id))
+
             
     def instantiateEndpoints(self, nffg):
         for end_point in nffg.end_points[:]:
@@ -391,11 +393,10 @@ class OpenstackOrchestratorController(object):
                 for port in vnf.listPort:
                     if port.status == "new":
                         self.addPorttoVNF(port, vnf, nf_fg)
-        """
+        
         for endpoint in profile_graph.endpoints.values():
             if endpoint.status == "new":
-                Graph().setEndpointLocation(self.graph_id, endpoint.id, endpoint.interface)
-        """
+                Graph().setEndpointLocation(nf_fg.db_id, endpoint.id, endpoint.interface)
                                 
     def instantiateFlowrules(self, profile_graph, graph_id):
         # Wait for VNFs being up, then instantiate flows
@@ -430,7 +431,6 @@ class OpenstackOrchestratorController(object):
         if flowrule.match.port_in is not None:
             tmp1 = flowrule.match.port_in.split(':')
             port1_type = tmp1[0]
-            #port1_id = tmp1[1]
             if port1_type == 'vnf':
                 if len(flowrule.actions) > 1 or flowrule.actions[0].output is None:
                     raise GraphError("Multiple actions or action different from output are not supported between vnfs")
@@ -526,12 +526,6 @@ class OpenstackOrchestratorController(object):
         logging.debug('Add templates to nffg')
         manager.addTemplates()
         logging.debug('Post expansion: '+nffg.getJSON())
-        
-        # Optimize NF-FG, currently the switch VNF when possible will be collapsed
-        manager.mergeUselessVNFs()   
-        
-        # Change the remote node ID in remote_endpoint_id and in prepare_connection_to_remote_endpoint_id to the internal value
-        #self.convertRemoteGraphID(nffg)
                                     
     def buildProfileGraph(self, nf_fg):
         profile_graph = ProfileGraph()
@@ -557,8 +551,9 @@ class OpenstackOrchestratorController(object):
             self.setVNFNetwork(nf_fg, vnf, profile_graph)
 
         for endpoint in nf_fg.end_points:
-            ep = self.buildEndpoint(endpoint)
-            profile_graph.addEndpoint(ep)
+            if endpoint.status is None:
+                endpoint.status = "new"            
+            profile_graph.addEndpoint(endpoint)
         
         for flowrule in nf_fg.flow_rules:
             if flowrule.status is None:
@@ -635,24 +630,6 @@ class OpenstackOrchestratorController(object):
                                     port1_id = tmp[2]
                                     port1 = profile_graph.functions[vnf_id].ports[port1_id]
                                     port1.net = net   
-              
-                
-    def buildEndpoint(self, endpoint):
-        if endpoint.status is None:
-            endpoint.status = "new"
-        else:
-            status = endpoint.status
-        """
-        if endpoint.remote_endpoint_id is not None:
-            delimiter = endpoint.remote_endpoint_id.find(":")
-            remote_graph = endpoint.remote_endpoint_id[:delimiter]
-            remote_id = endpoint.remote_endpoint_id[delimiter+1:] 
-            return Endpoint(endpoint.id, endpoint.name, endpoint.type, endpoint.vlan_id, endpoint.switch_id, endpoint.interface, status, remote_graph, remote_id)
-        else:
-            return Endpoint(endpoint.id, endpoint.name, endpoint.type, endpoint.vlan_id, endpoint.switch_id, endpoint.interface, status)
-        """
-        #return Endpoint(endpoint.id, endpoint.name, endpoint.type, endpoint.vlan_id, endpoint.node_id, endpoint.interface, status)
-        return endpoint
     
     def getOpenFlowSwitchID(self, ovs_id, bridge_name):
         '''

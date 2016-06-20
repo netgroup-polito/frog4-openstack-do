@@ -67,10 +67,6 @@ class Configuration(object, metaclass=Singleton):
             
             self._DOMAIN_DESCRIPTION_TOPIC = config.get('domain_description','topic')
             self._DOMAIN_DESCRIPTION_FILE = config.get('domain_description','file')
-            
-            self._SWITCH_TEMPLATE = config.get('switch','template')
-            self._SWITCH_NAME = [e.strip() for e in config.get('switch', 'switch_l2_name').split(',')]
-            self._CONTROL_SWITCH_NAME = [e.strip() for e in config.get('switch', 'switch_l2_control_name').split(',')]
                         
             self._DD_NAME = config.get('doubledecker','dd_name')
             self._DD_CUSTOMER = config.get('doubledecker','dd_customer')
@@ -178,18 +174,6 @@ class Configuration(object, metaclass=Singleton):
     @property
     def DEBUG(self):
         return self._DEBUG
-    
-    @property
-    def CONTROL_SWITCH_NAME(self):
-        return self._CONTROL_SWITCH_NAME
-    
-    @property
-    def SWITCH_NAME(self):
-        return self._SWITCH_NAME
-    
-    @property
-    def SWITCH_TEMPLATE(self):
-        return self._SWITCH_TEMPLATE
     
     @property
     def EXIT_SWITCH(self):

@@ -10,8 +10,6 @@ from do_core.exception import sessionNotFound, GraphError, StackError
 from do_core.sql.session import Session
 from do_core.sql.graph import Graph
 from do_core.config import Configuration
-
-
 from do_core.authentication import KeystoneAuthentication
 from do_core.rest import Glance, Nova, Neutron, ODL
 from do_core.resources import ProfileGraph, VNF, Net, Match, Action, Flow
@@ -108,17 +106,71 @@ class OpenstackOrchestratorController(object):
 
         graphs_ref = Graph().getGraphs(session.id)
         old_nf_fg = Graph().get_nffg(graphs_ref[0].id)
+        
+        graph_id = graphs_ref[0].id
 
         updated_nffg = old_nf_fg.diff(nf_fg)
         logging.debug("Diff: "+updated_nffg.getJSON(True))
+                
+        try:
+            self.openstackResourcesControlledDeletion(updated_nffg, graph_id)
+            
+            self.prepareNFFG(nf_fg)
+            Graph().updateNFFG(updated_nffg, graph_id)
+    
+            profile_graph = self.buildProfileGraph(updated_nffg)
+            self.instantiateEndpoints(nf_fg)
+            self.openstackResourcesInstantiation(profile_graph, updated_nffg)
+            self.instantiateFlowrules(profile_graph, graph_id)
+            
+            logging.debug("Graph " + old_nf_fg.id + " correctly updated!")
+            Session().updateStatus(session.id, 'complete')
         
-        logging.error("Update not yet implemented")
+        except Exception as ex:
+            logging.exception(ex)
+            #Graph().delete_graph(nffg.db_id)
+            Session().set_error(session.id)
+            raise ex
         
-        
-        Session().updateStatus(session.id, 'complete')
         return session.id
 
+    def openstackResourcesControlledDeletion(self, updated_nffg, graph_id):
+        # Delete FlowRules
+        for flow_rule in updated_nffg.flow_rules[:]:
+            if flow_rule.status == 'to_be_deleted':
+                self.deleteFlowrule(flow_rule, updated_nffg, graph_id)
+                        
+        # Delete VNFs
+        for vnf in updated_nffg.vnfs[:]:
+            if vnf.status == 'to_be_deleted':
+                self.deleteVNF(vnf, updated_nffg, graph_id)              
+            else:
+                # Delete ports
+                for port in vnf.ports[:]:
+                    if port.status == 'to_be_deleted':
+                        self.deletePort(port, graph_id)
+                        
+        # Delete end-point and end-point resources
+        for endpoint in updated_nffg.end_points[:]:
+            if endpoint.status == 'to_be_deleted':
+                self.deleteEndpoint(endpoint, updated_nffg)
+                Graph().deleteEndpoint(endpoint.id, graph_id)
+                Graph().deleteEndpointResourceAndResources(endpoint.db_id)
+                  
+        # Delete unused networks and subnets
+        self.deleteUnusedNetworksAndSubnets()  
         
+    def deleteFlowrule(self, flowrule, nf_fg, graph_id):    
+        flows = Graph().getFlowRule(graph_id, flowrule.id)
+        for flow in flows:
+            if flow.type == "external" and flow.status == "complete":
+                if flow.table_id is None:
+                    flow.table_id = 0
+                ODL().deleteFlow(self.odlendpoint, self.odlusername, self.odlpassword, flow.node_id, flow.internal_id, flow.table_id)
+                Graph().deleteFlowRule(flow.id)
+        Graph().deleteFlowRule(flowrule.db_id)
+        nf_fg.flow_rules.remove(flowrule)                
+                        
     def delete(self, nf_fg_id):
         session = Session().get_active_user_session_by_nf_fg_id(nf_fg_id, error_aware=False)
         logging.debug("Deleting session: "+str(session.id))
@@ -392,7 +444,7 @@ class OpenstackOrchestratorController(object):
             else:
                 for port in vnf.listPort:
                     if port.status == "new":
-                        self.addPorttoVNF(port, vnf, nf_fg)
+                        self.addPortToVNF(port, vnf, nf_fg)
         
         for endpoint in profile_graph.endpoints.values():
             if endpoint.status == "new":
@@ -443,7 +495,9 @@ class OpenstackOrchestratorController(object):
                         self.processFlowrule(profile_graph, graph_id, flowrule)
                         
     def processFlowrule(self, profile_graph, graph_id, flowrule):
-        #TODO: check priority
+        if flowrule.priority > 16382:
+            logging.warning("Flowrule priority cannot be greater than 16382 because it could break the "+ INTEGRATION_BRIDGE + " operation")
+            flowrule.priority = 16382
         tmp1 = flowrule.match.port_in.split(':',2)
         port1_type = tmp1[0]
         port1_id = tmp1[1]
@@ -659,12 +713,14 @@ class OpenstackOrchestratorController(object):
         #TODO: image location, location, type and availability_zone missing
         Graph().setVNFInternalID(nf_fg.db_id, vnf.id, vnf.OSid, 'complete')
     
-    def deleteServer(self, vnf, nf_fg):
+    def deleteVNF(self, vnf, nf_fg, graph_id):
         Nova().deleteServer(self.novaEndpoint, self.token.get_token(), vnf.internal_id)
-        Graph().deleteFlowRuleFromVNF(vnf.db_id)
-        Graph().deleteVNFNetworks(self.graph_id, vnf.db_id)     
-        Graph().deletePort(None, self.graph_id, vnf.db_id)
-        Graph().deleteVNF(vnf.id, self.graph_id)
+        #Graph().deleteFlowRuleFromVNF(vnf.db_id)
+        #Graph().deleteVNFNetworks(graph_id, vnf.db_id)
+        #Graph().deletePort(None, graph_id, vnf.db_id)
+        for port in vnf.ports[:]:
+            self.deletePort(port, graph_id)        
+        Graph().deleteVNF(vnf.id, graph_id)
         nf_fg.vnfs.remove(vnf)
     
     def createPort(self, port, vnf, nf_fg):
@@ -679,40 +735,25 @@ class OpenstackOrchestratorController(object):
             Graph().setPortInternalID(nf_fg.db_id, nf_fg.getVNF(vnf.id).db_id, port.id, port_internal_id, port.status, port_type='openstack')
             Graph().setOSNetwork(port.net, port.id, nf_fg.getVNF(vnf.id).db_id, port_internal_id, nf_fg.db_id)##,  vlan_id = port.vlan)
     
-    def deletePort(self, vnf, port, nf_fg): 
-        if port.status == 'to_be_deleted':
-            Neutron().deletePort(self.neutronEndpoint, self.token.get_token(), port.internal_id)
-            Graph().deleteFlowspecFromPort(port.id)
-            p = Graph().getPortFromInternalID(port.internal_id, self.graph_id)
-            Graph().deleteNetwork(p.os_network_id)
-            Graph().deletePort(port.db_id, self.graph_id)
-        else:
-            # Delete flow-rules associated to that port
-            for flowrule in nf_fg.getFlowRulesSendingTrafficFromPort(vnf.id, port.id):
-                if flowrule.status == 'to_be_deleted':
-                    Neutron().deletePort(self.neutronEndpoint, self.token.get_token(), port.internal_id)                                
-                    p = Graph().getPortFromInternalID(port.internal_id, self.graph_id)
-                    Graph().deleteNetwork(p.os_network_id)
-                    Graph().deletePort(port.db_id, self.graph_id)
-                    port.status = 'new'
-            '''        
-            for flowrule in nf_fg.getFlowRulesSendingTrafficToPort(vnf.id, port.id):
-                if flowrule.status == 'to_be_deleted':
-                    #check se endpoint o altra vnf per cancellare eventualmetne il flusso o la network sull'altra porta
-                    Graph().deleteFlowRule(flowrule.db_id) # toglila
-                    """
-                    Neutron().deletePort(self.neutronEndpoint, self.token.get_token(), port.internal_id)                                
-                    Graph().deleteFlowRule(flowrule.db_id)
-                    p = Graph().getPortFromInternalID(port.internal_id)
-                    Graph().deleteNetwork(p.os_network_id)
-                    Graph().deletePort(port.db_id, self.graph_id)   
-                    """                
-                    nf_fg.flow_rules.remove(flowrule)
-                    #port.status = 'new'                    
-            '''
+    def deletePort(self, port, graph_id):
+        Neutron().deletePort(self.neutronEndpoint, self.token.get_token(), port.internal_id)
+        #Graph().deleteFlowspecFromPort(port.id)
+        #p = Graph().getPortFromInternalID(port.internal_id, graph_id)
+        #Graph().deleteNetwork(p.os_network_id)
+        Graph().deletePort(port.db_id, graph_id)
+        # TODO: remove port from vnf
+
+    def deleteUnusedNetworksAndSubnets(self):
+        unused_networks_ref = Graph().getUnusedNetworks()
+        for unused_network_ref in unused_networks_ref:
+            subnet_id = Graph().getSubnet(unused_network_ref.id).id
+            Neutron().deleteSubNet(self.neutronEndpoint, self.token.get_token(), subnet_id)
+            Graph().deleteSubnet(unused_network_ref.id)
+            Neutron().deleteNetwork(self.neutronEndpoint, self.token.get_token(), unused_network_ref.id)
+            Graph().deleteNetwork(unused_network_ref.id)                    
                 
-    def addPorttoVNF(self, port, vnf, nf_fg):
-        vms = Graph().getVNFs(self.graph_id)
+    def addPortToVNF(self, port, vnf, nf_fg):
+        vms = Graph().getVNFs(nf_fg.db_id)
         for vm in vms:
             if vm.graph_vnf_id == vnf.id:
                 self.createPort(port, vnf, nf_fg)

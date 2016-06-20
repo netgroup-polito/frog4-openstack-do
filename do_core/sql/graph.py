@@ -453,11 +453,11 @@ class Graph(object):
                     
                     # Add end-point resources
                     # End-point attached to something that is not another graph
-                    if "interface" in endpoint.type or endpoint.type == "vlan":
+                    if "interface" in endpoint.type or endpoint.type == "vlan" or endpoint.type == "internal":
                         port_ref = PortModel(id=self.port_id, graph_port_id = endpoint.interface, graph_id=nffg.db_id, 
-                                             internal_id=endpoint.interface, name=endpoint.interface, location=endpoint.node,
-                                             virtual_switch=endpoint.switch_id, vlan_id=endpoint.vlan_id, creation_date=datetime.datetime.now(), 
-                                             last_update=datetime.datetime.now())
+                                             internal_id=endpoint.interface, name=endpoint.interface, location=endpoint.node_id,
+                                             virtual_switch=endpoint.node_id, vlan_id=endpoint.vlan_id, internal_group=endpoint.internal_group, 
+                                             creation_date=datetime.datetime.now(), last_update=datetime.datetime.now())
                         session.add(port_ref)
                         endpoint_resource_ref = EndpointResourceModel(endpoint_id=endpoint.db_id,
                                               resource_type='port',
@@ -624,6 +624,10 @@ class Graph(object):
     def getFlowRules(self, graph_id):
         session = get_session()
         return session.query(FlowRuleModel).filter_by(graph_id = graph_id).all()
+
+    def getFlowRule(self, graph_id, flowrule_id):
+        session = get_session()
+        return session.query(FlowRuleModel).filter_by(graph_id = graph_id).filter_by(graph_flow_rule_id = flowrule_id).all()
     
     def getVNFs(self, graph_id):
         session = get_session()

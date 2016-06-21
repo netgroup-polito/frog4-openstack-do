@@ -9,14 +9,14 @@ First, you need to install all the required ubuntu packages. For this, please fo
 		sudo pip3 install --upgrade falcon requests gunicorn jsonschema pymysql
 
 #### Clone the code
-Now you have to clone this repository _and_ all the submodules. Submodules include components that are part of the orchestrator but that are being developed in different repositories. This lead to the necessity to clone them as well in the right folders. For this, please follow the steps below:
+Now you have to clone this repository _and_ all the submodules. Submodules include components that are part of the domain orchestrator but that are being developed in different repositories. This lead to the necessity to clone them as well in the right folders. For this, please follow the steps below:
 
         git clone https://github.com/netgroup-polito/frog4-openstack-do.git
         cd frog4-openstack-do
         git submodule init && git submodule update
 
 #### DoubleDecker
-The frog4-orchestrator uses the [DoubleDecker](https://github.com/Acreo/DoubleDecker) messaging system to communicate with the other components of the FROG4 architecture. In order to launch the frog4-openstack-do you need to install DoubleDecker.
+The frog4-openstack-do uses the [DoubleDecker](https://github.com/Acreo/DoubleDecker) messaging system to communicate with the other components of the FROG4 architecture. In order to launch the frog4-openstack-do you need to install DoubleDecker.
 	
 		$ git clone https://github.com/Acreo/DoubleDecker
 		$ cd DobuleDecker/python/
@@ -39,7 +39,7 @@ The FROG4 OpenStack Domain Orchestrator uses a local mySQL database that has to 
         mysql> GRANT ALL PRIVILEGES ON openstack_orchestrator.* TO 'orchestrator'@'%' IDENTIFIED BY 'ORCH_DBPASS';	
         mysql> exit;
     
-- Create tables in the orchestrator db (all the initialization parameters are stored in the ``db.sql`` file):
+- Create tables in the domain orchestrator db (all the initialization parameters are stored in the ``db.sql`` file):
     
         mysql -u orchestrator -p -Dopenstack_orchestrator < db.sql
 
@@ -49,8 +49,8 @@ The FROG4 OpenStack Domain Orchestrator uses a local mySQL database that has to 
         # Mysql DB
         connection = mysql+pymysql://orchestrator:ORCH_DBPASS@127.0.0.1/openstack_orchestrator
         
-#### Run the orchestrator
-You can launch the orchestrator by executing the following script in the orchestrator root folder, optionally specifying the configuration file (example: conf/config.ini):
+#### Run the domain orchestrator
+You can launch this domain orchestrator by executing the following script in the domain orchestrator root folder, optionally specifying the configuration file (example: conf/config.ini):
         
         python3 gunicorn.py [--d conf-file]
 

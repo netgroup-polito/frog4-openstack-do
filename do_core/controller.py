@@ -133,43 +133,6 @@ class OpenstackOrchestratorController(object):
             raise ex
         
         return session.id
-
-    def openstackResourcesControlledDeletion(self, updated_nffg, graph_id):
-        # Delete FlowRules
-        for flow_rule in updated_nffg.flow_rules[:]:
-            if flow_rule.status == 'to_be_deleted':
-                self.deleteFlowrule(flow_rule, updated_nffg, graph_id)
-                        
-        # Delete VNFs
-        for vnf in updated_nffg.vnfs[:]:
-            if vnf.status == 'to_be_deleted':
-                self.deleteVNF(vnf, updated_nffg, graph_id)              
-            else:
-                # Delete ports
-                for port in vnf.ports[:]:
-                    if port.status == 'to_be_deleted':
-                        self.deletePort(port, graph_id)
-                        
-        # Delete end-point and end-point resources
-        for endpoint in updated_nffg.end_points[:]:
-            if endpoint.status == 'to_be_deleted':
-                self.deleteEndpoint(endpoint, updated_nffg)
-                Graph().deleteEndpoint(endpoint.id, graph_id)
-                Graph().deleteEndpointResourceAndResources(endpoint.db_id)
-                  
-        # Delete unused networks and subnets
-        self.deleteUnusedNetworksAndSubnets()  
-        
-    def deleteFlowrule(self, flowrule, nf_fg, graph_id):    
-        flows = Graph().getFlowRule(graph_id, flowrule.id)
-        for flow in flows:
-            if flow.type == "external" and flow.status == "complete":
-                if flow.table_id is None:
-                    flow.table_id = 0
-                ODL().deleteFlow(self.odlendpoint, self.odlusername, self.odlpassword, flow.node_id, flow.internal_id, flow.table_id)
-                Graph().deleteFlowRule(flow.id)
-        Graph().deleteFlowRule(flowrule.db_id)
-        nf_fg.flow_rules.remove(flowrule)                
                         
     def delete(self, nf_fg_id):
         session = Session().get_active_user_session_by_nf_fg_id(nf_fg_id, error_aware=False)
@@ -317,7 +280,44 @@ class OpenstackOrchestratorController(object):
             Neutron().deleteSubNet(self.neutronEndpoint, token_id, subnet.id)
         networks = Graph().getNetworks(graph_id)               
         for network in networks:
-            Neutron().deleteNetwork(self.neutronEndpoint, token_id, network.id) 
+            Neutron().deleteNetwork(self.neutronEndpoint, token_id, network.id)
+            
+    def openstackResourcesControlledDeletion(self, updated_nffg, graph_id):
+        # Delete FlowRules
+        for flow_rule in updated_nffg.flow_rules[:]:
+            if flow_rule.status == 'to_be_deleted':
+                self.deleteFlowrule(flow_rule, updated_nffg, graph_id)
+                        
+        # Delete VNFs
+        for vnf in updated_nffg.vnfs[:]:
+            if vnf.status == 'to_be_deleted':
+                self.deleteVNF(vnf, updated_nffg, graph_id)              
+            else:
+                # Delete ports
+                for port in vnf.ports[:]:
+                    if port.status == 'to_be_deleted':
+                        self.deletePort(port, graph_id)
+                        
+        # Delete end-point and end-point resources
+        for endpoint in updated_nffg.end_points[:]:
+            if endpoint.status == 'to_be_deleted':
+                self.deleteEndpoint(endpoint, updated_nffg)
+                Graph().deleteEndpoint(endpoint.id, graph_id)
+                Graph().deleteEndpointResourceAndResources(endpoint.db_id)
+                  
+        # Delete unused networks and subnets
+        self.deleteUnusedNetworksAndSubnets()  
+        
+    def deleteFlowrule(self, flowrule, nf_fg, graph_id):    
+        flows = Graph().getFlowRule(graph_id, flowrule.id)
+        for flow in flows:
+            if flow.type == "external" and flow.status == "complete":
+                if flow.table_id is None:
+                    flow.table_id = 0
+                ODL().deleteFlow(self.odlendpoint, self.odlusername, self.odlpassword, flow.node_id, flow.internal_id, flow.table_id)
+                Graph().deleteFlowRule(flow.id)
+        Graph().deleteFlowRule(flowrule.db_id)
+        nf_fg.flow_rules.remove(flowrule)            
     
     def deleteEndpoints(self, nffg):
         for endpoint in nffg.end_points[:]:
@@ -357,7 +357,6 @@ class OpenstackOrchestratorController(object):
             self.ovsdb.deleteBridge(ovs_id, internal_bridge_id)
             logging.debug("Deleting internal bridge: "+str(internal_bridge_id))
 
-            
     def instantiateEndpoints(self, nffg):
         for end_point in nffg.end_points[:]:
             if end_point.status == 'new' or end_point.status == 'to_be_updated':
@@ -478,7 +477,6 @@ class OpenstackOrchestratorController(object):
             if flowrule.status =='new':
                 self.instantiateFlowrule(profile_graph, graph_id, flowrule)
                 
-    
     def instantiateFlowrule(self, profile_graph, graph_id, flowrule):
         if flowrule.match.port_in is not None:
             tmp1 = flowrule.match.port_in.split(':')

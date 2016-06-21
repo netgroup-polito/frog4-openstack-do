@@ -26,7 +26,7 @@ Now you can follow the instruction provided in that folder. You can choose to in
 In this way the frog4-openstack-do will use the DoubleDecker sources in his folder, otherwise it will use the installed version, if present.
 
 #### Modify the configuration parameters
-For this, you need to modify the [config/default-config.ini](config/default-config.ini) file according to your preferences.
+For this, you need to modify the [config/default-config.ini](config/default-config.ini) file according to your preferences and your configuration. This guide assumes that OpenStack and the SDN controller already installed and correctly configured. For general guidelines refer to the [README_OPENSTACK](README_OPENSTACK.md) file.
 
 #### Create database
 The FROG4 OpenStack Domain Orchestrator uses a local mySQL database that has to be created and initialized by executing the steps below.

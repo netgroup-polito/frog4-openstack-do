@@ -1,9 +1,7 @@
 '''
-Created on Jun 20, 2015
-
 @author: fabiomignini
+@author: stefanopetrangeli
 '''
-#from exceptions import Exception 
 from sqlalchemy import Column, VARCHAR, Boolean, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from do_core.sql.sql_server import get_session

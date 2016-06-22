@@ -1,7 +1,6 @@
 '''
-Created on Oct 1, 2014
-
 @author: fabiomignini
+@author: stefanopetrangeli
 '''
 from sqlalchemy import Column, DateTime, func, VARCHAR, Text, not_, desc
 from do_core.sql.sql_server import get_session

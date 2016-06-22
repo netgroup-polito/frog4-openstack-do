@@ -6,10 +6,8 @@ Created on 03 giu 2016
 
 from do_core.rest import ODL
 from do_core.exception import OVSDBNodeNotFound, BridgeNotFound, PortNotFound
-from do_core.config import Configuration
 import json, logging
 
-##INTEGRATION_BRIDGE = Configuration().INTEGRATION_BRIDGE
 
 class OVSDB(object):
     def __init__(self, odl_endpoint, odl_username, odl_password, ovs_id = None):
@@ -65,7 +63,7 @@ class OVSDB(object):
     
     def getPortUUID(self, ovs_id, port_name): 
         bridges = ODL().getOVSDBTopology(self.odlendpoint, self.odlusername, self.odlpassword)
-        json_object = json.loads(bridges)['topology'][0]['node']
+        ports = json.loads(bridges)['topology'][0]['node']
         for attribute, value in ports.iteritems():    
             if value['name'] == port_name:
                 return attribute

@@ -42,10 +42,10 @@ class Configuration(object, metaclass=Singleton):
 
             self._TOKEN_EXPIRATION = config.get('authentication','token_expiration')
             
-            if config.has_option('networks', 'openstack_networks'):
-                self._OPENSTACK_NETWORKS = [e.strip() for e in config.get('networks', 'openstack_networks').split(',')]
+            if config.has_option('networks', 'jolnet_networks'):
+                self._JOLNET_NETWORKS = [e.strip() for e in config.get('networks', 'jolnet_networks').split(',')]
             else:
-                self._OPENSTACK_NETWORKS = None
+                self._JOLNET_NETWORKS = None
 
             if config.has_option('odl', 'address'):
                 self._ODL_ADDRESS = config.get('odl','address')
@@ -73,7 +73,6 @@ class Configuration(object, metaclass=Singleton):
             self._BROKER_ADDRESS = config.get('doubledecker','broker_address')
             self._DD_KEYFILE = config.get('doubledecker','dd_keyfile')
 
-            #self._DEFAULT_PRIORITY = config.get('flowrule', "default_priority")
             self._TEMPLATE_SOURCE = config.get('templates','source')
             if config.has_option('templates', 'path'):
                 self._TEMPLATE_PATH = config.get('templates','path')
@@ -100,8 +99,8 @@ class Configuration(object, metaclass=Singleton):
         return self._TOKEN_EXPIRATION
     
     @property
-    def OPENSTACK_NETWORKS(self):
-        return self._OPENSTACK_NETWORKS  
+    def JOLNET_NETWORKS(self):
+        return self._JOLNET_NETWORKS  
     
     @property
     def DOMAIN_DESCRIPTION_TOPIC(self):
@@ -142,11 +141,7 @@ class Configuration(object, metaclass=Singleton):
     @property
     def TEMPLATE_REPOSITORY_URL(self):
         return self._TEMPLATE_REPOSITORY_URL
-    """
-    @property
-    def DEFAULT_PRIORITY(self):
-        return self._DEFAULT_PRIORITY
-    """
+
     @property
     def ORCH_IP(self):
         return self._ORCH_IP

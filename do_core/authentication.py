@@ -124,6 +124,4 @@ class KeystoneAuthentication(object):
         '''
         Return the access token to authenticate to the OpenStack services
         '''
-        if IDENTITY_API_VERSION == 2:
-            return self.tokendata['access']['token']['id']
         return self.token

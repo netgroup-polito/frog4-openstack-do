@@ -1,7 +1,6 @@
 '''
-Created on 18 set 2015
-
-@author: Andrea
+@author: AndreaVida
+@author: stefanopetrangeli
 '''
 
 from sqlalchemy import Column, VARCHAR

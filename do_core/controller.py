@@ -20,7 +20,7 @@ from nffg_library.nffg import FlowRule
 
 OPENSTACK_IP = Configuration().OPENSTACK_IP
 DEBUG_MODE = Configuration().DEBUG_MODE
-OPENSTACK_NETWORKS = Configuration().OPENSTACK_NETWORKS
+JOLNET_NETWORKS = Configuration().JOLNET_NETWORKS
 INGRESS_SWITCH = Configuration().INGRESS_SWITCH
 EXIT_SWITCH = Configuration().EXIT_SWITCH
 INTEGRATION_BRIDGE= Configuration().INTEGRATION_BRIDGE
@@ -35,6 +35,7 @@ class OpenstackOrchestratorController(object):
                 credentials to get Keystone token for the user
         '''
         self.userdata = user_data
+        # Num_net needed to create networks and subnets with different names
         self.num_net = 0
               
     def getAuthTokenAndEndpoints(self):
@@ -49,7 +50,7 @@ class OpenstackOrchestratorController(object):
         self.odlendpoint = "http://" + Configuration().ODL_ADDRESS
         self.odlusername = Configuration().ODL_USERNAME
         self.odlpassword = Configuration().ODL_PASSWORD
-        self.ovsdb = OVSDB (self.odlendpoint, self.odlusername, self.odlpassword)
+        self.ovsdb = OVSDB(self.odlendpoint, self.odlusername, self.odlpassword)
         
     def get(self, nffg_id):
         session = Session().get_active_user_session_by_nf_fg_id(nffg_id, error_aware=False)
@@ -110,7 +111,7 @@ class OpenstackOrchestratorController(object):
         graph_id = graphs_ref[0].id
 
         updated_nffg = old_nf_fg.diff(nf_fg)
-        logging.debug("Diff: "+updated_nffg.getJSON(True))
+        logging.debug("Diff: "+updated_nffg.getJSON(extended=True))
                 
         try:
             self.openstackResourcesControlledDeletion(updated_nffg, graph_id)
@@ -369,14 +370,8 @@ class OpenstackOrchestratorController(object):
             self.manageExitEndpoint(nffg, end_point)
         elif end_point.type == "internal":
             self.manageInternalEndpoint(nffg, end_point)
-        """
-        elif 'gre' in end_point.type:
-            raise NotImplementedError()
-        elif  'internal' in end_point.type:
-            # TODO: Set the flow-rule of the end-point as 'shall_not_be_installed'
-            # TODO: Delete the following line
-            self.deleteEndPointConnection(nffg, end_point)
-        """
+        # TODO: handle other types of endpoint
+
     def manageIngressEndpoint(self, ingress_end_point):
         port_to_int_bridge = "to-" + INTEGRATION_BRIDGE
         port_to_ingress_switch =  "to-" + INGRESS_SWITCH
@@ -451,6 +446,7 @@ class OpenstackOrchestratorController(object):
                                 
     def instantiateFlowrules(self, profile_graph, graph_id):
         # Wait for VNFs being up, then instantiate flows
+        logging.info ("The domain orchestrator is waiting for VNF(s) being up. This may took some minutes...")
         while True:
             complete = True
             resources_status = {}
@@ -466,6 +462,8 @@ class OpenstackOrchestratorController(object):
             for vnf in vnfs:
                 resources_status['vnfs'][vnf.internal_id] = Nova().getServerStatus(self.novaEndpoint, self.token.get_token(), vnf.internal_id)
             for value in resources_status['vnfs'].values():
+                if value == 'ERROR':
+                    raise StackError("At least one VNF is in ERROR state")
                 if value != 'ACTIVE':
                     complete = False
             if complete is True:
@@ -505,6 +503,9 @@ class OpenstackOrchestratorController(object):
             for action in flowrule.actions:
                 if action.output is not None and action.output.split(':')[0] == "endpoint":
                     endpoint = profile_graph.endpoints[action.output.split(':')[1]]
+                    # Flows that involve vlan endpoints are not installed because they are used only in JOLNet
+                    if endpoint.type == 'vlan':
+                        return
                     break
             match = Match(flowrule.match)
             
@@ -532,6 +533,9 @@ class OpenstackOrchestratorController(object):
             
         elif port1_type == "endpoint":
             endpoint = profile_graph.endpoints[port1_id]
+            if endpoint.type == 'vlan':
+                # Flows that involve vlan endpoints are not installed because they are used only in JOLNet
+                return
             for action in flowrule.actions:
                 if action.output is not None:
                     output = action.output.split(':',2)
@@ -583,17 +587,15 @@ class OpenstackOrchestratorController(object):
         profile_graph = ProfileGraph()
         profile_graph.setId(nf_fg.id)
         
-        #Remove from the pool of available openstack networks vlans used in endpoints of type vlan
-        """
+        #Remove from the pool of available JOLnet networks vlans used in endpoints of type vlan
         for endpoint in nf_fg.end_points:
             if endpoint.type == 'vlan':
                 if endpoint.vlan_id.isdigit() is False:
                     name = endpoint.vlan_id
                 else:                                
                     name = "exp" + str(endpoint.vlan_id)
-                if name in OPENSTACK_NETWORKS:              
-                    OPENSTACK_NETWORKS.remove(name)
-        """
+                if name in JOLNET_NETWORKS:              
+                    JOLNET_NETWORKS.remove(name)
         
         for vnf in nf_fg.vnfs:
             nf = self.buildVNF(vnf)
@@ -626,8 +628,6 @@ class OpenstackOrchestratorController(object):
             status = "new"
         else:
             status = vnf.status
-        #TODO: add image location to the database
-        ##return VNF(vnf.id, vnf, image, flavor, vnf.availability_zone, status)
         return VNF(vnf.id, vnf, image, flavor, Configuration().AVAILABILITY_ZONE, status)
     
     def setVNFNetwork(self, nf_fg, nf, profile_graph):
@@ -636,38 +636,23 @@ class OpenstackOrchestratorController(object):
                 for flowrule in nf_fg.getFlowRulesSendingTrafficFromPort(nf.id, port.id):
                     logging.debug(flowrule.getDict(True))
                     if flowrule.match is not None:
-                        #check if vlan_id is constrained by a local or a remote endpoint
+                        # WARNING: VLAN endpoint is used only in JOLNet environment. Do not use other types of endpoint in JOLNet  
+                        #check if vlan_id is constrained by an endpoint
                         for action in flowrule.actions:
                             if action.output is not None:
                                 if action.output.split(":")[0] == 'endpoint':
                                     endp = nf_fg.getEndPoint(action.output.split(":")[1])
-                                    """
-                                    if endp.type =='vlan' or endp.remote_endpoint_id is not None:
-                                        if endp.type =='vlan':
-                                            net_vlan = endp.vlan_id
-                                        '''
-                                        elif endp.remote_endpoint_id is not None:
-                                            remote_endp = Graph().get_nffg(endp.remote_endpoint_id.split(':')[0]).getEndPoint(endp.remote_endpoint_id.split(':')[1])
-                                            net_vlan = remote_endp.vlan_id
-                                        '''
+                                    if endp.type =='vlan':
+                                        net_vlan = endp.vlan_id
                                         if net_vlan.isdigit() is False:
                                             name = net_vlan
                                         else:                                
                                             name = "exp" + str(net_vlan)
                                         net_id = self.getNetworkIdfromName(name)
-                                        port.setNetwork(net_id, net_vlan)                           
-                                        networks = Graph().getAllNetworks()
-                                        found = False
-                                        for net in networks:
-                                            if net.id == net_id:
-                                                found = True
-                                                break
-                                        if found is False:
-                                            Graph().addOSNetwork(net_id, name, 'complete', net_vlan)
-                                        if name in OPENSTACK_NETWORKS:              
-                                            OPENSTACK_NETWORKS.remove(name)                                                   
+                                        port.net = net_id
+                                        if name in JOLNET_NETWORKS:              
+                                            JOLNET_NETWORKS.remove(name)                                                   
                                         break
-                                    """
                         #Choose a network arbitrarily (no constraints)    
                         if port.net is None:
                             name, net = self.getNetwork(port, profile_graph)
@@ -685,7 +670,7 @@ class OpenstackOrchestratorController(object):
     
     def getOpenFlowSwitchID(self, ovs_id, bridge_name):
         '''
-        Get the OF_switch_id (e.g, openflow:64647512366924) of the bridge requested
+        Gets the OF_switch_id (e.g, openflow:64647512366924) of the bridge requested
         params:
             ovs_id:
                 Openvswitch ID where the bridge is located
@@ -759,7 +744,7 @@ class OpenstackOrchestratorController(object):
                 break;
             
     def getNetwork(self, port, profile_graph):
-        if OPENSTACK_NETWORKS is not None:
+        if JOLNET_NETWORKS is not None:
             return self.getUnusedNetwork()
         # Create network
         new_net = Net('fakenet_'+str(self.num_net))
@@ -781,7 +766,7 @@ class OpenstackOrchestratorController(object):
         '''
         Finds an unused openstack network
         '''
-        for network in OPENSTACK_NETWORKS[:]:
+        for network in JOLNET_NETWORKS[:]:
             network_free = True
             net_id = self.getNetworkIdfromName(network)
             if net_id is not None:
@@ -791,11 +776,11 @@ class OpenstackOrchestratorController(object):
                 for port in ports:
                     if port['network_id'] == net_id:
                         network_free = False
-                        OPENSTACK_NETWORKS.remove(network)
+                        JOLNET_NETWORKS.remove(network)
                         break
                 if network_free is False:
                     continue
-                OPENSTACK_NETWORKS.remove(network)
+                JOLNET_NETWORKS.remove(network)
                 return network, net_id
         return None
     

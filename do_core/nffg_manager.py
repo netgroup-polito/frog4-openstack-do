@@ -8,6 +8,7 @@ from vnf_template_library.validator import ValidateTemplate
 from do_core.config import Configuration
 from nffg_library.validator import ValidateNF_FG
 from do_core.exception import VNFRepositoryError, WrongConfigurationFile
+from nffg_library.nffg import NF_FG
 
 TEMPLATE_SOURCE = Configuration().TEMPLATE_SOURCE
 TEMPLATE_REPOSITORY_URL = Configuration().TEMPLATE_REPOSITORY_URL

@@ -339,7 +339,8 @@ The following operations have to be performed on the controller and on the compu
         service neutron-server start
 
 
-### Prototype configuration
+### Prototype configuration (compute node only)
+
 - Configure the external bridge
     - Add an L2 bridge that manage the exit traffic (it is necessary to deliver the traffic coming from the internet to the NF-FG graph of the correct user, which happens when multiple users are connected to your compute node):
 

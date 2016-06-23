@@ -52,7 +52,7 @@ The FROG4 OpenStack Domain Orchestrator uses a local mySQL database that has to 
 #### Run the domain orchestrator
 You can launch this domain orchestrator by executing the following script in the domain orchestrator root folder, optionally specifying the configuration file (example: conf/config.ini):
         
-        python3 gunicorn.py [--d conf-file]
+        ./start_orchestrator.sh [--d conf-file]
 
 #### Useful scripts
 You can find some helpful scripts inside the [scripts](scripts) folder. For example, if you need to clean all sessions and graphs currently stored in the database, you can launch the following script in the domain orchestrator root folder:

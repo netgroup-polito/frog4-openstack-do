@@ -476,19 +476,31 @@ class OpenstackOrchestratorController(object):
                 self.instantiateFlowrule(profile_graph, graph_id, flowrule)
                 
     def instantiateFlowrule(self, profile_graph, graph_id, flowrule):
+        # Only flowrules that involve a VNF and an endpoint are installed
         if flowrule.match.port_in is not None:
             tmp1 = flowrule.match.port_in.split(':')
             port1_type = tmp1[0]
+            port1_id = tmp1[1]
             if port1_type == 'vnf':
                 if len(flowrule.actions) > 1 or flowrule.actions[0].output is None:
-                    raise GraphError("Multiple actions or action different from output are not supported between vnfs")
-                for action in flowrule.actions:
-                    if action.output is not None and action.output.split(':')[0] == "endpoint":
+                    raise GraphError("Multiple actions or action different from output are not supported")
+                action = flowrule.actions[0]
+                if action.output.split(':')[0] == "endpoint":
+                    endpoint = profile_graph.endpoints[action.output.split(':')[1]]
+                    if endpoint.type != 'vlan':
+                        # Flows that involve vlan endpoints are not installed because they are used only in JOLNet
                         self.processFlowrule(profile_graph, graph_id, flowrule)
+                else:
+                    # output is vnf: vnf to vnf
+                    if flowrule.match.isComplex() is True:
+                        logging.warning("Complex flowrules between VNFs are not supported and the additional fields have been discarded. You can specify only 'port_in' in match")
             elif port1_type == 'endpoint':
-                for action in flowrule.actions:
-                    if action.output is not None and action.output.split(':')[0] == "vnf":
-                        self.processFlowrule(profile_graph, graph_id, flowrule)
+                endpoint = profile_graph.endpoints[port1_id]
+                if endpoint.type != 'vlan':
+                    # Flows that involve vlan endpoints are not installed because they are used only in JOLNet
+                    for action in flowrule.actions:
+                        if action.output is not None and action.output.split(':')[0] == "vnf":
+                            self.processFlowrule(profile_graph, graph_id, flowrule)
                         
     def processFlowrule(self, profile_graph, graph_id, flowrule):
         if flowrule.priority > 16382:
@@ -503,9 +515,6 @@ class OpenstackOrchestratorController(object):
             for action in flowrule.actions:
                 if action.output is not None and action.output.split(':')[0] == "endpoint":
                     endpoint = profile_graph.endpoints[action.output.split(':')[1]]
-                    # Flows that involve vlan endpoints are not installed because they are used only in JOLNet
-                    if endpoint.type == 'vlan':
-                        return
                     break
             match = Match(flowrule.match)
             
@@ -533,9 +542,6 @@ class OpenstackOrchestratorController(object):
             
         elif port1_type == "endpoint":
             endpoint = profile_graph.endpoints[port1_id]
-            if endpoint.type == 'vlan':
-                # Flows that involve vlan endpoints are not installed because they are used only in JOLNet
-                return
             for action in flowrule.actions:
                 if action.output is not None:
                     output = action.output.split(':',2)

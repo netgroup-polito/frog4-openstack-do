@@ -16,6 +16,8 @@ from do_core.resources import ProfileGraph, VNF, Net, Match, Action, Flow
 from do_core.nffg_manager import NFFG_Manager
 from do_core.ovsdb import OVSDB
 from nffg_library.nffg import FlowRule
+from do_core.messaging import Messaging
+from do_core.resource_description import ResourceDescription
 
 
 OPENSTACK_IP = Configuration().OPENSTACK_IP
@@ -24,6 +26,7 @@ JOLNET_NETWORKS = Configuration().JOLNET_NETWORKS
 INGRESS_SWITCH = Configuration().INGRESS_SWITCH
 EXIT_SWITCH = Configuration().EXIT_SWITCH
 INTEGRATION_BRIDGE= Configuration().INTEGRATION_BRIDGE
+DOMAIN_DESCRIPTION_FILE = Configuration().DOMAIN_DESCRIPTION_FILE
 
 
 class OpenstackOrchestratorController(object):
@@ -37,6 +40,7 @@ class OpenstackOrchestratorController(object):
         self.userdata = user_data
         # Num_net needed to create networks and subnets with different names
         self.num_net = 0
+        self.res_desc = ResourceDescription(DOMAIN_DESCRIPTION_FILE)
               
     def getAuthTokenAndEndpoints(self):
         self.node_endpoint = OPENSTACK_IP # IP Openstack
@@ -77,7 +81,7 @@ class OpenstackOrchestratorController(object):
             Session().inizializeSession(session_id, self.userdata.getUserID(), nf_fg.id, nf_fg.name)
             
             self.getAuthTokenAndEndpoints()
-            
+
             logging.debug("Forwarding graph: " + nf_fg.getJSON(extended=True))
             try:
                 self.prepareNFFG(nf_fg)
@@ -91,8 +95,10 @@ class OpenstackOrchestratorController(object):
                 self.instantiateFlowrules(profile_graph, nf_fg.db_id)
                 logging.debug("Graph " + profile_graph.id + " correctly instantiated!")
                 
-                Session().updateStatus(session_id, 'complete')
+                self.res_desc.writeToFile()
+                Messaging().publishDomainDescription()
                 
+                Session().updateStatus(session_id, 'complete')
             except Exception as ex:
                 logging.exception(ex)
                 #Graph().delete_graph(nffg.db_id)
@@ -124,6 +130,9 @@ class OpenstackOrchestratorController(object):
             self.openstackResourcesInstantiation(profile_graph, updated_nffg)
             self.instantiateFlowrules(profile_graph, graph_id)
             
+            self.res_desc.writeToFile()
+            Messaging().publishDomainDescription()
+
             logging.debug("Graph " + old_nf_fg.id + " correctly updated!")
             Session().updateStatus(session.id, 'complete')
         
@@ -149,6 +158,9 @@ class OpenstackOrchestratorController(object):
             try:
                 self.openstackResourcesDeletion(graph_ref.id)
                 self.deleteEndpoints(nffg)
+
+                self.res_desc.writeToFile()
+                Messaging().publishDomainDescription()
             except Exception as ex:
                 logging.exception(ex)
                 Session().set_error(session.id)
@@ -329,8 +341,9 @@ class OpenstackOrchestratorController(object):
         if endpoint.type == 'interface-out':
             self.deleteExitEndpoint(nffg, endpoint)
         elif endpoint.type == 'internal':
-            self.deleteInternalEndpoint(nffg, endpoint)        
-        nffg.end_points.remove(endpoint)         
+            self.deleteInternalEndpoint(nffg, endpoint)
+        self.res_desc.deleteEndpoint(endpoint)
+        nffg.end_points.remove(endpoint)
         
     def deleteExitEndpoint(self, nffg, endpoint):
         port_to_int_bridge = nffg.id + "-" + endpoint.id + "-to-" + INTEGRATION_BRIDGE
@@ -370,6 +383,8 @@ class OpenstackOrchestratorController(object):
             self.manageExitEndpoint(nffg, end_point)
         elif end_point.type == "internal":
             self.manageInternalEndpoint(nffg, end_point)
+
+        self.res_desc.addEndpoint(end_point)
         # TODO: handle other types of endpoint
 
     def manageIngressEndpoint(self, ingress_end_point):

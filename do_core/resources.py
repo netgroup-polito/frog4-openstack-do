@@ -149,7 +149,7 @@ class Action(object):
             elif action.controller is True:
                 self.setControllerAction()
             elif action.set_vlan_id is not None:
-                self.setSwapVlanAction(action.set_vlan_id)
+                self.setVlanAction(action.set_vlan_id)
             elif action.pop_vlan is True:
                 self.setPopVlanAction()
             elif action.set_ethernet_src_address is not None:
@@ -192,7 +192,12 @@ class Action(object):
         self.max_length = max_length
         self.priority = 10
     
-    def setSwapVlanAction(self, vlan_id):
+    def setPushVlanAction(self, ethernet_type=33024):
+        self.action_type = "push-vlan-action"
+        self.ethernet_type = ethernet_type
+        self.priority = 2
+            
+    def setVlanAction(self, vlan_id):
         '''
         Define this action as a vlan tag swapping action
         Args:
@@ -222,6 +227,9 @@ class Action(object):
             j_action['set-dl-dst-action']['address'] = self.address
         if self.action_type == "pop-vlan-action":
             j_action['pop-vlan-action'] = {}
+        elif self.action_type == "push-vlan-action":
+            j_action['push-vlan-action'] = {}
+            j_action['push-vlan-action']['ethernet-type'] = self.ethernet_type          
         elif self.action_type == "drop-action":
             j_action['drop-action'] = {}
         elif self.action_type == "output-action":

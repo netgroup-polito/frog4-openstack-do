@@ -22,6 +22,7 @@ from do_core.resource_description import ResourceDescription
 
 OPENSTACK_IP = Configuration().OPENSTACK_IP
 DEBUG_MODE = Configuration().DEBUG_MODE
+JOLNET_MODE = Configuration().JOLNET_MODE
 JOLNET_NETWORKS = Configuration().JOLNET_NETWORKS
 INGRESS_SWITCH = Configuration().INGRESS_SWITCH
 EXIT_SWITCH = Configuration().EXIT_SWITCH
@@ -338,7 +339,7 @@ class OpenstackOrchestratorController(object):
           
     def deleteEndpoint(self, endpoint, nffg):
         logging.debug("Deleting endpoint type: "+str(endpoint.type))
-        if endpoint.type == 'interface-out':
+        if endpoint.type == 'interface-out' or endpoint.type == 'vlan':
             self.deleteExitEndpoint(nffg, endpoint)
         elif endpoint.type == 'internal':
             self.deleteInternalEndpoint(nffg, endpoint)
@@ -379,7 +380,7 @@ class OpenstackOrchestratorController(object):
     def instantiateEndPoint(self, nffg, end_point):
         if end_point.type == "interface":
             self.manageIngressEndpoint(end_point)
-        elif end_point.type == 'interface-out':
+        elif end_point.type == 'interface-out' or end_point.type == 'vlan':
             self.manageExitEndpoint(nffg, end_point)
         elif end_point.type == "internal":
             self.manageInternalEndpoint(nffg, end_point)
@@ -460,62 +461,57 @@ class OpenstackOrchestratorController(object):
                 Graph().setEndpointLocation(nf_fg.db_id, endpoint.id, endpoint.interface)
                                 
     def instantiateFlowrules(self, profile_graph, graph_id):
-        # Wait for VNFs being up, then instantiate flows
-        logging.info ("The domain orchestrator is waiting for VNF(s) being up. This may took some minutes...")
-        while True:
-            complete = True
-            resources_status = {}
-            resources_status['vnfs'] = {}
-            """
-            resources_status['ports'] = {}
-            ports = Graph().getPorts(graph_id)
-            for port in ports:
-                if port.type == 'openstack':
-                    resources_status['ports'][port.id] = Neutron().getPortStatus(self.neutronEndpoint, self.token.get_token(), port.internal_id)
-            """
-            vnfs = Graph().getVNFs(graph_id)
-            for vnf in vnfs:
-                resources_status['vnfs'][vnf.internal_id] = Nova().getServerStatus(self.novaEndpoint, self.token.get_token(), vnf.internal_id)
-            for value in resources_status['vnfs'].values():
-                if value == 'ERROR':
-                    raise StackError("At least one VNF is in ERROR state")
-                if value != 'ACTIVE':
-                    complete = False
-            if complete is True:
-                break
-            time.sleep(1)
-            #print("sleep")
-        
-        for flowrule in profile_graph.flowrules.values():
-            if flowrule.status =='new':
-                self.instantiateFlowrule(profile_graph, graph_id, flowrule)
+        if JOLNET_MODE is False:
+            # Wait for VNFs being up, then instantiate flows
+            logging.info ("The domain orchestrator is waiting for VNF(s) being up. This may took some minutes...")
+            while True:
+                complete = True
+                resources_status = {}
+                resources_status['vnfs'] = {}
+                """
+                resources_status['ports'] = {}
+                ports = Graph().getPorts(graph_id)
+                for port in ports:
+                    if port.type == 'openstack':
+                        resources_status['ports'][port.id] = Neutron().getPortStatus(self.neutronEndpoint, self.token.get_token(), port.internal_id)
+                """
+                vnfs = Graph().getVNFs(graph_id)
+                for vnf in vnfs:
+                    resources_status['vnfs'][vnf.internal_id] = Nova().getServerStatus(self.novaEndpoint, self.token.get_token(), vnf.internal_id)
+                for value in resources_status['vnfs'].values():
+                    if value == 'ERROR':
+                        raise StackError("At least one VNF is in ERROR state")
+                    if value != 'ACTIVE':
+                        complete = False
+                if complete is True:
+                    break
+                time.sleep(1)
+                #print("sleep")
+            
+            for flowrule in profile_graph.flowrules.values():
+                if flowrule.status =='new':
+                    self.instantiateFlowrule(profile_graph, graph_id, flowrule)
                 
     def instantiateFlowrule(self, profile_graph, graph_id, flowrule):
         # Only flowrules that involve a VNF and an endpoint are installed
         if flowrule.match.port_in is not None:
             tmp1 = flowrule.match.port_in.split(':')
             port1_type = tmp1[0]
-            port1_id = tmp1[1]
+            #port1_id = tmp1[1]
             if port1_type == 'vnf':
                 if len(flowrule.actions) > 1 or flowrule.actions[0].output is None:
                     raise GraphError("Multiple actions or action different from output are not supported")
                 action = flowrule.actions[0]
                 if action.output.split(':')[0] == "endpoint":
-                    endpoint = profile_graph.endpoints[action.output.split(':')[1]]
-                    if endpoint.type != 'vlan':
-                        # Flows that involve vlan endpoints are not installed because they are used only in JOLNet
-                        self.processFlowrule(profile_graph, graph_id, flowrule)
+                    self.processFlowrule(profile_graph, graph_id, flowrule)
                 else:
                     # output is vnf: vnf to vnf
                     if flowrule.match.isComplex() is True:
                         logging.warning("Complex flowrules between VNFs are not supported and the additional fields have been discarded. You can specify only 'port_in' in match")
             elif port1_type == 'endpoint':
-                endpoint = profile_graph.endpoints[port1_id]
-                if endpoint.type != 'vlan':
-                    # Flows that involve vlan endpoints are not installed because they are used only in JOLNet
-                    for action in flowrule.actions:
-                        if action.output is not None and action.output.split(':')[0] == "vnf":
-                            self.processFlowrule(profile_graph, graph_id, flowrule)
+                for action in flowrule.actions:
+                    if action.output is not None and action.output.split(':')[0] == "vnf":
+                        self.processFlowrule(profile_graph, graph_id, flowrule)
                         
     def processFlowrule(self, profile_graph, graph_id, flowrule):
         if flowrule.priority > 16382:
@@ -540,13 +536,22 @@ class OpenstackOrchestratorController(object):
                 vnf_port.of_port = str(input_port)
             match.setInputMatch(vnf_port.of_port)
 
+            actions = []
+            if endpoint.type == "vlan":
+                push_vlan_action = Action()
+                push_vlan_action.setPushVlanAction()
+                set_vlan_action = Action()
+                set_vlan_action.setVlanAction(endpoint.vlan_id)
+                actions.append(push_vlan_action)
+                actions.append(set_vlan_action)
             output_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, endpoint.interface_internal_id)
-            action = Action()
-            action.setOutputAction(str(output_port), 65535)
+            output_action = Action()
+            output_action.setOutputAction(str(output_port), 65535)
+            actions.append(output_action)
             
             flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
             
-            flowj = Flow(flow_id, table_id=110, priority=16385+flowrule.priority, actions=[action], match=match)
+            flowj = Flow(flow_id, table_id=110, priority=16385+flowrule.priority, actions=actions, match=match)
             json_req = flowj.getJSON()
             #print (json_req)
 
@@ -572,15 +577,23 @@ class OpenstackOrchestratorController(object):
 
             input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, endpoint.interface_internal_id) 
             match.setInputMatch(str(input_port))
+            
+            actions = []
+            if endpoint.type == "vlan":
+                match.setVlanMatch(endpoint.vlan_id)
+                pop_vlan_action = Action()
+                pop_vlan_action.setPopVlanAction()
+                actions.append(pop_vlan_action)
             if vnf_port.of_port is None:
                 output_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_port.internal_id[0:8])
                 vnf_port.of_port = str(output_port)
-            action = Action()
-            action.setOutputAction(vnf_port.of_port, 65535)
+            output_action = Action()
+            output_action.setOutputAction(vnf_port.of_port, 65535)
+            actions.append(output_action)
             
             flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
 
-            flowj = Flow(flow_id, table_id=110, priority=16385+flowrule.priority, actions=[action], match=match)
+            flowj = Flow(flow_id, table_id=110, priority=16385+flowrule.priority, actions=actions, match=match)
             json_req = flowj.getJSON()
             #print (json_req)
 
@@ -610,7 +623,7 @@ class OpenstackOrchestratorController(object):
         
         #Remove from the pool of available JOLnet networks vlans used in endpoints of type vlan
         for endpoint in nf_fg.end_points:
-            if endpoint.type == 'vlan':
+            if endpoint.type == 'vlan' and JOLNET_MODE is True:
                 if endpoint.vlan_id.isdigit() is False:
                     name = endpoint.vlan_id
                 else:                                
@@ -657,23 +670,23 @@ class OpenstackOrchestratorController(object):
                 for flowrule in nf_fg.getFlowRulesSendingTrafficFromPort(nf.id, port.id):
                     logging.debug(flowrule.getDict(True))
                     if flowrule.match is not None:
-                        # WARNING: VLAN endpoint is used only in JOLNet environment. Do not use other types of endpoint in JOLNet  
-                        #check if vlan_id is constrained by an endpoint
-                        for action in flowrule.actions:
-                            if action.output is not None:
-                                if action.output.split(":")[0] == 'endpoint':
-                                    endp = nf_fg.getEndPoint(action.output.split(":")[1])
-                                    if endp.type =='vlan':
-                                        net_vlan = endp.vlan_id
-                                        if net_vlan.isdigit() is False:
-                                            name = net_vlan
-                                        else:                                
-                                            name = "exp" + str(net_vlan)
-                                        net_id = self.getNetworkIdfromName(name)
-                                        port.net = net_id
-                                        if name in JOLNET_NETWORKS:              
-                                            JOLNET_NETWORKS.remove(name)                                                   
-                                        break
+                        #check if vlan_id is constrained by an endpoint (only JOLNet)
+                        if JOLNET_MODE is True:
+                            for action in flowrule.actions:
+                                if action.output is not None:
+                                    if action.output.split(":")[0] == 'endpoint':
+                                        endp = nf_fg.getEndPoint(action.output.split(":")[1])
+                                        if endp.type =='vlan':
+                                            net_vlan = endp.vlan_id
+                                            if net_vlan.isdigit() is False:
+                                                name = net_vlan
+                                            else:                                
+                                                name = "exp" + str(net_vlan)
+                                            net_id = self.getNetworkIdfromName(name)
+                                            port.net = net_id
+                                            if name in JOLNET_NETWORKS:              
+                                                JOLNET_NETWORKS.remove(name)                                                   
+                                            break
                         #Choose a network arbitrarily (no constraints)    
                         if port.net is None:
                             name, net = self.getNetwork(port, profile_graph)
@@ -765,7 +778,7 @@ class OpenstackOrchestratorController(object):
                 break;
             
     def getNetwork(self, port, profile_graph):
-        if JOLNET_NETWORKS is not None:
+        if JOLNET_MODE is True:
             return self.getUnusedNetwork()
         # Create network
         new_net = Net('fakenet_'+str(self.num_net))

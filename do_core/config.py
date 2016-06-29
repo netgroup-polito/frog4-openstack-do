@@ -42,7 +42,9 @@ class Configuration(object, metaclass=Singleton):
 
             self._TOKEN_EXPIRATION = config.get('authentication','token_expiration')
             
-            if config.has_option('networks', 'jolnet_networks'):
+            self._JOLNET_MODE = config.getboolean('jolnet', 'jolnet_mode')
+
+            if self._JOLNET_MODE is True:
                 self._JOLNET_NETWORKS = [e.strip() for e in config.get('networks', 'jolnet_networks').split(',')]
             else:
                 self._JOLNET_NETWORKS = None
@@ -100,7 +102,7 @@ class Configuration(object, metaclass=Singleton):
     
     @property
     def JOLNET_NETWORKS(self):
-        return self._JOLNET_NETWORKS  
+        return self._JOLNET_NETWORKS
     
     @property
     def DOMAIN_DESCRIPTION_TOPIC(self):
@@ -129,7 +131,11 @@ class Configuration(object, metaclass=Singleton):
     @property
     def DEBUG_MODE(self):
         return self._DEBUG_MODE
-    
+
+    @property
+    def JOLNET_MODE(self):
+        return self._JOLNET_MODE
+
     @property
     def TEMPLATE_SOURCE(self):
         return self._TEMPLATE_SOURCE

@@ -3,8 +3,8 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Creato il: Giu 20, 2016 alle 10:03
--- Versione del server: 5.7.12-0ubuntu1
+-- Creato il: Giu 30, 2016 alle 10:27
+-- Versione del server: 5.7.12-0ubuntu1.1
 -- Versione PHP: 7.0.4-7ubuntu2.1
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -179,6 +179,8 @@ CREATE TABLE `port` (
   `mac_address` varchar(64) DEFAULT NULL,
   `ipv4_address` varchar(64) DEFAULT NULL,
   `vlan_id` varchar(64) DEFAULT NULL,
+  `local_ip` varchar(64) DEFAULT NULL,
+  `remote_ip` varchar(64) DEFAULT NULL,
   `gre_key` varchar(64) DEFAULT NULL,
   `internal_group` varchar(64) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -245,8 +247,8 @@ CREATE TABLE `user` (
 INSERT INTO `user` (`id`, `name`, `password`, `token`, `token_timestamp`, `tenant_id`, `mail`) VALUES
 ('0', 'demo', 'stack', NULL, NULL, '0', NULL),
 ('1', 'isp', 'stack', NULL, NULL, '1', NULL),
-('2', 'admin', 'stack', '9cad079720b6411e896405ced48256bc', '1465907351', '2', NULL),
-('3', 'AdminPoliTO', 'AdminPoliTO', 'abcdd', '1463384189', '1', NULL);
+('2', 'admin', 'stackstack', 'abc', '1466673553', '2', NULL),
+('3', 'AdminPoliTO', 'AdminPoliTO', 'abcdd', '1466673553', '1', NULL);
 
 -- --------------------------------------------------------
 

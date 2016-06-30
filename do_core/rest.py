@@ -100,7 +100,7 @@ class ODL(object):
         resp.raise_for_status()
         return resp.text
     
-    def createPort(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name, port_name, patch_peer):
+    def createPort(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name, port_name):
         '''
         Args:
             name:
@@ -111,22 +111,59 @@ class ODL(object):
         headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
         bridge_path = self.odl_bridge_path % (ovs_id, bridge_name)
         url = odl_endpoint +self.odl_config_topology_path + self.odl_ovsdb_topology+ self.odl_node + urllib.parse.quote(bridge_path, safe='') + self.odl_port_path + port_name
-        if patch_peer is None:
-            body = {"network-topology:termination-point": [{"ovsdb:name": port_name,"tp-id": port_name}]}
-        else:
-            body= {"network-topology:termination-point": [{
-              "ovsdb:options": [
-                {
-                  "ovsdb:option": "peer",
-                  "ovsdb:value" : patch_peer
-                }
-              ],
-              "ovsdb:name": port_name,
-              "ovsdb:interface-type": "ovsdb:interface-type-patch",
-              "tp-id": port_name}]}
+        body = {"network-topology:termination-point": [{"ovsdb:name": port_name,"tp-id": port_name}]}
         resp = requests.put(url, data=json.dumps(body), headers=headers, auth=(odl_user, odl_pass))
         resp.raise_for_status()
         return resp.text
+    
+    def createPatchPort(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name, port_name, patch_peer):
+        '''
+        '''
+        headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
+        bridge_path = self.odl_bridge_path % (ovs_id, bridge_name)
+        url = odl_endpoint +self.odl_config_topology_path + self.odl_ovsdb_topology+ self.odl_node + urllib.parse.quote(bridge_path, safe='') + self.odl_port_path + port_name
+        body= {"network-topology:termination-point": [{
+          "ovsdb:options": [
+            {
+              "ovsdb:option": "peer",
+              "ovsdb:value" : patch_peer
+            }
+          ],
+          "ovsdb:name": port_name,
+          "ovsdb:interface-type": "ovsdb:interface-type-patch",
+          "tp-id": port_name}]}
+        resp = requests.put(url, data=json.dumps(body), headers=headers, auth=(odl_user, odl_pass))
+        resp.raise_for_status()
+        return resp.text
+    
+    def createGrePort(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name, port_name, gre_local_ip, gre_remote_ip, gre_key):
+        '''
+        '''
+        headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
+        bridge_path = self.odl_bridge_path % (ovs_id, bridge_name)
+        url = odl_endpoint +self.odl_config_topology_path + self.odl_ovsdb_topology+ self.odl_node + urllib.parse.quote(bridge_path, safe='') + self.odl_port_path + port_name
+        body= {"network-topology:termination-point": [{
+          "ovsdb:options": [
+            {
+              "ovsdb:option": "local_ip",
+              "ovsdb:value" : gre_local_ip
+            },
+            {
+              "ovsdb:option": "remote_ip",
+              "ovsdb:value" : gre_remote_ip
+            },        
+            {
+              "ovsdb:option": "key",
+              "ovsdb:value" : gre_key
+            },                                               
+                            
+          ],
+          "ovsdb:name": port_name,
+          "ovsdb:interface-type": "ovsdb:interface-type-gre",
+          "tp-id": port_name}]}
+        resp = requests.put(url, data=json.dumps(body), headers=headers, auth=(odl_user, odl_pass))
+        resp.raise_for_status()
+        return resp.text    
     
     def deletePort(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name, port_name):
         '''

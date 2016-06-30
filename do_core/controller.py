@@ -343,6 +343,8 @@ class OpenstackOrchestratorController(object):
             self.deleteExitEndpoint(nffg, endpoint)
         elif endpoint.type == 'internal':
             self.deleteInternalEndpoint(nffg, endpoint)
+        elif endpoint.type == 'gre-tunnel':
+            self.deleteGreEndpoint(nffg, endpoint)            
         self.res_desc.deleteEndpoint(endpoint)
         nffg.end_points.remove(endpoint)
         
@@ -354,7 +356,7 @@ class OpenstackOrchestratorController(object):
         
         self.ovsdb.deletePort(ovs_id, port_to_int_bridge, EXIT_SWITCH)
         
-        self.ovsdb.deletePort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE)     
+        self.ovsdb.deletePort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE)  
             
     def deleteInternalEndpoint(self, nffg, endpoint):
         internal_bridge_id = "br-internal-"+ str(endpoint.internal_group)
@@ -371,6 +373,13 @@ class OpenstackOrchestratorController(object):
             # There are no ports belonging to this bridge so we can delete it
             self.ovsdb.deleteBridge(ovs_id, internal_bridge_id)
             logging.debug("Deleting internal bridge: "+str(internal_bridge_id))
+            
+    def deleteGreEndpoint(self, nffg, endpoint):
+        gre_port = nffg.id + "-gre-" + endpoint.id
+        
+        ovs_id = self.ovsdb.getOVSId(endpoint.local_ip)
+                
+        self.ovsdb.deletePort(ovs_id, gre_port, INTEGRATION_BRIDGE)             
 
     def instantiateEndpoints(self, nffg):
         for end_point in nffg.end_points[:]:
@@ -384,9 +393,10 @@ class OpenstackOrchestratorController(object):
             self.manageExitEndpoint(nffg, end_point)
         elif end_point.type == "internal":
             self.manageInternalEndpoint(nffg, end_point)
+        elif end_point.type == "gre-tunnel":
+            self.manageGreEndpoint(nffg, end_point)            
 
         self.res_desc.addEndpoint(end_point)
-        # TODO: handle other types of endpoint
 
     def manageIngressEndpoint(self, ingress_end_point):
         port_to_int_bridge = "to-" + INTEGRATION_BRIDGE
@@ -398,9 +408,9 @@ class OpenstackOrchestratorController(object):
         
         self.ovsdb.createPort(ovs_id, ingress_end_point.interface, INGRESS_SWITCH)
         
-        self.ovsdb.createPort(ovs_id, port_to_int_bridge, INGRESS_SWITCH, patch_peer = port_to_ingress_switch)
+        self.ovsdb.createPatchPort(ovs_id, port_to_int_bridge, INGRESS_SWITCH, patch_peer = port_to_ingress_switch)
         
-        self.ovsdb.createPort(ovs_id, port_to_ingress_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)
+        self.ovsdb.createPatchPort(ovs_id, port_to_ingress_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)
         
         ingress_end_point.interface_internal_id = port_to_ingress_switch
                 
@@ -414,9 +424,9 @@ class OpenstackOrchestratorController(object):
         
         self.ovsdb.createPort(ovs_id, egress_end_point.interface, EXIT_SWITCH)
                 
-        self.ovsdb.createPort(ovs_id, port_to_int_bridge, EXIT_SWITCH, patch_peer = port_to_exit_switch)
+        self.ovsdb.createPatchPort(ovs_id, port_to_int_bridge, EXIT_SWITCH, patch_peer = port_to_exit_switch)
         
-        self.ovsdb.createPort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)        
+        self.ovsdb.createPatchPort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)        
         
         egress_end_point.interface_internal_id =  port_to_exit_switch
         
@@ -431,11 +441,22 @@ class OpenstackOrchestratorController(object):
 
         self.ovsdb.createBridge(ovs_id, internal_bridge_id)
                 
-        self.ovsdb.createPort(ovs_id, port_to_integration_bridge, internal_bridge_id, patch_peer = port_to_internal_bridge)
+        self.ovsdb.createPatchPort(ovs_id, port_to_integration_bridge, internal_bridge_id, patch_peer = port_to_internal_bridge)
         
-        self.ovsdb.createPort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE, patch_peer = port_to_integration_bridge)
+        self.ovsdb.createPatchPort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE, patch_peer = port_to_integration_bridge)
         
         internal_end_point.interface_internal_id = port_to_internal_bridge
+        
+    def manageGreEndpoint(self, nffg, gre_end_point):
+        gre_port = nffg.id + "-gre-" + gre_end_point.id
+        
+        ovs_id = self.ovsdb.getOVSId(gre_end_point.local_ip)
+                        
+        self.ovsdb.createGrePort(ovs_id, gre_port, INTEGRATION_BRIDGE, gre_end_point.local_ip, gre_end_point.remote_ip, gre_end_point.gre_key)
+        
+        gre_end_point.interface_internal_id = gre_port
+        # This is needed in order to uniform the processFlowrule function regardless of the endpoint type
+        gre_end_point.node_id = gre_end_point.local_ip
         
     def openstackResourcesInstantiation(self, profile_graph, nf_fg):
         for network in profile_graph.networks:

@@ -64,7 +64,7 @@ class OVSDB(object):
     def getPortUUID(self, ovs_id, port_name): 
         bridges = ODL().getOVSDBTopology(self.odlendpoint, self.odlusername, self.odlpassword)
         ports = json.loads(bridges)['topology'][0]['node']
-        for attribute, value in ports.iteritems():    
+        for attribute, value in ports.iteritems():
             if value['name'] == port_name:
                 return attribute
     """      
@@ -91,10 +91,18 @@ class OVSDB(object):
         termination_points = json.loads(bridge_data)['node'][0]['termination-point']
         return termination_points
         
-    def createPort(self, ovs_id, port_name, bridge_name, patch_peer = None):
+    def createPort(self, ovs_id, port_name, bridge_name):
         if ODL().getPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name) is None:
-            ODL().createPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name, patch_peer)
+            ODL().createPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name)
     
+    def createPatchPort(self, ovs_id, port_name, bridge_name, patch_peer):
+        if ODL().getPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name) is None:
+            ODL().createPatchPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name, patch_peer)
+    
+    def createGrePort(self, ovs_id, port_name, bridge_name, gre_local_ip, gre_remote_ip, gre_key):
+        if ODL().getPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name) is None:
+            ODL().createGrePort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name, gre_local_ip, gre_remote_ip, gre_key)
+                
     def createBridge(self, ovs_id, bridge_name):
         if ODL().getBridge(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name) is None:
             ODL().createBridge(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name)

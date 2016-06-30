@@ -55,7 +55,7 @@ class PortModel(Base):
     '''
     __tablename__ = 'port'
     attributes = ['id', 'internal_id', 'graph_port_id', 'graph_id', 'name','vnf_id', 'location','type', 'virtual_switch', 'status', 'creation_date','last_update', 'os_network_id',
-                    'mac_address', 'ipv4_address', 'vlan_id','gre_key', 'internal_group']
+                    'mac_address', 'ipv4_address', 'vlan_id', 'local_ip', 'remote_ip', 'gre_key', 'internal_group']
     id = Column(Integer, primary_key=True)
     internal_id = Column(VARCHAR(64)) # id in the infrastructure
     graph_port_id = Column(VARCHAR(64)) # id in the json
@@ -72,6 +72,8 @@ class PortModel(Base):
     mac_address = Column(VARCHAR(64))
     ipv4_address = Column(VARCHAR(64))
     vlan_id = Column(VARCHAR(64))
+    local_ip = Column(VARCHAR(64))
+    remote_ip = Column(VARCHAR(64))        
     gre_key = Column(VARCHAR(64))
     internal_group = Column(VARCHAR(64)) 
     
@@ -298,6 +300,9 @@ class Graph(object):
                     end_point.internal_group = port.internal_group
                     end_point.interface = port.graph_port_id
                     end_point.vlan_id = port.vlan_id
+                    end_point.local_ip = port.local_ip
+                    end_point.remote_ip = port.remote_ip
+                    end_point.gre_key = port.gre_key
         for end_point in nffg.end_points:
             if complete is False and end_point.type == 'shadow':
                 same_end_points = nffg.getEndPointsFromName(end_point.name)
@@ -335,17 +340,18 @@ class Graph(object):
                 
                 # Add end-point resources
                 # End-point attached to something that is not another graph
-                if "interface" in endpoint.type or endpoint.type == "vlan" or endpoint.type == "internal":
-                    port_ref = PortModel(id=self.port_id, graph_port_id = endpoint.interface, graph_id=nffg.db_id, 
-                                         internal_id=endpoint.interface, name=endpoint.interface, location=endpoint.node_id,
-                                         virtual_switch=endpoint.node_id, vlan_id=endpoint.vlan_id, internal_group=endpoint.internal_group, creation_date=datetime.datetime.now(), 
-                                         last_update=datetime.datetime.now())
-                    session.add(port_ref)
-                    endpoint_resource_ref = EndpointResourceModel(endpoint_id=endpoint.db_id,
-                                          resource_type='port',
-                                          resource_id=self.port_id)
-                    session.add(endpoint_resource_ref)
-                    self.port_id = self.port_id + 1
+                #if "interface" in endpoint.type or endpoint.type == "vlan" or endpoint.type == "internal":
+                port_ref = PortModel(id=self.port_id, graph_port_id = endpoint.interface, graph_id=nffg.db_id, 
+                                     internal_id=endpoint.interface, name=endpoint.interface, location=endpoint.node_id,
+                                     virtual_switch=endpoint.node_id, vlan_id=endpoint.vlan_id, internal_group=endpoint.internal_group,
+                                     local_ip=endpoint.local_ip, remote_ip=endpoint.remote_ip, gre_key=endpoint.gre_key,  
+                                     creation_date=datetime.datetime.now(), last_update=datetime.datetime.now())
+                session.add(port_ref)
+                endpoint_resource_ref = EndpointResourceModel(endpoint_id=endpoint.db_id,
+                                      resource_type='port',
+                                      resource_id=self.port_id)
+                session.add(endpoint_resource_ref)
+                self.port_id = self.port_id + 1
   
     def addFlowRule(self, graph_id, flow_rule, nffg):
         session = get_session()
@@ -451,17 +457,18 @@ class Graph(object):
                     
                     # Add end-point resources
                     # End-point attached to something that is not another graph
-                    if "interface" in endpoint.type or endpoint.type == "vlan" or endpoint.type == "internal":
-                        port_ref = PortModel(id=self.port_id, graph_port_id = endpoint.interface, graph_id=nffg.db_id, 
-                                             internal_id=endpoint.interface, name=endpoint.interface, location=endpoint.node_id,
-                                             virtual_switch=endpoint.node_id, vlan_id=endpoint.vlan_id, internal_group=endpoint.internal_group, 
-                                             creation_date=datetime.datetime.now(), last_update=datetime.datetime.now())
-                        session.add(port_ref)
-                        endpoint_resource_ref = EndpointResourceModel(endpoint_id=endpoint.db_id,
-                                              resource_type='port',
-                                              resource_id=self.port_id)
-                        session.add(endpoint_resource_ref)
-                        self.port_id = self.port_id + 1
+                    #if "interface" in endpoint.type or endpoint.type == "vlan" or endpoint.type == "internal":
+                    port_ref = PortModel(id=self.port_id, graph_port_id = endpoint.interface, graph_id=nffg.db_id, 
+                                         internal_id=endpoint.interface, name=endpoint.interface, location=endpoint.node_id,
+                                         virtual_switch=endpoint.node_id, vlan_id=endpoint.vlan_id, internal_group=endpoint.internal_group,
+                                         local_ip=endpoint.local_ip, remote_ip=endpoint.remote_ip, gre_key=endpoint.gre_key,  
+                                         creation_date=datetime.datetime.now(), last_update=datetime.datetime.now())
+                    session.add(port_ref)
+                    endpoint_resource_ref = EndpointResourceModel(endpoint_id=endpoint.db_id,
+                                          resource_type='port',
+                                          resource_id=self.port_id)
+                    session.add(endpoint_resource_ref)
+                    self.port_id = self.port_id + 1
     
     def delete_session(self, session_id):
         session = get_session()

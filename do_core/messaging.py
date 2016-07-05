@@ -79,12 +79,8 @@ class Messaging(object, metaclass=Singleton):
             raise Exception("DD client not registered") from None
         
     def readDomainDescriptionFile(self):
-        try:
-            description_file = open(DOMAIN_DESCRIPTION_FILE,"r")
-            return description_file.read()
-        except IOError:
-            #TODO: raise proper missing file exception
-            raise Exception()
+        description_file = open(DOMAIN_DESCRIPTION_FILE,"r")
+        return description_file.read()
 
     
     

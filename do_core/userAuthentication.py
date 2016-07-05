@@ -33,7 +33,8 @@ class UserAuthentication(object):
     token_expiration = int(Configuration().TOKEN_EXPIRATION)
     
     def authenticateUserFromRESTRequest(self, request):
-        token = request.get_header("X-Auth-Token")  
+        token = request.headers.get("X-Auth-Token")
+        #token = request.get_header("X-Auth-Token")  
         if token is None:
             raise unauthorizedRequest('Token required')
         return self.authenticateUserFromToken(token)

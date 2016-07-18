@@ -9,65 +9,6 @@ Currently this domain orchestrator works with OpenStack Mitaka and OpenDaylight 
 
 This domain orchestrator offers a REST API which is shared among all the domain orchestrators of the FROG4 architecture.
 
-REST interface provides several urls to authenticate, to send/get/delete a graph, to get the status of a graph.
+REST interface provides several urls to authenticate, to send/get/delete a graph and to get the status of a graph. 
 
-#### Basic authentication
-This step is needed to retrieve a token which will be used into all the operative requests. 
-```
-	[POST]
-	Url: '/login'
-	Content-Type: application/json
-	Data: { "username":"admin", "password":"admin" }
-```
-Response is the token:
-```
-	797187d548d937827b53a7e6f3d3ff7fb1ead5d9887480fd71eb97971535bf1d
-```
-
-#### Send a new graph or update an existent graph
-```
-	[PUT]
-	Url: '/NF-FG/12345'
-	X-Auth-Token: 797187d548d937827b53a7e6f3d3ff7fb1ead5d9887480fd71eb97971535bf1d
-	Content-Type: application/json
-	Data: { "forwarding-graph": { "id": "12345", "name": "GraphName", ... } }
-```
-
-#### Get a graph
-```
-	[GET]
-	Url: '/NF-FG/12345'
-	X-Auth-Token: 797187d548d937827b53a7e6f3d3ff7fb1ead5d9887480fd71eb97971535bf1d
-```
-Response:
-```
-	{
-		"forwarding-graph":
-		{
-			"id": "12345", 
-			"name": "GraphName", 
-			...
-		}
-	}
-```
-
-#### Delete a graph
-```
-	[DELETE]
-	Url: '/NF-FG/12345'
-	X-Auth-Token: 797187d548d937827b53a7e6f3d3ff7fb1ead5d9887480fd71eb97971535bf1d
-```
-
-#### Get the status of a graph
-```
-	[GET]
-	Url: '/NF-FG/status/12345'
-	X-Auth-Token: 797187d548d937827b53a7e6f3d3ff7fb1ead5d9887480fd71eb97971535bf1d
-```
-Response:
-```
-	{
-		"percentage_completed": 100,
-		"status": "complete"
-	}
-```
+In order to discover which REST calls are supported you can see the API documentation at the URL {Domain_Orchestrator_Address}/apidocs/index.html once the domain orchestrator is installed and running.

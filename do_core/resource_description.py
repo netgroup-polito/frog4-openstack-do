@@ -4,7 +4,6 @@ Created on 23 giu 2016
 @author: stefanopetrangeli
 '''
 import json, logging
-from json.decoder import JSONDecodeError
 
 class Singleton(type):
     _instances = {}
@@ -24,7 +23,7 @@ class ResourceDescription(object, metaclass=Singleton):
         try:
             description_file = open(self.file,"r")
             self.dict = json.loads(description_file.read())
-        except JSONDecodeError as ex:
+        except ValueError as ex:
             logging.error("Resource description file is not a valid json")
             raise ex
     

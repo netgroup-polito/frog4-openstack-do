@@ -69,9 +69,12 @@ class NFFGStatus(MethodView):
             if request.headers.get("X-Auth-User") is not None:
                 logging.debug("Unauthorized access attempt from user "+request.headers.get("X-Auth-User"))
             logging.debug(err.message)
-            return ("Unauthorized", 401) 
-        except Exception as ex:
-            logging.exception(ex)
+            return ("Unauthorized", 401)
+        except UserTokenExpired as err:
+            logging.exception(err)
+            return (err.message, 401)        
+        except Exception as err:
+            logging.exception(err)
             return ("Contact the admin "+ str(err), 500)
       
 class OpenstackOrchestrator(MethodView):
@@ -123,15 +126,15 @@ class OpenstackOrchestrator(MethodView):
             logging.exception(err.message)
             return (err.message, 404)
         except UserTokenExpired as err:
-            logging.debug("User token is expired")
-            return ("User token expired", 401)       
+            logging.exception(err)
+            return (err.message, 401)       
         except (unauthorizedRequest, UserNotFound) as err:
             if request.headers.get("X-Auth-User") is not None:
                 logging.debug("Unauthorized access attempt from user "+request.headers.get("X-Auth-User"))
             logging.debug(err.message)
             return ("Unauthorized", 401) 
-        except Exception as ex:
-            logging.exception(ex)
+        except Exception as err:
+            logging.exception(err)
             return ("Contact the admin "+ str(err), 500)
     
     def get(self, nffg_id):
@@ -184,15 +187,15 @@ class OpenstackOrchestrator(MethodView):
             logging.exception(err.message)
             return (err.message, 404)
         except UserTokenExpired as err:
-            logging.debug("User token is expired")
-            return ("User token expired", 401)       
+            logging.exception(err)
+            return (err.message, 401)  
         except (unauthorizedRequest, UserNotFound) as err:
             if request.headers.get("X-Auth-User") is not None:
                 logging.debug("Unauthorized access attempt from user "+request.headers.get("X-Auth-User"))
             logging.debug(err.message)
             return ("Unauthorized", 401)   
-        except Exception as ex:
-            logging.exception(ex)
+        except Exception as err:
+            logging.exception(err)
             return ("Contact the admin "+ str(err), 500)
         
     def put(self, nffg_id = None):
@@ -244,8 +247,8 @@ class OpenstackOrchestrator(MethodView):
             logging.exception(err)
             return ("Bad Request", 400)
         except UserTokenExpired as err:
-            logging.debug("User token is expired")
-            return ("User token expired", 401)            
+            logging.exception(err)
+            return (err.message, 401)          
         except (unauthorizedRequest, UserNotFound) as err:
             if request.headers.get("X-Auth-User") is not None:
                 logging.debug("Unauthorized access attempt from user "+request.headers.get("X-Auth-User"))

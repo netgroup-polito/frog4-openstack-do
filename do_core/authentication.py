@@ -7,12 +7,11 @@ Created on Oct 1, 2014
 
 import requests
 import json
-import falcon
 import hashlib
 import logging
 import six
 from do_core.config import Configuration
-from do_core.exception import WrongConfigurationFile
+from do_core.exception import WrongConfigurationFile, unauthorizedRequest
 
 IDENTITY_API_VERSION = Configuration().IDENTITY_API_VERSION
 
@@ -116,7 +115,7 @@ class KeystoneAuthentication(object):
         self.createToken()
         if IDENTITY_API_VERSION == 2:
             if self.tokendata['access']['token']['id'] is None:              
-                raise falcon.HTTPUnauthorized("HTTPUnauthorized", "Token not valid")
+                raise unauthorizedRequest ("HTTPUnauthorized:  Token not valid")
             else:
                 self.token = self.tokendata['access'][ 'token']['id']
 

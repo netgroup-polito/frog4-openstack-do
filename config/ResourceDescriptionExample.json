@@ -1,0 +1,42 @@
+{
+  "frog-domain:informations": {
+    "frog-network-manager:informations": {
+      "openconfig-interfaces:interfaces": {
+        "openconfig-interfaces:interface": [
+          {
+            "config": {
+              "enabled": true,
+              "description": "Compute 122 - eth1",
+              "type": "ethernetCsmacd"
+            },
+            "name": "130.192.225.122/eth1",
+            "openconfig-interfaces:subinterfaces": {
+              "openconfig-interfaces:subinterface": [
+                {
+                  "config": {
+                    "name": "eth1",
+                    "enabled": true
+                  },
+                  "capabilities": {
+                    "gre": true
+                  }
+                }
+              ]
+            },
+            "openconfig-if-ethernet:ethernet": {
+              "frog-neighbor:neighbor": [
+                {
+                  "domain-name": "Internet",
+                  "domain-type": "IP"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "name": "openstack",
+    "type": "OS",
+    "management-address": "130.192.225.107:9200"
+  }
+}

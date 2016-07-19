@@ -27,15 +27,22 @@ class ResourceDescription(object, metaclass=Singleton):
             logging.error("Resource description file is not a valid json")
             raise ex
     
-    def getEndpointDesc(self, if_name):
+    def getEndpointDesc(self, endpoint):
         for endp in self.endpoints:
-            if endp['name'] == if_name:
-                return endp
+            if '/' in endp['name']:
+                tmp = endp['name'].split("/")
+                node_id = tmp[0]
+                if_name = tmp[1]
+                if node_id == endpoint.node_id and if_name == endpoint.interface:
+                    return endp
+            else:
+                if endp['name'] == endpoint.interface:
+                    return endp
         return None
         
     def addEndpoint(self, endpoint):
         if endpoint.type == "vlan":
-            endpoint_desc = self.getEndpointDesc(endpoint.interface)
+            endpoint_desc = self.getEndpointDesc(endpoint)
             vlan = int(endpoint.vlan_id)
             if endpoint_desc is not None and self.supportsVlan(endpoint_desc):
                 vlan_list = self.getFreeVlans(endpoint_desc)
@@ -46,7 +53,7 @@ class ResourceDescription(object, metaclass=Singleton):
 
     def deleteEndpoint(self, endpoint):
         if endpoint.type == "vlan":
-            endpoint_desc = self.getEndpointDesc(endpoint.interface)
+            endpoint_desc = self.getEndpointDesc(endpoint)
             vlan = int(endpoint.vlan_id)
             if endpoint_desc is not None and self.supportsVlan(endpoint_desc):
                 vlan_list = self.getFreeVlans(endpoint_desc)
@@ -108,4 +115,3 @@ class ResourceDescription(object, metaclass=Singleton):
     def writeToFile(self):
         description_file = open(self.file,"w")
         description_file.write(json.dumps(self.dict, indent=2, separators=(',', ': ')))
-   

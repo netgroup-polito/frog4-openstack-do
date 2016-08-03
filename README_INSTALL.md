@@ -19,8 +19,10 @@ Now you have to clone this repository _and_ all the submodules. Submodules inclu
 The frog4-openstack-do uses the [DoubleDecker](https://github.com/Acreo/DoubleDecker) messaging system to communicate with the other components of the FROG4 architecture. In order to launch the frog4-openstack-do you need to install DoubleDecker, if it is not already installed.
 	
 		$ git clone https://github.com/Acreo/DoubleDecker
+		$ cd DobuleDecker 
 		$ git checkout 93ffede
-		$ cd DobuleDecker/python/
+		$ cd python
+		 
 Now you can follow the instruction provided in that folder. You can choose to install it in your system (recommended if you are installing also other frog4 components) or simply copy the doubledecker folder in the [do_core](do_core) folder with the following command:
 
 		cp -R doubledecker/ {domain_orchestrator_root}/do_core/

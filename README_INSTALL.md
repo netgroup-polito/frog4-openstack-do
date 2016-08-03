@@ -16,17 +16,20 @@ Now you have to clone this repository _and_ all the submodules. Submodules inclu
         git submodule init && git submodule update
 
 #### DoubleDecker
-The frog4-openstack-do uses the [DoubleDecker](https://github.com/Acreo/DoubleDecker) messaging system to communicate with the other components of the FROG4 architecture. In order to launch the frog4-openstack-do you need to install DoubleDecker.
+The frog4-openstack-do uses the [DoubleDecker](https://github.com/Acreo/DoubleDecker) messaging system to communicate with the other components of the FROG4 architecture. In order to launch the frog4-openstack-do you need to install DoubleDecker, if it is not already installed.
 	
 		$ git clone https://github.com/Acreo/DoubleDecker
+		$ git checkout 93ffede
 		$ cd DobuleDecker/python/
-Now you can follow the instruction provided in that folder. You can choose to install it in your system or simply copy the doubledecker folder in the [do_core](do_core) folder with the following command:
+Now you can follow the instruction provided in that folder. You can choose to install it in your system (recommended if you are installing also other frog4 components) or simply copy the doubledecker folder in the [do_core](do_core) folder with the following command:
 
 		cp -R doubledecker/ {domain_orchestrator_root}/do_core/
 In this way the frog4-openstack-do will use the DoubleDecker sources in his folder, otherwise it will use the installed version, if present.
 
 #### Modify the configuration parameters
-For this, you need to modify the [config/default-config.ini](config/default-config.ini) file according to your preferences and your configuration. This guide assumes OpenStack and the SDN controller already installed and correctly configured. For general guidelines refer to the [README_OPENSTACK](README_OPENSTACK.md) file.
+For this, you need to modify the [config/default-config.ini](config/default-config.ini) file according to your preferences and your configuration. 
+It is very important to correctly set the templates section, in order to retrieve templates in a local directory or by means of a [VNF-Repository] (https://github.com/netgroup-polito/VNF-repository).
+This guide assumes OpenStack and the SDN controller already installed and correctly configured. For general guidelines refer to the [README_OPENSTACK](README_OPENSTACK.md) file.
 
 #### Create database
 The FROG4 OpenStack Domain Orchestrator uses a local mySQL database that has to be created and initialized by executing the steps below.

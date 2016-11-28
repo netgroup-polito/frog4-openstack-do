@@ -363,6 +363,7 @@ class Port(object):
         self.VNFId = VNFId
         self.internal_id = None
         self.status = status
+        self.mac = portTemplate.mac
         self.type = portTemplate.type
         self.device_id = None
         self.of_port = None
@@ -396,6 +397,8 @@ class Port(object):
         resource['port']['network_id'] = self.net
         if self.device_id is not None:
             resource['port']['device_id'] = self.device_id
+        if self.mac is not None:
+            resource['port']['mac_address'] = self.mac
         return resource
 
 class VNF(object):

@@ -516,7 +516,7 @@ class OpenstackOrchestratorController(object):
     def instantiateFlowrule(self, profile_graph, graph_id, flowrule):
         # Only flowrules that involve a VNF and an endpoint are installed
         if flowrule.match.port_in is not None:
-            tmp1 = flowrule.match.port_in.split(':')
+            tmp1 = flowrule.match.port_in.split(':',1)
             port1_type = tmp1[0]
             #port1_id = tmp1[1]
             if port1_type == 'vnf':
@@ -526,6 +526,7 @@ class OpenstackOrchestratorController(object):
                 if action.output.split(':')[0] == "endpoint":
                     self.processFlowrule(profile_graph, graph_id, flowrule)
                 else:
+                    self.processFlowrule(profile_graph, graph_id, flowrule)
                     # output is vnf: vnf to vnf
                     if flowrule.match.isComplex() is True:
                         logging.warning("Complex flowrules between VNFs are not supported and the additional fields have been discarded. You can specify only 'port_in' in match")
@@ -542,33 +543,64 @@ class OpenstackOrchestratorController(object):
         port1_type = tmp1[0]
         port1_id = tmp1[1]
         if port1_type == "vnf":
+            vnf_portOut = None
             vnf = profile_graph.functions[port1_id]
             vnf_port = vnf.ports[tmp1[2]]
+            endpoint = None
             for action in flowrule.actions:
                 if action.output is not None and action.output.split(':')[0] == "endpoint":
                     endpoint = profile_graph.endpoints[action.output.split(':')[1]]
                     break
+                if action.output is not None and action.output.split(':')[0] == "vnf":
+                    output = action.output.split(':',2)
+                    vnfOut = profile_graph.functions[output[1]]
+                    vnf_portOut = vnfOut.ports[output[2]]
+                    break
+
             match = Match(flowrule.match)
-            
-            ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
-            of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
+            if endpoint is not None:
+                ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+                of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
+            else:
+                ovs_id = self.ovsdb.getOVSId('127.0.0.1')
+                of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
+
             if vnf_port.of_port is None:
                 input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_port.internal_id[0:8])
                 vnf_port.of_port = str(input_port)
             match.setInputMatch(vnf_port.of_port)
 
             actions = []
-            if endpoint.type == "vlan":
+            if endpoint is not None and endpoint.type == "vlan":
                 push_vlan_action = Action()
                 push_vlan_action.setPushVlanAction()
                 set_vlan_action = Action()
                 set_vlan_action.setVlanAction(endpoint.vlan_id)
                 actions.append(push_vlan_action)
                 actions.append(set_vlan_action)
-            output_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, endpoint.interface_internal_id)
-            output_action = Action()
-            output_action.setOutputAction(str(output_port), 65535)
-            actions.append(output_action)
+            if endpoint is not None:
+                output_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, endpoint.interface_internal_id)
+                output_action = Action()
+                output_action.setOutputAction(str(output_port), 65535)
+                actions.append(output_action)
+            else:
+                if vnf_portOut.of_port is None:
+                   out_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_portOut.internal_id[0:8])
+                   vnf_portOut.of_port = str(out_port)
+                output_action = Action()
+                output_action.setOutputAction(vnf_portOut.of_port, 65535)
+                actions.append(output_action)
+
+            flow_id = str(profile_graph.id) + "_in_" + str(flowrule.id) 
+            
+            flowj = Flow(flow_id, table_id=0, priority=16385+flowrule.priority, actions=actions, match=match)
+            json_req = flowj.getJSON()
+
+            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
+            
+            flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)
+            Graph().addFlowRule(graph_id, flow_rule, None)
+
             
             flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
             
@@ -578,7 +610,7 @@ class OpenstackOrchestratorController(object):
 
             ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
             
-            flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=110)  
+            flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=110)
             Graph().addFlowRule(graph_id, flow_rule, None)
             
         elif port1_type == "endpoint":
@@ -614,13 +646,13 @@ class OpenstackOrchestratorController(object):
             
             flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
 
-            flowj = Flow(flow_id, table_id=110, priority=16385+flowrule.priority, actions=actions, match=match)
+            flowj = Flow(flow_id, table_id=0, priority=16385+flowrule.priority, actions=actions, match=match)
             json_req = flowj.getJSON()
             #print (json_req)
 
             ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
             
-            flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=110)  
+            flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)  
             Graph().addFlowRule(graph_id, flow_rule, None)
             
         

@@ -91,13 +91,13 @@ class OVSDB(object):
         termination_points = json.loads(bridge_data)['node'][0]['termination-point']
         return termination_points
         
-    def createPort(self, ovs_id, port_name, bridge_name):
+    def createPort(self, ovs_id, port_name, bridge_name, vlan=None):
         if ODL().getPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name) is None:
-            ODL().createPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name)
+            ODL().createPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name, vlan)
     
-    def createPatchPort(self, ovs_id, port_name, bridge_name, patch_peer):
+    def createPatchPort(self, ovs_id, port_name, bridge_name, patch_peer, vlan=None):
         if ODL().getPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name) is None:
-            ODL().createPatchPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name, patch_peer)
+            ODL().createPatchPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name, patch_peer, vlan)
     
     def createGrePort(self, ovs_id, port_name, bridge_name, gre_local_ip, gre_remote_ip, gre_key):
         if ODL().getPort(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name, port_name) is None:

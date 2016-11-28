@@ -100,7 +100,7 @@ class ODL(object):
         resp.raise_for_status()
         return resp.text
     
-    def createPort(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name, port_name):
+    def createPort(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name, port_name, vlan=None):
         '''
         Args:
             name:
@@ -111,27 +111,45 @@ class ODL(object):
         headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
         bridge_path = self.odl_bridge_path % (ovs_id, bridge_name)
         url = odl_endpoint +self.odl_config_topology_path + self.odl_ovsdb_topology+ self.odl_node + urllib.parse.quote(bridge_path, safe='') + self.odl_port_path + port_name
-        body = {"network-topology:termination-point": [{"ovsdb:name": port_name,"tp-id": port_name}]}
+        if vlan is None:
+           body = {"network-topology:termination-point": [{"ovsdb:name": port_name,"tp-id": port_name}]}
+        else:
+           body = {"network-topology:termination-point": [{"ovsdb:name": port_name,"tp-id": port_name, "ovsdb:vlan-tag": vlan}]}
+
         resp = requests.put(url, data=json.dumps(body), headers=headers, auth=(odl_user, odl_pass))
         resp.raise_for_status()
         return resp.text
     
-    def createPatchPort(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name, port_name, patch_peer):
+    def createPatchPort(self, odl_endpoint, odl_user, odl_pass, ovs_id, bridge_name, port_name, patch_peer,vlan=None):
         '''
         '''
         headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
         bridge_path = self.odl_bridge_path % (ovs_id, bridge_name)
         url = odl_endpoint +self.odl_config_topology_path + self.odl_ovsdb_topology+ self.odl_node + urllib.parse.quote(bridge_path, safe='') + self.odl_port_path + port_name
-        body= {"network-topology:termination-point": [{
-          "ovsdb:options": [
-            {
+        if vlan is not None:
+           body= {"network-topology:termination-point": [{
+             "ovsdb:options": [
+             {
               "ovsdb:option": "peer",
               "ovsdb:value" : patch_peer
-            }
-          ],
-          "ovsdb:name": port_name,
-          "ovsdb:interface-type": "ovsdb:interface-type-patch",
-          "tp-id": port_name}]}
+             }
+             ],
+             "ovsdb:name": port_name,
+             "ovsdb:interface-type": "ovsdb:interface-type-patch",
+             "tp-id": port_name,
+             "ovsdb:vlan-tag": vlan}]}
+        else:
+          body= {"network-topology:termination-point": [{
+             "ovsdb:options": [
+             {
+              "ovsdb:option": "peer",
+              "ovsdb:value" : patch_peer
+             }
+             ],
+             "ovsdb:name": port_name,
+             "ovsdb:interface-type": "ovsdb:interface-type-patch",
+             "tp-id": port_name}]}
+
         resp = requests.put(url, data=json.dumps(body), headers=headers, auth=(odl_user, odl_pass))
         resp.raise_for_status()
         return resp.text

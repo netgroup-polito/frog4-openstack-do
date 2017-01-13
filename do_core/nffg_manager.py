@@ -98,7 +98,7 @@ class NFFG_Manager(object):
             headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
             resp = requests.get(TEMPLATE_REPOSITORY_URL + actual_uri, headers=headers)
             resp.raise_for_status()
-            template_dict = json.loads(json.loads(resp.text))
+            template_dict = resp.json()
             self.stored_templates[uri] = template_dict
             return template_dict
         except Exception as ex:

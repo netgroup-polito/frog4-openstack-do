@@ -56,6 +56,7 @@ class Configuration(object, metaclass=Singleton):
                 
             if config.has_option('odl', 'integration_bridge'):
                 self._INTEGRATION_BRIDGE = config.get('odl','integration_bridge')
+                self._INTEGRATION_BRIDGE_LOCAL_IP = config.get('odl', 'integration_bridge_local_ip')
             if config.has_option('odl', 'exit_switch'):
                 self._EXIT_SWITCH = config.get('odl','exit_switch')
             if config.has_option('odl', 'ingress_switch'):
@@ -203,4 +204,8 @@ class Configuration(object, metaclass=Singleton):
     @property
     def AVAILABILITY_ZONE(self):
         return self._AVAILABILITY_ZONE
+
+    @property
+    def INTEGRATION_BRIDGE_LOCAL_IP(self):
+        return self._INTEGRATION_BRIDGE_LOCAL_IP
     

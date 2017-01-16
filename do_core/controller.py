@@ -28,7 +28,7 @@ INGRESS_SWITCH = Configuration().INGRESS_SWITCH
 EXIT_SWITCH = Configuration().EXIT_SWITCH
 INTEGRATION_BRIDGE= Configuration().INTEGRATION_BRIDGE
 DOMAIN_DESCRIPTION_FILE = Configuration().DOMAIN_DESCRIPTION_FILE
-
+INTEGRATION_BRIDGE_LOCAL_IP = Configuration().INTEGRATION_BRIDGE_LOCAL_IP
 
 class OpenstackOrchestratorController(object):
     def __init__(self, user_data):
@@ -562,7 +562,7 @@ class OpenstackOrchestratorController(object):
                 ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
                 of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
             else:
-                ovs_id = self.ovsdb.getOVSId('127.0.0.1')
+                ovs_id = self.ovsdb.getOVSId(INTEGRATION_BRIDGE_LOCAL_IP)
                 of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
 
             if vnf_port.of_port is None:

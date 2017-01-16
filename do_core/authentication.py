@@ -43,7 +43,8 @@ class KeystoneAuthentication(object):
             self.authenticationData = {'auth':{'tenantName': tenant_name, 'passwordCredentials':{'username': username, 'password': password}}}
         elif IDENTITY_API_VERSION == 3:
             self.keystone_authentication_url = self.keystone_server+"/v3/auth/tokens"
-            self.authenticationData = {"auth":{"identity":{"methods":["password"],"password":{"user":{"domain":{"name": domain},"password":password,"name":username}}},"scope":{"project":{"domain":{"name":domain},"name":tenant_name}}}}
+            self.authenticationData = {"auth":{"identity":{"methods":["password"],"password":{"user":{"domain":{"name": domain},"password":password,"name":username}}},"scope":{"project":{"domain":{"name":domain},"name":username}}}}
+            #self.authenticationData = {"auth":{"identity":{"methods":["password"],"password":{"user":{"domain":{"name": domain},"password":password,"name":username}}},"scope":{"project":{"domain":{"name":domain},"name":tenant_name}}}}
         else:
             raise WrongConfigurationFile("Identity_api_version should be 2 or 3")
         

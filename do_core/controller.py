@@ -91,7 +91,8 @@ class OpenstackOrchestratorController(object):
 
                 #Read the nf_fg JSON structure and map it into the proper objects and db entries
                 profile_graph = self.buildProfileGraph(nf_fg)
-                self.instantiateEndpoints(nf_fg)
+                if JOLNET_MODE is False:
+                      self.instantiateEndpoints(nf_fg)
                 self.openstackResourcesInstantiation(profile_graph, nf_fg)
                 self.instantiateFlowrules(profile_graph, nf_fg.db_id)
                 logging.debug("Graph " + profile_graph.id + " correctly instantiated!")
@@ -127,7 +128,8 @@ class OpenstackOrchestratorController(object):
             Graph().updateNFFG(updated_nffg, graph_id)
     
             profile_graph = self.buildProfileGraph(updated_nffg)
-            self.instantiateEndpoints(nf_fg)
+            if JOLNET_MODE is False:
+                  self.instantiateEndpoints(nf_fg)
             self.openstackResourcesInstantiation(profile_graph, updated_nffg)
             self.instantiateFlowrules(profile_graph, graph_id)
             
@@ -158,7 +160,8 @@ class OpenstackOrchestratorController(object):
             
             try:
                 self.openstackResourcesDeletion(graph_ref.id)
-                self.deleteEndpoints(nffg)
+                if JOLNET_MODE is False:
+                    self.deleteEndpoints(nffg)
 
                 self.res_desc.writeToFile()
                 Messaging().publishDomainDescription()
@@ -180,7 +183,6 @@ class OpenstackOrchestratorController(object):
         
         self.getAuthTokenAndEndpoints()
         status = self.getResourcesStatus(session_id)
-        
         if status is None:
             return False
         # If the status of the graph is complete, return False
@@ -526,8 +528,7 @@ class OpenstackOrchestratorController(object):
                 if action.output.split(':')[0] == "endpoint":
                     self.processFlowrule(profile_graph, graph_id, flowrule)
                 else:
-                    if not JOLNET_MODE:
-                        self.processFlowrule(profile_graph, graph_id, flowrule)
+                    self.processFlowrule(profile_graph, graph_id, flowrule)
                     # output is vnf: vnf to vnf
                     if flowrule.match.isComplex() is True:
                         logging.warning("Complex flowrules between VNFs are not supported and the additional fields have been discarded. You can specify only 'port_in' in match")
@@ -832,8 +833,8 @@ class OpenstackOrchestratorController(object):
                 break;
             
     def getNetwork(self, port, profile_graph):
-        if JOLNET_MODE is True:
-            return self.getUnusedNetwork()
+        #if JOLNET_MODE is True:
+            #return self.getUnusedNetwork()
         # Create network
         new_net = Net('fakenet_'+str(self.num_net))
         self.num_net += 1

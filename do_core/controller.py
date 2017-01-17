@@ -526,7 +526,8 @@ class OpenstackOrchestratorController(object):
                 if action.output.split(':')[0] == "endpoint":
                     self.processFlowrule(profile_graph, graph_id, flowrule)
                 else:
-                    self.processFlowrule(profile_graph, graph_id, flowrule)
+                    if not JOLNET_MODE:
+                        self.processFlowrule(profile_graph, graph_id, flowrule)
                     # output is vnf: vnf to vnf
                     if flowrule.match.isComplex() is True:
                         logging.warning("Complex flowrules between VNFs are not supported and the additional fields have been discarded. You can specify only 'port_in' in match")

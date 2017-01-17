@@ -53,6 +53,8 @@ The FROG4 OpenStack Domain Orchestrator uses a local mySQL database that has to 
         [db]
         # Mysql DB
         connection = mysql+pymysql://orchestrator:ORCH_DBPASS@127.0.0.1/openstack_orchestrator
+
+On the last OpenStack version username and tenantnane must be the same to avoid authentication error
         
 #### Run the domain orchestrator
 You can launch this domain orchestrator by executing the following script in the domain orchestrator root folder, optionally specifying the configuration file (example: conf/config.ini):

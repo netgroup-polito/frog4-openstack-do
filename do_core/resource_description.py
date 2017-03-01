@@ -17,7 +17,7 @@ class ResourceDescription(object, metaclass=Singleton):
         self.file = file
         self.dict = None
         self.parse()
-        self.endpoints = self.dict["frog-domain:informations"]["frog-network-manager:informations"]["openconfig-interfaces:interfaces"]["openconfig-interfaces:interface"]
+        self.endpoints = self.dict["netgroup-domain:informations"]["hardware-informations"]["interfaces"]["interface"]
                 
     def parse(self):
         try:
@@ -64,17 +64,16 @@ class ResourceDescription(object, metaclass=Singleton):
                 
                 
     def supportsVlan(self, endpoint_desc):
-        if 'openconfig-if-ethernet:ethernet' in endpoint_desc:
-            if 'openconfig-vlan:vlan' in endpoint_desc['openconfig-if-ethernet:ethernet']:
-                if 'openconfig-vlan:config' in endpoint_desc['openconfig-if-ethernet:ethernet']['openconfig-vlan:vlan']:
-                    vlan_config = endpoint_desc['openconfig-if-ethernet:ethernet']['openconfig-vlan:vlan']['openconfig-vlan:config']
-                    if vlan_config['interface-mode'] == "TRUNK":
-                        return True
+        if 'netgroup-if-ethernet:ethernet' in endpoint_desc:
+            if 'netgroup-vlan:vlans' in endpoint_desc['netgroup-if-ethernet:ethernet']:
+                if 'netgroup-vlan:vlan' in endpoint_desc['netgroup-if-ethernet:ethernet']['netgroup-vlan:vlans']:
+                    if len(endpoint_desc['netgroup-if-ethernet:ethernet']['netgroup-vlan:vlans']['netgroup-vlan:vlan']) > 0:
+                       return True
         return False
     
     def getFreeVlans(self, endpoint_desc):
         vlan_list = []
-        vlan_config = endpoint_desc['openconfig-if-ethernet:ethernet']['openconfig-vlan:vlan']['openconfig-vlan:config']
+        vlan_config = endpoint_desc['netgroup-if-ethernet:ethernet']['netgroup-vlan:vlans']['netgroup-vlan:config']
         for vlan in vlan_config['trunk-vlans']:
             if type(vlan) is str and ".." in vlan:
                 tmp = vlan.split("..")
@@ -94,7 +93,7 @@ class ResourceDescription(object, metaclass=Singleton):
                 vlan_output_list.append(vlan_range[0])
             else:
                 vlan_output_list.append(str(vlan_range[0]) + ".." + str(vlan_range[1]))
-        vlan_config = endpoint_desc['openconfig-if-ethernet:ethernet']['openconfig-vlan:vlan']['openconfig-vlan:config']
+        vlan_config = endpoint_desc['netgroup-if-ethernet:ethernet']['netgroup-vlan:vlan']['netgroup-vlan:config']
         vlan_config['trunk-vlans'] = vlan_output_list
 
     def ranges(self,seq):

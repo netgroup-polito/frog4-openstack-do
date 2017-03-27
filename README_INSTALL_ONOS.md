@@ -2,7 +2,7 @@
 The installation instructions below have been tested on ubuntu 16.10.
 
 ### Required packages
-First of all, you need to install some required Ubuntu packages. For this, please just follow the steps below:
+First of all, you need to install some required Ubuntu packages. To do that, please just follow the steps below:
 		
 	sudo apt-get install python-pip
 		
@@ -48,7 +48,7 @@ As an additional step we need to install networking-onos, a Neutron ML2 plug-in 
 
 * Follow all the steps listed within the [README_OPENSTACK.md](https://github.com/netgroup-polito/frog4-openstack-do/blob/onos-support/README_OPENSTACK.md) file, except those under "ML2 plugin configuration for ODL" section.
 * When you reach that section, please follow this steps:  
- 	* Configure the Modular Layer 2 (ML2) plug-in to use OpenDaylight as a mechanism driver:  
+ 	* Configure the Modular Layer 2 (ML2) plug-in to use ONOS as a mechanism driver:  
 	* Edit the /etc/neutron/plugins/ml2/ml2_conf.ini file and complete the following actions:
 	
 	    - In the [ml2] section set the following options: 

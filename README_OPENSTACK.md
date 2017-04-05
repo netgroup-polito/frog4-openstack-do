@@ -391,3 +391,19 @@ The following operations have to be performed on the controller and on the compu
 
             auto INTERFACE_NAME
             iface INTERFACE_NAME inet manual
+## Horizon installation:
+
+After installed the Dashboard when loaded on the browser it can give Bad Gataway error and it will not be loaded.
+To solve the problem:
+
+- open the dashboard configuration file:
+
+        vim /etc/apache2/conf-available/openstack-dashboard.conf
+
+- Add the following line to the configturation:
+
+        WSGIApplicationGroup %{GLOBAL}
+
+- Reload the Apache
+
+        service apache2 reload

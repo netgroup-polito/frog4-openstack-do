@@ -3,9 +3,7 @@ The installation instructions below have been tested on ubuntu 16.10.
 
 ### Required packages
 First of all, you need to install some required Ubuntu packages. To do that, please just follow the steps below:
-		
-	sudo apt-get install python-pip
-		
+				
 	sudo apt-get install software-properties-common -y && \
 	sudo add-apt-repository ppa:webupd8team/java -y && \
 	sudo apt-get update && \

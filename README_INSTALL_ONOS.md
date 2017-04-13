@@ -21,6 +21,8 @@ This are the steps to install it:
 	sudo wget -c http://downloads.onosproject.org/release/onos-$ONOS_VERSION.tar.gz
 	sudo tar xzf onos-$ONOS_VERSION.tar.gz
 	sudo mv onos-$ONOS_VERSION onos
+	sudo chown -R USERNAME:GROUP onos
+`Substitute USERNAME and GROUP with your username and group so you don't have to run ONOS as root user. It's recommended to create an unprivileged user named sdn. To do this just type "sudo adduser sdn --system --group" and substitute USERNAME and GROUP with sdn respectively.`
 
 Now you can run ONOS by typing in a terminal:
 		
@@ -41,8 +43,8 @@ As an additional step we need to install networking-onos, a Neutron ML2 plug-in 
 	
 	cd
 	git clone https://github.com/openstack/networking-onos.git
-	pip install ./networking-onos
-
+	cd networking-onos
+	sudo python setup.py install
 
 ### Configure ONOS
 
@@ -78,7 +80,7 @@ As an additional step we need to install networking-onos, a Neutron ML2 plug-in 
         		firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
                 enable_ipset = True
 
-        - Add the [ml2_odl] section with the following options:
+        - Add the [onos] section with the following options:
             - Replace ONOS_IP with the proper values.
 
             		[onos]

@@ -109,6 +109,7 @@ At the end check that ONOS is running all the required applications for communic
 If not, type this command within ONOS CLI:
 	
 	app activate org.onosproject.openstacknetworking
+	app activate org.onosproject.openflow-base
 If some apps still missing, type those commands:
 	
 	feature:install <MISSING_APP>

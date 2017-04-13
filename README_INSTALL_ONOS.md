@@ -22,7 +22,8 @@ This are the steps to install it:
 	sudo tar xzf onos-$ONOS_VERSION.tar.gz
 	sudo mv onos-$ONOS_VERSION onos
 	sudo chown -R USERNAME:GROUP onos
-`Substitute USERNAME and GROUP with your username and group so you don't have to run ONOS as root user. It's recommended to create an unprivileged user named sdn. To do this just type "sudo adduser sdn --system --group" and substitute USERNAME and GROUP with sdn respectively.`
+`Substitute USERNAME and GROUP with your username and group so you don't have to run ONOS as root user. It's recommended to create an 
+unprivileged user named sdn. To do this just type "sudo adduser sdn --system --group" and substitute USERNAME and GROUP with sdn respectively.`
 
 Now you can run ONOS by typing in a terminal:
 		

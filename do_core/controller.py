@@ -14,7 +14,9 @@ from do_core.authentication import KeystoneAuthentication
 from do_core.rest import Glance, Nova, Neutron, ODL
 from do_core.resources import ProfileGraph, VNF, Net, Match, Action, Flow
 from do_core.nffg_manager import NFFG_Manager
-from do_core.ovsdb import OVSDB
+from do_core.onosBusiness import ONOSBusiness
+#from do_core.ovsdb import OVSDB
+
 from nffg_library.nffg import FlowRule
 from do_core.messaging import Messaging
 from do_core.resource_description import ResourceDescription
@@ -51,12 +53,23 @@ class OpenstackOrchestratorController(object):
         self.novaEndpoint = self.token.get_endpoint_URL('compute', 'public')
         #self.glanceEndpoint = self.token.get_endpoint_URL('image','public')  # not needed because it is read from the templates
         self.neutronEndpoint = self.token.get_endpoint_URL('network','public')
-        
-        self.odlendpoint = "http://" + Configuration().ODL_ADDRESS
-        self.odlusername = Configuration().ODL_USERNAME
-        self.odlpassword = Configuration().ODL_PASSWORD
-        self.ovsdb = OVSDB(self.odlendpoint, self.odlusername, self.odlpassword)
-        
+
+	self.isOnosEnabled   = Configuration().ONOS_ENABLED
+
+	if self.isOnosEnabled == 'false':
+
+		self.odlendpoint = "http://" + Configuration().ODL_ADDRESS
+		self.odlusername = Configuration().ODL_USERNAME
+		self.odlpassword = Configuration().ODL_PASSWORD
+		self.ovsdb = OVSDB(self.odlendpoint, self.odlusername, self.odlpassword)
+
+	else:
+
+		self.onosEndpoint = Configuration().ONOS_ADDRESS
+		self.onosUsername = Configuration().ONOS_USERNAME
+		self.onosPassword = Configuration().ONOS_PASSWORD
+		self.onosBusiness = ONOSBusiness(self.onosEndpoint, self.onosUsername, self.onosPassword)
+     
     def get(self, nffg_id):
         session = Session().get_active_user_session_by_nf_fg_id(nffg_id, error_aware=False)
         logging.debug("Getting session: "+str(session.id))
@@ -316,7 +329,7 @@ class OpenstackOrchestratorController(object):
                         
         # Delete end-point and end-point resources
         for endpoint in updated_nffg.end_points[:]:
-            if endpoint.status == 'to_be_deleted':
+            if endpoint.status == 'to_be_deleted':10.0.0.1
                 self.deleteEndpoint(endpoint, updated_nffg)
                 Graph().deleteEndpoint(endpoint.id, graph_id)
                 Graph().deleteEndpointResourceAndResources(endpoint.db_id)
@@ -334,7 +347,13 @@ class OpenstackOrchestratorController(object):
                 Graph().deleteFlowRule(flow.id)
         Graph().deleteFlowRule(flowrule.db_id)
         nf_fg.flow_rules.remove(flowrule)            
-    
+
+'''
+***********************************
+*	Endpoints deletetion	  *
+***********************************
+'''
+
     def deleteEndpoints(self, nffg):
         for endpoint in nffg.end_points[:]:
             self.deleteEndpoint(endpoint, nffg)
@@ -354,34 +373,69 @@ class OpenstackOrchestratorController(object):
         port_to_int_bridge = nffg.id + "-" + endpoint.id + "-to-" + INTEGRATION_BRIDGE
         port_to_exit_switch =  nffg.id + "-" + endpoint.id + "-to-" + EXIT_SWITCH
         
-        ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
-        
-        self.ovsdb.deletePort(ovs_id, port_to_int_bridge, EXIT_SWITCH)
-        
-        self.ovsdb.deletePort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE)  
+	if self.isOnosEnabled == 'false':
+		ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+		
+		self.ovsdb.deletePort(ovs_id, port_to_int_bridge, EXIT_SWITCH)
+		
+		self.ovsdb.deletePort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE)
+
+	else:
+		ovsdbIP = self.onosBusiness.getOvsdbIP()
+
+		self.onosBusiness.deletePort(ovsdbIP, port_to_int_bridge, EXIT_SWITCH)
+	
+		self.onosBusiness.deletePort(ovsdbIP, port_to_exit_switch, INTEGRATION_BRIDGE)
             
     def deleteInternalEndpoint(self, nffg, endpoint):
         internal_bridge_id = "br-internal-"+ str(endpoint.internal_group)
         port_to_internal_bridge = nffg.id + "-" + endpoint.id + "-to-" + internal_bridge_id
         port_to_integration_bridge =  nffg.id + "-" + endpoint.id + "-to-" + INTEGRATION_BRIDGE
         
-        ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
-        
-        self.ovsdb.deletePort(ovs_id, port_to_integration_bridge, internal_bridge_id)
-        
-        self.ovsdb.deletePort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE)
-        
-        if len(self.ovsdb.getBridgePorts(ovs_id, internal_bridge_id)) == 1:
-            # There are no ports belonging to this bridge so we can delete it
-            self.ovsdb.deleteBridge(ovs_id, internal_bridge_id)
-            logging.debug("Deleting internal bridge: "+str(internal_bridge_id))
-            
+	if self.isOnosEnabled == 'false':
+		ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+		
+		self.ovsdb.deletePort(ovs_id, port_to_integration_bridge, internal_bridge_id)
+		
+		self.ovsdb.deletePort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE)
+		
+		if len(self.ovsdb.getBridgePorts(ovs_id, internal_bridge_id)) == 1:
+		    # There are no ports belonging to this bridge so we can delete it
+		    self.ovsdb.deleteBridge(ovs_id, internal_bridge_id)
+		    logging.debug("Deleting internal bridge: "+str(internal_bridge_id))
+
+	else:
+		ovsdbIP = self.onosBusiness.getOvsdbIP()
+
+		self.onosBusiness.deletePort(ovsdbIP, port_to_integration_bridge, internal_bridge_id)
+	
+		self.onosBusiness.deletePort(ovsdbIP, port_to_internal_bridge, INTEGRATION_BRIDGE)
+
+		if len(self.onosBusiness.getBridgePorts(internal_bridge_id)) == 1:
+		    # There are no ports belonging to this bridge so we can delete it
+		    self.onosBusiness.deleteBridge(ovsdbIP, internal_bridge_id)
+		    logging.debug("Deleting internal bridge: "+str(internal_bridge_id))
+
     def deleteGreEndpoint(self, nffg, endpoint):
         gre_port = nffg.id + "-gre-" + endpoint.id
         
-        ovs_id = self.ovsdb.getOVSId(endpoint.local_ip)
-                
-        self.ovsdb.deletePort(ovs_id, gre_port, INTEGRATION_BRIDGE)             
+	if self.isOnosEnabled == 'false':
+
+		ovs_id = self.ovsdb.getOVSId(endpoint.local_ip)
+		        
+		self.ovsdb.deletePort(ovs_id, gre_port, INTEGRATION_BRIDGE)
+
+	else:
+		ovsdbIP = self.onosBusiness.getOvsdbIP()
+		
+		self.onosBusiness.deleteGreTunnel(ovsdbIP, gre_port, INTEGRATION_BRIDGE)
+
+'''
+*****************************************
+*	 Endpoints instantiation 	*
+*****************************************
+'''
+
 
     def instantiateEndpoints(self, nffg):
         for end_point in nffg.end_points[:]:
@@ -400,6 +454,10 @@ class OpenstackOrchestratorController(object):
 
         self.res_desc.addEndpoint(end_point)
 
+'''
+Managing an endpoint which type is interface
+'''
+
     def manageIngressEndpoint(self, ingress_end_point):
         port_to_int_bridge = "to-" + INTEGRATION_BRIDGE
         port_to_ingress_switch =  "to-" + INGRESS_SWITCH
@@ -415,6 +473,10 @@ class OpenstackOrchestratorController(object):
         self.ovsdb.createPatchPort(ovs_id, port_to_ingress_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)
         
         ingress_end_point.interface_internal_id = port_to_ingress_switch
+
+'''
+Managing an endpoint which type is interface-out or vlan
+'''
                 
     def manageExitEndpoint(self, nffg, egress_end_point):
         port_to_int_bridge = nffg.id + "-" + egress_end_point.id + "-to-" + INTEGRATION_BRIDGE
@@ -431,6 +493,10 @@ class OpenstackOrchestratorController(object):
         self.ovsdb.createPatchPort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)        
         
         egress_end_point.interface_internal_id =  port_to_exit_switch
+
+'''
+Managing an endpoint which type is internal
+'''
         
     def manageInternalEndpoint(self, nffg, internal_end_point):
         if internal_end_point.node_id is None:
@@ -448,6 +514,10 @@ class OpenstackOrchestratorController(object):
         self.ovsdb.createPatchPort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE, patch_peer = port_to_integration_bridge)
         
         internal_end_point.interface_internal_id = port_to_internal_bridge
+
+'''
+Managing an endpoint which type is gre-tunnel
+'''
         
     def manageGreEndpoint(self, nffg, gre_end_point):
         gre_port = nffg.id + "-gre-" + gre_end_point.id
@@ -459,6 +529,12 @@ class OpenstackOrchestratorController(object):
         gre_end_point.interface_internal_id = gre_port
         # This is needed in order to uniform the processFlowrule function regardless of the endpoint type
         gre_end_point.node_id = gre_end_point.local_ip
+
+'''
+*********************************************************
+* 	Instantiation of resources within OpenStack 	*
+*********************************************************
+'''
         
     def openstackResourcesInstantiation(self, profile_graph, nf_fg):
         for network in profile_graph.networks:
@@ -482,6 +558,12 @@ class OpenstackOrchestratorController(object):
         for endpoint in profile_graph.endpoints.values():
             if endpoint.status == "new":
                 Graph().setEndpointLocation(nf_fg.db_id, endpoint.id, endpoint.interface)
+
+'''
+*********************************************************
+*		 Flow Rules Management			*
+*********************************************************
+'''
                                 
     def instantiateFlowrules(self, profile_graph, graph_id):
         if JOLNET_MODE is False:
@@ -514,6 +596,10 @@ class OpenstackOrchestratorController(object):
             for flowrule in profile_graph.flowrules.values():
                 if flowrule.status =='new':
                     self.instantiateFlowrule(profile_graph, graph_id, flowrule)
+
+'''
+If one of this methods are called it means that all the resources have been instantiated within OpenStack
+'''
                 
     def instantiateFlowrule(self, profile_graph, graph_id, flowrule):
         # Only flowrules that involve a VNF and an endpoint are installed

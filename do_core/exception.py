@@ -244,15 +244,6 @@ class GraphNotFound(Exception):
     def get_mess(self):
         return self.message
 
-class PortNotFound(Exception):
-    def __init__(self, message):
-        self.message = message
-        # Call the base class constructor with the parameters it needs
-        super(PortNotFound, self).__init__(message)
-    
-    def get_mess(self):
-        return self.message
-
 class EndpointNotFound(Exception):
     def __init__(self, message):
         self.message = message
@@ -279,7 +270,7 @@ class VNFRepositoryError(Exception):
 
     def get_mess(self):
         return self.message
-
+'''
 class OVSDBNodeNotFound(Exception):
     def __init__(self, message):
         self.message = message
@@ -288,7 +279,43 @@ class OVSDBNodeNotFound(Exception):
 
     def get_mess(self):
         return self.message   
-     
+'''
+
+'''
+class PortNotFound(Exception):
+    def __init__(self, message):
+        self.message = message
+        # Call the base class constructor with the parameters it needs
+        super(PortNotFound, self).__init__(message)
+    
+    def get_mess(self):
+        return self.message
+'''
+
+'''
+*******************************
+*	ONOS Exceptions       *
+*******************************
+'''
+
+class OnosInternalError(Exception):
+	def __init__(self, message):
+		self.message = message
+	        # Call the base class constructor with the parameters it needsù
+	super(OnosInternalError, self).__init__(message)
+
+	def get_mess(self):
+		return self.message
+
+class OVSDBNodeNotFound(Exception):
+    def __init__(self, message):
+        self.message = message
+        # Call the base class constructor with the parameters it needs
+        super(OVSDBNodeNotFound, self).__init__(message)
+
+    def get_mess(self):
+        return self.message
+
 class BridgeNotFound(Exception):
     def __init__(self, message):
         self.message = message
@@ -296,4 +323,5 @@ class BridgeNotFound(Exception):
         super(BridgeNotFound, self).__init__(message)
 
     def get_mess(self):
-        return self.message        
+        return self.message
+

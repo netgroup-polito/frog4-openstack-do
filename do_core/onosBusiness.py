@@ -7,7 +7,7 @@ Created on may 2017
 
 from do_core.rest import ONOS
 from do_core.exception import BridgeNotFound, OnosInternalError
-import json, logging
+import json, logging, requests
 
 '''
 This is a business class. This class interacts with onos Rest api to handle the requests from controller
@@ -33,9 +33,22 @@ class ONOSBusiness(object):
 
 		raise OVSDBNodeNotFound("No OVSDB connection found!")
 
+	def getBridgeID(self, bridge_name):
+		bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, bridge_name)
+
+		if bridgeID.statu_code is 200
+			return bridgeID.text
+
+		else:
+			raise BridgeNotFound(port + " not found")
+
 	def getBridgePorts(self, bridge_name):
 		bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, bridge_name)
-		response = ONOS().getPorts(self.onosEndpoint, self.onosUsername, self.onosPassword, bridgeID)
+		if bridgeID.statu_code is 200
+			response = ONOS().getPorts(self.onosEndpoint, self.onosUsername, self.onosPassword, bridgeID.text)
+
+		else:
+			raise BridgeNotFound(port + " not found")
 
 		if response.status_code is 404:
 			raise BridgeNotFound(port + " not found")

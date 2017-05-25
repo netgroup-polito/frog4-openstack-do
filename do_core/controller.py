@@ -425,7 +425,7 @@ class OpenstackOrchestratorController(object):
 		        
 		self.ovsdb.deletePort(ovs_id, gre_port, INTEGRATION_BRIDGE)
 
-	else:
+	else:      "annotations": {
 		ovsdbIP = self.onosBusiness.getOvsdbIP()
 		
 		self.onosBusiness.deleteGreTunnel(ovsdbIP, gre_port, INTEGRATION_BRIDGE)
@@ -444,13 +444,13 @@ class OpenstackOrchestratorController(object):
     
     def instantiateEndPoint(self, nffg, end_point):
         if end_point.type == "interface":
-            self.manageIngressEndpoint(end_point)
+            self.manageIngressEndpoint(end_point)	#INGRESS_SWITCH
         elif end_point.type == 'interface-out' or end_point.type == 'vlan':
-            self.manageExitEndpoint(nffg, end_point)
-        elif end_point.type == "internal":
-            self.manageInternalEndpoint(nffg, end_point)
+            self.manageExitEndpoint(nffg, end_point)	#EXIT_SWITCH
+        elif end_point.type == "internal":      "annotations": {
+            self.manageInternalEndpoint(nffg, end_point)	#INTERNAL_BRIDGE
         elif end_point.type == "gre-tunnel":
-            self.manageGreEndpoint(nffg, end_point)            
+            self.manageGreEndpoint(nffg, end_point)		#INTEGRATION_BRIDGE
 
         self.res_desc.addEndpoint(end_point)
 
@@ -478,7 +478,7 @@ Managing an endpoint which type is interface
 Managing an endpoint which type is interface-out or vlan
 '''
                 
-    def manageExitEndpoint(self, nffg, egress_end_point):
+    def manageExitEndpoint(self, nffg, egress_end_point):      "annotations": {
         port_to_int_bridge = nffg.id + "-" + egress_end_point.id + "-to-" + INTEGRATION_BRIDGE
         port_to_exit_switch =  nffg.id + "-" + egress_end_point.id + "-to-" + EXIT_SWITCH
         
@@ -631,7 +631,7 @@ If one of this methods are called it means that all the resources have been inst
         port1_type = tmp1[0]
         port1_id = tmp1[1]
         if port1_type == "vnf":
-            vnf_portOut = None
+            vnf_portOut = None      "annotations": {
             vnf = profile_graph.functions[port1_id]
             vnf_port = vnf.ports[tmp1[2]]
             endpoint = None
@@ -647,11 +647,29 @@ If one of this methods are called it means that all the resources have been inst
 
             match = Match(flowrule.match)
             if endpoint is not None:
-                ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
-                of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
+				if self.isOnosEnabled == 'false':
+		            ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+		            of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
+'''				else:
+					if end_point.type == "interface":
+						of_switch_id = self.onosBusiness.getBridgeID(INGRESS_SWITCH)
+
+					elif end_point.type == 'interface-out' or end_point.type == 'vlan':
+						of_switch_id = self.onosBusiness.getBridgeID(EXIT_SWITCH)
+
+					elif end_point.type == "internal":
+						of_switch_id = self.onosBusiness.getBridgeID(INTERNAL_BRIDGE)
+
+					elif end_point.type == "gre-tunnel":
+						of_switch_id = self.onosBusiness.getBridgeID(INTEGRATION_BRIDGE)
+'''
             else:
-                ovs_id = self.ovsdb.getOVSId(INTEGRATION_BRIDGE_LOCAL_IP)
-                of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
+				if self.isOnosEnabled == 'false':
+		            ovs_id = self.ovsdb.getOVSId(INTEGRATION_BRIDGE_LOCAL_IP)
+		            of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
+
+				else:
+					of_switch_id = self.onosBusiness.getBridgeID(INTEGRATION_BRIDGE)
 
             if vnf_port.of_port is None:
                 input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_port.internal_id[0:8])
@@ -684,7 +702,7 @@ If one of this methods are called it means that all the resources have been inst
             flowj = Flow(flow_id, table_id=0, priority=16385+flowrule.priority, actions=actions, match=match)
             json_req = flowj.getJSON()
 
-            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
+            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of _switch_id, flow_id, flowj.table_id)
             
             flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)
             Graph().addFlowRule(graph_id, flow_rule, None)

@@ -1,0 +1,12 @@
+{
+    "apps" : {
+        "org.onosproject.openstackinterface" : {
+            "openstackinterface" : {
+                 "neutronServer" : "http://controller:9696/v2.0/",
+                 "keystoneServer" : "http://controller:5000/v2.0/",
+                 "userName" : "admin",
+                 "password" : "admin"
+             }
+        }
+    }
+}

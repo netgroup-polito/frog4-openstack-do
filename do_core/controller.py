@@ -373,62 +373,62 @@ class OpenstackOrchestratorController(object):
         port_to_int_bridge = nffg.id + "-" + endpoint.id + "-to-" + INTEGRATION_BRIDGE
         port_to_exit_switch =  nffg.id + "-" + endpoint.id + "-to-" + EXIT_SWITCH
         
-	if self.isOnosEnabled == 'false':
-		ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+		if self.isOnosEnabled == 'false':
+			ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
 		
-		self.ovsdb.deletePort(ovs_id, port_to_int_bridge, EXIT_SWITCH)
+			self.ovsdb.deletePort(ovs_id, port_to_int_bridge, EXIT_SWITCH)
 		
-		self.ovsdb.deletePort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE)
+			self.ovsdb.deletePort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE)
 
-	else:
-		ovsdbIP = self.onosBusiness.getOvsdbIP()
+		else:
+			ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
 
-		self.onosBusiness.deletePort(ovsdbIP, port_to_int_bridge, EXIT_SWITCH)
+			self.onosBusiness.deletePort(ovsdbIP, port_to_int_bridge, EXIT_SWITCH)
 	
-		self.onosBusiness.deletePort(ovsdbIP, port_to_exit_switch, INTEGRATION_BRIDGE)
+			self.onosBusiness.deletePort(ovsdbIP, port_to_exit_switch, INTEGRATION_BRIDGE)
             
     def deleteInternalEndpoint(self, nffg, endpoint):
         internal_bridge_id = "br-internal-"+ str(endpoint.internal_group)
         port_to_internal_bridge = nffg.id + "-" + endpoint.id + "-to-" + internal_bridge_id
         port_to_integration_bridge =  nffg.id + "-" + endpoint.id + "-to-" + INTEGRATION_BRIDGE
         
-	if self.isOnosEnabled == 'false':
-		ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+		if self.isOnosEnabled == 'false':
+			ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
 		
-		self.ovsdb.deletePort(ovs_id, port_to_integration_bridge, internal_bridge_id)
+			self.ovsdb.deletePort(ovs_id, port_to_integration_bridge, internal_bridge_id)
 		
-		self.ovsdb.deletePort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE)
+			self.ovsdb.deletePort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE)
 		
-		if len(self.ovsdb.getBridgePorts(ovs_id, internal_bridge_id)) == 1:
-		    # There are no ports belonging to this bridge so we can delete it
-		    self.ovsdb.deleteBridge(ovs_id, internal_bridge_id)
-		    logging.debug("Deleting internal bridge: "+str(internal_bridge_id))
+			if len(self.ovsdb.getBridgePorts(ovs_id, internal_bridge_id)) == 1:
+				# There are no ports belonging to this bridge so we can delete it
+				self.ovsdb.deleteBridge(ovs_id, internal_bridge_id)
+				logging.debug("Deleting internal bridge: "+str(internal_bridge_id))
 
-	else:
-		ovsdbIP = self.onosBusiness.getOvsdbIP()
+		else:
+			ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
 
-		self.onosBusiness.deletePort(ovsdbIP, port_to_integration_bridge, internal_bridge_id)
+			self.onosBusiness.deletePort(ovsdbIP, port_to_integration_bridge, internal_bridge_id)
 	
-		self.onosBusiness.deletePort(ovsdbIP, port_to_internal_bridge, INTEGRATION_BRIDGE)
+			self.onosBusiness.deletePort(ovsdbIP, port_to_internal_bridge, INTEGRATION_BRIDGE)
 
-		if len(self.onosBusiness.getBridgePorts(internal_bridge_id)) == 1:
-		    # There are no ports belonging to this bridge so we can delete it
-		    self.onosBusiness.deleteBridge(ovsdbIP, internal_bridge_id)
-		    logging.debug("Deleting internal bridge: "+str(internal_bridge_id))
+			if len(self.onosBusiness.getBridgePorts(endpoint.node_id, internal_bridge_id)) == 1:
+				# There are no ports belonging to this bridge so we can delete it
+				self.onosBusiness.deleteBridge(endpoint.node_id, ovsdbIP, internal_bridge_id)
+				logging.debug("Deleting internal bridge: "+str(internal_bridge_id))
 
     def deleteGreEndpoint(self, nffg, endpoint):
         gre_port = nffg.id + "-gre-" + endpoint.id
         
-	if self.isOnosEnabled == 'false':
+		if self.isOnosEnabled == 'false':
 
-		ovs_id = self.ovsdb.getOVSId(endpoint.local_ip)
-		        
-		self.ovsdb.deletePort(ovs_id, gre_port, INTEGRATION_BRIDGE)
+			ovs_id = self.ovsdb.getOVSId(endpoint.local_ip)
+				    
+			self.ovsdb.deletePort(ovs_id, gre_port, INTEGRATION_BRIDGE)
 
-	else:      "annotations": {
-		ovsdbIP = self.onosBusiness.getOvsdbIP()
+		else:
+			ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
 		
-		self.onosBusiness.deleteGreTunnel(ovsdbIP, gre_port, INTEGRATION_BRIDGE)
+			self.onosBusiness.deleteGreTunnel(ovsdbIP, gre_port, INTEGRATION_BRIDGE)
 
 '''
 *****************************************
@@ -461,18 +461,34 @@ Managing an endpoint which type is interface
     def manageIngressEndpoint(self, ingress_end_point):
         port_to_int_bridge = "to-" + INTEGRATION_BRIDGE
         port_to_ingress_switch =  "to-" + INGRESS_SWITCH
-        
-        ovs_id = self.ovsdb.getOVSId(ingress_end_point.node_id)
 
-        self.ovsdb.createBridge(ovs_id, INGRESS_SWITCH)
+		if self.isOnosEnabled == 'false':
         
-        self.ovsdb.createPort(ovs_id, ingress_end_point.interface, INGRESS_SWITCH)
-        
-        self.ovsdb.createPatchPort(ovs_id, port_to_int_bridge, INGRESS_SWITCH, patch_peer = port_to_ingress_switch)
-        
-        self.ovsdb.createPatchPort(ovs_id, port_to_ingress_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)
-        
-        ingress_end_point.interface_internal_id = port_to_ingress_switch
+		    ovs_id = self.ovsdb.getOVSId(ingress_end_point.node_id)
+
+		    self.ovsdb.createBridge(ovs_id, INGRESS_SWITCH)
+		    
+		    self.ovsdb.createPort(ovs_id, ingress_end_point.interface, INGRESS_SWITCH)
+		    
+		    self.ovsdb.createPatchPort(ovs_id, port_to_int_bridge, INGRESS_SWITCH, patch_peer = port_to_ingress_switch)
+		    
+		    self.ovsdb.createPatchPort(ovs_id, port_to_ingress_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)
+		    
+		    ingress_end_point.interface_internal_id = port_to_ingress_switch
+
+		else:
+
+			ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
+
+		    self.onosBusiness.createBridge(ovsdbIP, INGRESS_SWITCH)
+		    
+		    self.onosBusiness.createPort(ovsdbIP, ingress_end_point.interface, INGRESS_SWITCH)
+		    
+		    self.onosBusiness.createPatchPort(ovsdbIP, port_to_int_bridge, INGRESS_SWITCH, patch_peer = port_to_ingress_switch)
+		    
+		    self.onosBusiness.createPatchPort(ovsdbIP, port_to_ingress_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)
+		    
+		    ingress_end_point.interface_internal_id = port_to_ingress_switch
 
 '''
 Managing an endpoint which type is interface-out or vlan
@@ -481,18 +497,34 @@ Managing an endpoint which type is interface-out or vlan
     def manageExitEndpoint(self, nffg, egress_end_point):      "annotations": {
         port_to_int_bridge = nffg.id + "-" + egress_end_point.id + "-to-" + INTEGRATION_BRIDGE
         port_to_exit_switch =  nffg.id + "-" + egress_end_point.id + "-to-" + EXIT_SWITCH
-        
-        ovs_id = self.ovsdb.getOVSId(egress_end_point.node_id)
 
-        self.ovsdb.createBridge(ovs_id, EXIT_SWITCH)
+		if self.isOnosEnabled == 'false':
         
-        self.ovsdb.createPort(ovs_id, egress_end_point.interface, EXIT_SWITCH)
-                
-        self.ovsdb.createPatchPort(ovs_id, port_to_int_bridge, EXIT_SWITCH, patch_peer = port_to_exit_switch)
-        
-        self.ovsdb.createPatchPort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)        
-        
-        egress_end_point.interface_internal_id =  port_to_exit_switch
+		    ovs_id = self.ovsdb.getOVSId(egress_end_point.node_id)
+
+		    self.ovsdb.createBridge(ovs_id, EXIT_SWITCH)
+		    
+		    self.ovsdb.createPort(ovs_id, egress_end_point.interface, EXIT_SWITCH)
+		            
+		    self.ovsdb.createPatchPort(ovs_id, port_to_int_bridge, EXIT_SWITCH, patch_peer = port_to_exit_switch)
+		    
+		    self.ovsdb.createPatchPort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)        
+		    
+		    egress_end_point.interface_internal_id =  port_to_exit_switch
+
+		else:
+
+			ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
+
+		    self.onosBusiness.createBridge(ovsdbIP, EXIT_SWITCH)
+		    
+		    self.onosBusiness.createPort(ovsdbIP, egress_end_point.interface, EXIT_SWITCH)
+		            
+		    self.onosBusiness.createPatchPort(ovsdbIP, port_to_int_bridge, EXIT_SWITCH, patch_peer = port_to_exit_switch)
+		    
+		    self.onosBusiness.createPatchPort(ovsdbIP, port_to_exit_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)        
+		    
+		    egress_end_point.interface_internal_id =  port_to_exit_switch
 
 '''
 Managing an endpoint which type is internal
@@ -504,16 +536,30 @@ Managing an endpoint which type is internal
         internal_bridge_id = "br-internal-"+ str(internal_end_point.internal_group)
         port_to_internal_bridge = nffg.id + "-" + internal_end_point.id + "-to-" + internal_bridge_id
         port_to_integration_bridge =  nffg.id + "-" + internal_end_point.id + "-to-" + INTEGRATION_BRIDGE
-        
-        ovs_id = self.ovsdb.getOVSId(internal_end_point.node_id)
 
-        self.ovsdb.createBridge(ovs_id, internal_bridge_id)
-                
-        self.ovsdb.createPatchPort(ovs_id, port_to_integration_bridge, internal_bridge_id, patch_peer = port_to_internal_bridge)
+		if self.isOnosEnabled == 'false':
         
-        self.ovsdb.createPatchPort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE, patch_peer = port_to_integration_bridge)
-        
-        internal_end_point.interface_internal_id = port_to_internal_bridge
+		    ovs_id = self.ovsdb.getOVSId(internal_end_point.node_id)
+
+		    self.ovsdb.createBridge(ovs_id, internal_bridge_id)
+		            
+		    self.ovsdb.createPatchPort(ovs_id, port_to_integration_bridge, internal_bridge_id, patch_peer = port_to_internal_bridge)
+		    
+		    self.ovsdb.createPatchPort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE, patch_peer = port_to_integration_bridge)
+		    
+		    internal_end_point.interface_internal_id = port_to_internal_bridge
+
+		else:
+
+			ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
+
+		    self.onosBusiness.createBridge(ovsdbIP, internal_bridge_id)
+		            
+		    self.onosBusiness.createPatchPort(ovsdbIP, port_to_integration_bridge, internal_bridge_id, patch_peer = port_to_internal_bridge)
+		    
+		    self.onosBusiness.createPatchPort(ovsdbIP, port_to_internal_bridge, INTEGRATION_BRIDGE, patch_peer = port_to_integration_bridge)
+		    
+		    internal_end_point.interface_internal_id = port_to_internal_bridge
 
 '''
 Managing an endpoint which type is gre-tunnel
@@ -521,14 +567,26 @@ Managing an endpoint which type is gre-tunnel
         
     def manageGreEndpoint(self, nffg, gre_end_point):
         gre_port = nffg.id + "-gre-" + gre_end_point.id
+
+		if self.isOnosEnabled == 'false':
         
-        ovs_id = self.ovsdb.getOVSId(gre_end_point.local_ip)
-                        
-        self.ovsdb.createGrePort(ovs_id, gre_port, INTEGRATION_BRIDGE, gre_end_point.local_ip, gre_end_point.remote_ip, gre_end_point.gre_key)
-        
-        gre_end_point.interface_internal_id = gre_port
-        # This is needed in order to uniform the processFlowrule function regardless of the endpoint type
-        gre_end_point.node_id = gre_end_point.local_ip
+		    ovs_id = self.ovsdb.getOVSId(gre_end_point.local_ip)
+		                    
+		    self.ovsdb.createGrePort(ovs_id, gre_port, INTEGRATION_BRIDGE, gre_end_point.local_ip, gre_end_point.remote_ip, gre_end_point.gre_key)
+		    
+		    gre_end_point.interface_internal_id = gre_port
+		    # This is needed in order to uniform the processFlowrule function regardless of the endpoint type
+		    gre_end_point.node_id = gre_end_point.local_ip
+
+		else:
+
+			ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
+		                    
+		    self.onosBusiness.createGrePort(ovsdbIP, INTEGRATION_BRIDGE, gre_port, , gre_end_point.local_ip, gre_end_point.remote_ip, gre_end_point.gre_key)
+		    
+		    gre_end_point.interface_internal_id = gre_port
+		    # This is needed in order to uniform the processFlowrule function regardless of the endpoint type
+		    gre_end_point.node_id = gre_end_point.local_ip
 
 '''
 *********************************************************
@@ -647,33 +705,53 @@ If one of this methods are called it means that all the resources have been inst
 
             match = Match(flowrule.match)
             if endpoint is not None:
+
 				if self.isOnosEnabled == 'false':
+
 		            ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
 		            of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
-'''				else:
+
+				else:
+
+					ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
+
 					if end_point.type == "interface":
-						of_switch_id = self.onosBusiness.getBridgeID(INGRESS_SWITCH)
+						of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INGRESS_SWITCH)
 
 					elif end_point.type == 'interface-out' or end_point.type == 'vlan':
-						of_switch_id = self.onosBusiness.getBridgeID(EXIT_SWITCH)
+						of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, EXIT_SWITCH)
 
 					elif end_point.type == "internal":
-						of_switch_id = self.onosBusiness.getBridgeID(INTERNAL_BRIDGE)
+						of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTERNAL_BRIDGE)
 
 					elif end_point.type == "gre-tunnel":
-						of_switch_id = self.onosBusiness.getBridgeID(INTEGRATION_BRIDGE)
-'''
+						of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
+
             else:
+
 				if self.isOnosEnabled == 'false':
+
 		            ovs_id = self.ovsdb.getOVSId(INTEGRATION_BRIDGE_LOCAL_IP)
 		            of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
 
 				else:
-					of_switch_id = self.onosBusiness.getBridgeID(INTEGRATION_BRIDGE)
+
+					ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
+
+					of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
 
             if vnf_port.of_port is None:
-                input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_port.internal_id[0:8])
-                vnf_port.of_port = str(input_port)
+
+				if self.isOnosEnabled == 'false':
+
+		            input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_port.internal_id[0:8])
+		            vnf_port.of_port = str(input_port)
+
+				else:
+					# Input port is returned as a number which identify the port within that bridge
+					input_port = self.onosBusiness.getOfPort(ovsdbIP, INTEGRATION_BRIDGE, vnf_port.internal_id[0:11])
+		            vnf_port.of_port = str(input_port)
+
             match.setInputMatch(vnf_port.of_port)
 
             actions = []
@@ -702,7 +780,7 @@ If one of this methods are called it means that all the resources have been inst
             flowj = Flow(flow_id, table_id=0, priority=16385+flowrule.priority, actions=actions, match=match)
             json_req = flowj.getJSON()
 
-            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of _switch_id, flow_id, flowj.table_id)
+            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
             
             flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)
             Graph().addFlowRule(graph_id, flow_rule, None)

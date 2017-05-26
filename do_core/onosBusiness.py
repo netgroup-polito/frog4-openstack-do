@@ -21,20 +21,23 @@ class ONOSBusiness(object):
         self.onosUsername = onos_username
         self.onosPassword = onos_password
 
-	def getOvsdbIP(self):
+'''
+The nodeIP should be the same of ovsdb ip. That's because nodeIP is an ip address representing a node where ovsdb is running and it's used by onos as management address for that node
+'''
+	def getOvsdbIP(self, nodeIP):
 		response = ONOS().getOvsdbIP(self.onosEndpoint, self.onosUsername, self.onosPassword)
 		devices = response.text
 
 	        json_object = json.loads(devices)['devices']
 
 		for node in json_object:
-			if node['id'].split(':')[0] == 'ovsdb':
+			if node['id'].split(':')[0] == 'ovsdb' and node['id'].split(":")[1] == nodeIP:
 				return node['id'].split(":")[1]
 
-		raise OVSDBNodeNotFound("No OVSDB connection found!")
+		raise OVSDBNodeNotFound("No OVSDB connection found for " + nodeIP)
 
-	def getBridgeID(self, bridge_name):
-		bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, bridge_name)
+	def getBridgeID(self, ovsdbIP, bridge_name):
+		bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)
 
 		if bridgeID.statu_code is 200
 			return bridgeID.text
@@ -42,8 +45,8 @@ class ONOSBusiness(object):
 		else:
 			raise BridgeNotFound(port + " not found")
 
-	def getBridgePorts(self, bridge_name):
-		bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, bridge_name)
+	def getBridgePorts(self, ovsdbIP, bridge_name):
+		bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)
 		if bridgeID.statu_code is 200
 			response = ONOS().getPorts(self.onosEndpoint, self.onosUsername, self.onosPassword, bridgeID.text)
 
@@ -55,10 +58,31 @@ class ONOSBusiness(object):
 
 		device = response.text
 
-	        json_object = json.loads(device)['ports']
+		json_objects = json.loads(device)['ports']
 
-		return len(json_object)
+		return len(json_objects)
 
+	def getOfPort(ovsdbIP, bridge_name, vnf_port):
+		bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)
+		if bridgeID.statu_code is 200
+			response = ONOS().getPorts(self.onosEndpoint, self.onosUsername, self.onosPassword, bridgeID.text)
+
+		else:
+			raise BridgeNotFound(port + " not found")
+
+		if response.status_code is 404:
+			raise BridgeNotFound(port + " not found")
+
+		device = response.text
+
+		json_objects = json.loads(device)['ports']
+
+		for port in json_objects:
+			if port['annotations']['portName'] == 'tap'+vnf_port:
+
+				return port['port']
+
+        raise PortNotFound(vnf_port + " not found")
 
 	def createBridge(self, ovsdbIP, bridge_name):
 		response = ONOS().createBridge(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)

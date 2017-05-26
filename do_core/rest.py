@@ -62,7 +62,7 @@ class ONOS(object):
 		return response
 
 	#This method returns 200 OK if it sucessful retrieve a bridge ID, 404 if the bridge doesn't exists
-	def getBridgeID(self, onos_endpoint, onos_user, onos_pass, br_name):
+	def getBridgeID(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name):
 		'''
 		Retrieve a bridge ID from name
 		Args:

@@ -1,0 +1,36 @@
+{
+    "apps" : {
+        "org.onosproject.openstacknode" : {
+            "openstacknode" : {
+                 "nodes" : [
+                        {
+                                "hostname" : "compute-node",
+                                "type" : "COMPUTE",
+                                "managementIp" : "COMPUTE_NODE_IP",
+                                "dataIp" : "COMPUTE_NODE_DATA_IP",
+                                "integrationBridge" : "of:00000000000000a1"
+                        },
+                        {
+                                "hostname" : "compute-node2",
+                                "type" : "COMPUTE",
+                                "managementIp" : "COMPUTE_NODE2_IP",
+                                "dataIp" : "COMPUTE_NODE2_DATA_IP",
+                                "integrationBridge" : "of:00000000000000a2"
+                        }
+                  ]
+             }
+        }
+    },
+    "devices" : {
+        "of:00000000000000a1" : {
+            "basic" : {
+                "driver" : "sona"
+            }
+        },
+        "of:00000000000000a2" : {
+            "basic" : {
+                "driver" : "sona"
+            }
+        }
+    }
+}

@@ -6,6 +6,272 @@
 import json
 import logging
 
+'''
+###############################################################################################################
+#####################       Classes which represent resources into graphs for ONOS        #####################
+###############################################################################################################
+'''
+class OnosFlow(object):
+    def __init__(self, priority = 5, of_switch_id = None, timeout = 0, actions = None, match = None):
+        '''
+        Constructor for the Flow
+        Args:
+            flow_id:
+                identifier of the flow (to be recorded for further deletion)
+            table_id:
+                identifier of the table where to install the flow (in OF1.0 can be only table0!!)
+            priority:
+                flow priority
+            installHw:
+                boolean to force installation on the switch (default = True)
+            hard_timeout:
+                time before flow deletion (default = 0 = no timeout)
+            idle_timeout:
+                inactivity time before flow deletion (default = 0 = no timeout)
+            actions:
+                list of Actions for this flow
+            match:
+                Match for this flow
+        '''
+        self.priority = priority
+        self.timeout = timeout
+        self.isPermanent = "true"
+        self.of_switch_id = of_switch_id
+
+        self.actions = actions or []
+        self.match = match
+        
+        #self.flow_id = flow_id
+        #self.table_id = table_id
+        #self.installHw = installHw
+        #self.hard_timeout = hard_timeout
+        #self.idle_timeout = idle_timeout
+    
+    def getJSON(self):
+        '''
+        Gets the JSON.
+        '''
+        j_flow = {}
+        j_list_action = []
+        
+        
+        j_flow[''] = {}
+        j_flow['']['priority'] = self.priority
+        j_flow['']['timeout'] = self.timeout
+        j_flow['']['isPermanent'] = self.isPermanent
+        j_flow['']['deviceId'] = self.of_switch_id
+        #j_flow['']['strict'] = self.strict
+        #j_flow['flow']['id'] = self.flow_id
+        #j_flow['flow']['table_id'] = self.table_id
+
+        #j_flow['flow']['installHw'] = self.installHw
+        #j_flow['flow']['hard-timeout'] = self.hard_timeout
+        #j_flow['flow']['idle-timeout'] = self.idle_timeout
+        
+        j_flow['']['treatment'] = {}
+        j_flow['']['treatment']['instructions'] = {}
+        #j_flow['flow']['instructions']['instruction']['order'] = str(0)
+        #j_flow['flow']['instructions']['instruction']['apply-actions'] = {}
+        
+        i = 0
+        for action in self.actions:
+            j_action = action.getActions(i)
+            j_list_action.append(j_action)
+            i = i + 1
+               
+        j_flow['']['treatment']['instructions'] = j_list_action
+        
+        if (self.match is not None):
+            j_flow['']['selector'] = {}
+            j_flow['']['selector']['criteria'] = {}
+            
+            if (self.match.input_port is not None):
+                j_flow['']['selector']['criteria']['type'] = "IN_PORT"
+                j_flow['']['selector']['criteria']['port'] = self.match.input_port
+                
+            if (self.match.ip_source is not None):
+                j_flow['']['selector']['criteria']['type'] = "IPV4_SRC"
+                j_flow['']['selector']['criteria']['ip']   = self.match.ip_source
+                
+            if (self.match.ip_dest is not None):
+                j_flow['']['selector']['criteria']['type'] = "IPV4_DST"
+                j_flow['']['selector']['criteria']['ip']   = self.match.ip_dest
+                
+            if (self.match.ip_protocol is not None):
+                j_flow['']['selector']['criteria']['type'] = "IP_PROTO"
+                j_flow['']['selector']['criteria']['type'] = self.match.ip_protocol
+        
+            if (self.match.port_source is not None):
+            
+                if (self.match.ip_protocol is not None):
+                    protocol = self.match.ip_protocol
+                    if protocol == "6":
+                        #protocol = "tcp"
+                        j_flow['']['selector']['criteria']['type'] = "TCP_SRC"
+                        j_flow['']['selector']['criteria']['tcpPort'] = self.match.port_source
+                        
+                    elif protocol == "17":
+                        #protocol = "udp"
+                        j_flow['']['selector']['criteria']['type'] = "UDP_SRC"
+                        j_flow['']['selector']['criteria']['udpPort'] = self.match.port_source
+                else:
+                    logging.warning('sourcePort discarded. You have to set also the "protocol" field')
+        
+            if (self.match.port_dest is not None):
+                if (self.match.ip_protocol is not None):
+                    protocol = self.match.ip_protocol
+                    if protocol == "6":
+                        #protocol = "tcp"
+                        j_flow['']['selector']['criteria']['type'] = "TCP_DST"
+                        j_flow['']['selector']['criteria']['tcpPort'] = self.match.port_dest
+                        
+                    elif protocol == "17":
+                        #protocol = "udp"
+                        j_flow['']['selector']['criteria']['type'] = "UDP_DST"
+                        j_flow['']['selector']['criteria']['udpPort'] = self.match.port_dest
+                else:
+                    logging.warning('destPort discarded. You have to set also the "protocol" field')
+                    
+            if (self.match.vlan_id is not None):
+            
+                j_flow['']['selector']['criteria']['type'] = "VLAN_VID"
+                j_flow['']['selector']['criteria']['vlanId'] = self.match.vlan_id
+                #j_flow['flow']['match']['vlan-match']['vlan-id']['vlan-id-present'] = self.match.vlan_id_present
+                
+            if (self.match.eth_match is True):
+                
+                if (self.match.ethertype is not None):
+
+                    j_flow['']['selector']['criteria']['type'] = "ETH_TYPE"
+                    j_flow['']['selector']['criteria']['ethType'] = self.match.ethertype
+                    
+                if (self.match.eth_source is not None):
+                
+                    j_flow['']['selector']['criteria']['type'] = "ETH_SRC"
+                    j_flow['']['selector']['criteria']['mac']  = self.match.eth_source
+                    
+                if (self.match.eth_dest is not None):
+                
+                    j_flow['']['selector']['criteria']['type'] = "ETH_DST"
+                    j_flow['']['selector']['criteria']['mac']  = self.match.eth_dest
+
+        return json.dumps(j_flow)
+        
+class OnosAction(object):
+    def __init__(self, action = None):
+        '''
+        Represents any OpenFlow 1.0 possible action on the outgoing traffic
+        '''
+        self.address = None
+        self.action_type = None
+        self.action_subtype = None
+        self.action_value = None
+        self.output_port = None
+        self.max_length = None
+        self.vlan_id = None
+        self.priority = 0 # priority used to sort actions list
+        if action is not None:
+            #TODO: add remaining actions
+            if action.drop is True:
+                self.setDropAction()
+            elif action.controller is True:
+                self.setControllerAction()
+            elif action.set_vlan_id is not None:
+                self.setVlanAction(action.set_vlan_id)
+            elif action.pop_vlan is True:
+                self.setPopVlanAction()
+            elif action.set_ethernet_src_address is not None:
+                self.setEthernetAddressAction("source", action.set_ethernet_src_address)
+            elif action.set_ethernet_dst_address is not None:
+                self.setEthernetAddressAction("destination", action.set_ethernet_dst_address)                
+
+    def setEthernetAddressAction(self, _type, address):
+        self.address = address
+        
+        self.action_type = "L2MODIFICATION"
+        
+        if _type=="source":
+            self.action_subtype = "ETH_SRC"
+            self.action_value   = address
+            
+        elif _type=="destination":
+            self.action_subtype = "ETH_DST"
+            self.action_value   = address
+
+    def setDropAction(self):
+        self.action_type = ""
+        
+    def setPopVlanAction(self):
+        self.action_type = "L2MODIFICATION"
+        self.action_subtype="VLAN_POP"
+        
+    def setPushVlanAction(self):
+        self.action_type = "L2MODIFICATION"
+        self.action_subtype = "VLAN_PUSH"
+            
+    def setVlanAction(self, vlan_id):
+        '''
+        Define this action as a vlan tag swapping action
+        Args:
+            vlan_id:
+                vlan id for the new tag
+        '''
+        self.action_type = "L2MODIFICATION"
+        self.action_subtype = "VLAN_ID"
+        self.action_value = vlan_id
+        
+    def setControllerAction(self):
+        self.action_type = "OUTPUT"
+        self.action_value = "CONTROLLER"
+    
+    def setOutputAction(self, out_port):
+        '''
+        Define this action as an output port action
+        Args:
+            out_port:
+                id of the output port where to send out the traffic
+        '''
+        self.action_type = "OUTPUT"
+        self.action_value = out_port
+    
+    def getActions(self, order):
+        '''
+        Gets the Action as an object (to be inserted in Flow actions list)
+        Args:
+            order:
+                the order number of this action in the Flow list
+        '''
+        j_action = {}
+        j_action['order'] = order
+        
+        if self.action_type == "L2MODIFICATION":
+        
+            j_action['type'] = "L2MODIFICATION"
+        
+            if self.action_subtype == "ETH_SRC":
+                j_action['subtype'] = "ETH_SRC"
+                j_action['mac'] = self.action_value
+            
+            elif self.action_subtype == "ETH_DST":
+                j_action['subtype'] = "ETH_DST"
+                j_action['mac'] = self.action_value
+                
+            elif self.action_subtype == "VLAN_POP":
+                j_action['subtype'] = "VLAN_POP"
+                
+            elif self.action_subtype == "VLAN_PUSH":
+                j_action['subtype'] = "VLAN_PUSH"
+                
+            elif self.action_subtype == "VLAN_ID":
+                j_action['subtype'] = "VLAN_ID"
+                j_action['vlanId']  = self.action_value
+        
+        elif self.action_type == "OUTPUT":
+        
+            j_action['type'] = "OUTPUT"
+            j_action['port'] = self.action_value
+
+        return j_action
 
 '''
 ######################################################################################################

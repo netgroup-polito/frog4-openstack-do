@@ -272,19 +272,19 @@ class VNFRepositoryError(Exception):
         return self.message
 
 '''
-*************************************
-* 		ONOS/ODL Exceptions 		*
-*************************************
+***************************************
+*         ONOS/ODL Exceptions         *
+***************************************
 '''
 
 class OnosInternalError(Exception):
-	def __init__(self, message):
-		self.message = message
-	        # Call the base class constructor with the parameters it needsù
-	super(OnosInternalError, self).__init__(message)
+    def __init__(self, message):
+        self.message = message
+            # Call the base class constructor with the parameters it needsù
+        super(OnosInternalError, self).__init__(message)
 
-	def get_mess(self):
-		return self.message
+    def get_mess(self):
+        return self.message
 
 class OVSDBNodeNotFound(Exception):
     def __init__(self, message):

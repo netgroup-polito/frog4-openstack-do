@@ -10,212 +10,212 @@ import json, logging
 
 '''
 ######################################################################################################
-##############################	           ONOS  REST calls	        ##############################
+##############################               ONOS  REST calls            ##############################
 ######################################################################################################
 '''
 
 '''
    This class interacts with an ONOS app, ovsdbrest, which exhibits REST api for the following actions:
-	- Create/delete a bridge
-	- Add/delete a port
-	- Add/delete a patch port (see man 5 ovs-vswitchd.conf.db for more info)
-	- Add/delete a GRE tunnel (see http://api.onosproject.org/1.7.1/org/onosproject/net/behaviour/DefaultTunnelDescription.Builder.html for more info about GRE tunnel in ONOS)
+    - Create/delete a bridge
+    - Add/delete a port
+    - Add/delete a patch port (see man 5 ovs-vswitchd.conf.db for more info)
+    - Add/delete a GRE tunnel (see http://api.onosproject.org/1.7.1/org/onosproject/net/behaviour/DefaultTunnelDescription.Builder.html for more info about GRE tunnel in ONOS)
 '''
 class ONOS(object):
 
-	def __init__(self):
-		self.onos_api         = '/onos/v1'
-		self.onos_bridge_path = '/onos/ovsdb/%s/bridge/%s'
-		self.onos_port_path   = '/port/%s'
-		self.onos_patch_path  = '/patch_peer/'
-		self.onos_gre_path    = '/gre'
-		self.onos_devices     = '/devices'
-		self.onos_bridgeID    = '/onos/ovsdb/bridge'
+    def __init__(self):
+        self.onos_api         = '/onos/v1'
+        self.onos_bridge_path = '/onos/ovsdb/%s/bridge/%s'
+        self.onos_port_path   = '/port/%s'
+        self.onos_patch_path  = '/patch_peer/'
+        self.onos_gre_path    = '/gre'
+        self.onos_devices     = '/devices'
+        self.onos_bridgeID    = '/onos/ovsdb/bridge'
 
-	def getOvsdbIP(self, onos_endpoint, onos_user, onos_pass):
-		'''
-		Get all devices.
-		'''
-		headers = {'Accept': 'application/json'}
-		
-		url = onos_endpoint + self.onos_api + self.onos_devices
-		
-		response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
+    def getOvsdbIP(self, onos_endpoint, onos_user, onos_pass):
+        '''
+        Get all devices.
+        '''
+        headers = {'Accept': 'application/json'}
+        
+        url = onos_endpoint + self.onos_api + self.onos_devices
+        
+        response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
 
-		return response
+        return response
 
-	#This method returns 200 OK if it sucessful creates a bridge, 409 Conflict if the bridge already exists (There's no getBridge method), 500 otherwise
-	def createBridge(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name):
-		'''
-		Create a bridge
-		Args:
-		    br_name: name of the bridge
-		    ovsdb_ip: The endpoint to the ovsdb node where the bridge are
-		'''
-		headers = {'Accept': 'text/plain', 'Content-type': 'text/plain'}
-		
-		bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
-		url = onos_endpoint + urllib.parse.quote(bridge_path, safe='')
-		
-		response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+    #This method returns 200 OK if it sucessful creates a bridge, 409 Conflict if the bridge already exists (There's no getBridge method), 500 otherwise
+    def createBridge(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name):
+        '''
+        Create a bridge
+        Args:
+            br_name: name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge are
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'text/plain'}
+        
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='')
+        
+        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
 
-		return response
+        return response
 
-	#This method returns 200 OK if it sucessful retrieve a bridge ID, 404 if the bridge doesn't exists
-	def getBridgeID(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name):
-		'''
-		Retrieve a bridge ID from name
-		Args:
-		    br_name: name of the bridge
-		'''
-		headers = {'Accept': 'text/plain'}
-		
-		bridge_path = self.onos_bridgeID % (br_name)
+    #This method returns 200 OK if it sucessful retrieve a bridge ID, 404 if the bridge doesn't exists
+    def getBridgeID(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name):
+        '''
+        Retrieve a bridge ID from name
+        Args:
+            br_name: name of the bridge
+        '''
+        headers = {'Accept': 'text/plain'}
+        
+        bridge_path = self.onos_bridgeID % (br_name)
 
-		url = onos_endpoint + urllib.parse.quote(bridge_path, safe='')
-		
-		response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='')
+        
+        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
 
-		return response
+        return response
 
-	#This method returns 200 OK if it sucessful retrieve a bridge ID, 404 if the bridge doesn't exists
-	def getBridgePorts(self, onos_endpoint, onos_user, onos_pass, br_id):
-		'''
-		Get the ports of a bridge
-		Args:
-		    br_id: ID of the bridge
-		    ovsdb_ip: The endpoint to the ovsdb node where the bridge is
-		'''
-		headers = {'Accept': 'text/plain'}
-		
-		device_path = self.onos_api + self.onos_devices + '/' + br_id + '/ports'
+    #This method returns 200 OK if it sucessful retrieve a bridge ID, 404 if the bridge doesn't exists
+    def getBridgePorts(self, onos_endpoint, onos_user, onos_pass, br_id):
+        '''
+        Get the ports of a bridge
+        Args:
+            br_id: ID of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge is
+        '''
+        headers = {'Accept': 'text/plain'}
+        
+        device_path = self.onos_api + self.onos_devices + '/' + br_id + '/ports'
 
-		url = onos_endpoint + urllib.parse.quote(device_path, safe='')
-		
-		response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+        url = onos_endpoint + urllib.parse.quote(device_path, safe='')
+        
+        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
 
-		return response
+        return response
 
-	#This method returns 200 OK if it sucessful create and attach a port, 404 if the related bridge doesn't exist, 409 if the port already exists (There's no getPort method), 500 otherwise
-	def createPort(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name):
-		'''
-		Attach a port to a specified bridge
-		Args:
-		    br_name: Name of the bridge
-		    ovsdb_ip: The endpoint to the ovsdb node where the bridge is
-		    port_name: Name of the port to attach
-		'''
-		headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
-		
-		bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
-		port_path = self.onos_port_path % (port_name)
-		url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(port_path, safe='')
+    #This method returns 200 OK if it sucessful create and attach a port, 404 if the related bridge doesn't exist, 409 if the port already exists (There's no getPort method), 500 otherwise
+    def createPort(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name):
+        '''
+        Attach a port to a specified bridge
+        Args:
+            br_name: Name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge is
+            port_name: Name of the port to attach
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
+        
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        port_path = self.onos_port_path % (port_name)
+        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(port_path, safe='')
 
-		response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
 
-		return response
+        return response
 
-	#This method returns 200 OK if it sucessful create and attach a port, 404 if the related bridge doesn't exist, 409 if the port already exists (There's no getPort method), 500 otherwise
-	def createPatchPort(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name, patch_peer):
-		'''
-		Create and attach a patch port to a specified bridge
-		Args:
-		    br_name: Name of the bridge
-		    ovsdb_ip: The endpoint to the ovsdb node where the bridge is
-		    port_name: Name of the port to attach
-		    patch_peer: This is the name of the peer port
-		'''
-		headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
-		
-		bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
-		patch_path = self.onos_port_path % (port_name) + self.onos_patch_path + patch_peer
-		url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(patch_path, safe='')
+    #This method returns 200 OK if it sucessful create and attach a port, 404 if the related bridge doesn't exist, 409 if the port already exists (There's no getPort method), 500 otherwise
+    def createPatchPort(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name, patch_peer):
+        '''
+        Create and attach a patch port to a specified bridge
+        Args:
+            br_name: Name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge is
+            port_name: Name of the port to attach
+            patch_peer: This is the name of the peer port
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
+        
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        patch_path = self.onos_port_path % (port_name) + self.onos_patch_path + patch_peer
+        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(patch_path, safe='')
 
-		response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
 
-		return response.status_code
+        return response.status_code
 
-	#This method returns 200 OK if it sucessful create a GRE tunnel, 404 if the related bridge doesn't exist, 500 otherwise
-	def createGreTunnel(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name, local_ip, remote_ip, tunnel_key):
-		'''
-		Create a Gre tunnel with a specific tunnel key
-		Args:
-		    br_name: Name of the bridge
-		    ovsdb_ip: The endpoint to the ovsdb node where the bridge is
-		    port_name: Name of the port to attach
-		    local_ip: The local IP address (local GRE endpoint)
-		    remote_ip: The remote IP address (remote GRE endpoint)
-		    tunnel_key: This is the Tunnel key, usually (for GRE tunnel) a 32-bit number value
-		'''
-		headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
+    #This method returns 200 OK if it sucessful create a GRE tunnel, 404 if the related bridge doesn't exist, 500 otherwise
+    def createGreTunnel(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name, local_ip, remote_ip, tunnel_key):
+        '''
+        Create a Gre tunnel with a specific tunnel key
+        Args:
+            br_name: Name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge is
+            port_name: Name of the port to attach
+            local_ip: The local IP address (local GRE endpoint)
+            remote_ip: The remote IP address (remote GRE endpoint)
+            tunnel_key: This is the Tunnel key, usually (for GRE tunnel) a 32-bit number value
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
 
-		bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
-		port_path = self.onos_port_path % (port_name)
-		gre_path = self.onos_gre_path + '/' + local_ip + '/' + remote_ip + '/' + tunnel_key
-		url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(port_path, safe='') + urllib.parse.quote(gre_path, safe='')
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        port_path = self.onos_port_path % (port_name)
+        gre_path = self.onos_gre_path + '/' + local_ip + '/' + remote_ip + '/' + tunnel_key
+        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(port_path, safe='') + urllib.parse.quote(gre_path, safe='')
 
-		response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
 
-		return response.status_code
+        return response.status_code
 
-	#This method returns 200 OK if it sucessful delete a bridge, 500 otherwise
-	def deleteBridge(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name):
-		'''
-		Create a bridge
-		Args:
-		    br_name: name of the bridge
-		    ovsdb_ip: The endpoint to the ovsdb node where the bridge is
-		'''
-		headers = {'Accept': 'text/plain', 'Content-type': 'text/plain'}
-		
-		bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
-		url = onos_endpoint + urllib.parse.quote(bridge_path, safe='')
-		
-		response = requests.delete(url, headers=headers, auth=(onos_user, onos_pass))
+    #This method returns 200 OK if it sucessful delete a bridge, 500 otherwise
+    def deleteBridge(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name):
+        '''
+        Create a bridge
+        Args:
+            br_name: name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge is
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'text/plain'}
+        
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='')
+        
+        response = requests.delete(url, headers=headers, auth=(onos_user, onos_pass))
 
-		return response.status_code
+        return response.status_code
 
-	#This method returns 200 OK if it sucessful delete a port/patch port, 404 if the related bridge doesn't exist, 500 otherwise
-	def deletePort(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name):
-		'''
-		Attach a port to a specified bridge
-		Args:
-		    br_name: Name of the bridge
-		    ovsdb_ip: The endpoint to the ovsdb node where the bridge are
-		    port_name: Name of the port to attach
-		'''
-		headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
-		
-		bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
-		port_path = self.onos_port_path % (port_name)
-		url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(port_path, safe='')
+    #This method returns 200 OK if it sucessful delete a port/patch port, 404 if the related bridge doesn't exist, 500 otherwise
+    def deletePort(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name):
+        '''
+        Attach a port to a specified bridge
+        Args:
+            br_name: Name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge are
+            port_name: Name of the port to attach
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
+        
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        port_path = self.onos_port_path % (port_name)
+        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(port_path, safe='')
 
-		response = requests.delete(url, headers=headers, auth=(onos_user, onos_pass))
+        response = requests.delete(url, headers=headers, auth=(onos_user, onos_pass))
 
-		return response.status_code
+        return response.status_code
 
-	#This method returns 200 OK if it sucessful delete a GRE tunnel, 500 otherwise
-	def deleteGreTunnel(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name):
-		'''
-		Create a Gre tunnel with a specific tunnel key
-		Args:
-		    br_name: Name of the bridge
-		    ovsdb_ip: The endpoint to the ovsdb node where the bridge is
-		    port_name: Name of the port to attach
-		    local_ip: The local IP address (local GRE endpoint)
-		    remote_ip: The remote IP address (remote GRE endpoint)
-		    tunnel_key: This is the Tunnel key, usually (for GRE tunnel) a 32-bit number value
-		'''
-		headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
+    #This method returns 200 OK if it sucessful delete a GRE tunnel, 500 otherwise
+    def deleteGreTunnel(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name):
+        '''
+        Create a Gre tunnel with a specific tunnel key
+        Args:
+            br_name: Name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge is
+            port_name: Name of the port to attach
+            local_ip: The local IP address (local GRE endpoint)
+            remote_ip: The remote IP address (remote GRE endpoint)
+            tunnel_key: This is the Tunnel key, usually (for GRE tunnel) a 32-bit number value
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
 
-		bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
-		port_path = self.onos_port_path % (port_name)
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        port_path = self.onos_port_path % (port_name)
 
-		url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(port_path, safe='') + self.onos_gre_path
+        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(port_path, safe='') + self.onos_gre_path
 
-		response = requests.delete(url, headers=headers, auth=(onos_user, onos_pass))
+        response = requests.delete(url, headers=headers, auth=(onos_user, onos_pass))
 
-		return response.status_code
+        return response.status_code
 
 '''
 ######################################################################################################

@@ -49,24 +49,22 @@ class Configuration(object, metaclass=Singleton):
             else:
                 self._JOLNET_NETWORKS = None
 
+
+            self._INTEGRATION_BRIDGE = config.get('topology','integration_bridge')
+            self._EXIT_SWITCH = config.get('topology','exit_switch')
+            self._INGRESS_SWITCH = config.get('topology','ingress_switch')
+
             if config.has_option('onos', 'address'):
-                self._ONOS_ADDRESS = config.get('onos','address')
+                self._ONOS_ADDRESS  = config.get('onos','address')
                 self._ONOS_USERNAME = config.get('onos','username')
                 self._ONOS_PASSWORD = config.get('onos','password')
-		self._ONOS_ENABLED  = config.get('onos','enabled')
+                self._ONOS_ENABLED  = config.get('onos','enabled')
 
             if config.has_option('odl', 'address'):
                 self._ODL_ADDRESS = config.get('odl','address')
                 self._ODL_USERNAME = config.get('odl','username')
                 self._ODL_PASSWORD = config.get('odl','password')
-                
-            if config.has_option('onos', 'integration_bridge'):
-                self._INTEGRATION_BRIDGE = config.get('onos','integration_bridge')
-                #self._INTEGRATION_BRIDGE_LOCAL_IP = config.get('onos', 'integration_bridge_local_ip')
-            if config.has_option('onos', 'exit_switch'):
-                self._EXIT_SWITCH = config.get('onos','exit_switch')
-            if config.has_option('onos', 'ingress_switch'):
-                self._INGRESS_SWITCH = config.get('onos','ingress_switch')            
+                self._INTEGRATION_BRIDGE_LOCAL_IP = config.get('odl', 'integration_bridge_local_ip')           
                 
             self._LOG_FILE = config.get('log', 'log_file')
             self._VERBOSE = config.getboolean('log', 'verbose')
@@ -209,7 +207,7 @@ class Configuration(object, metaclass=Singleton):
 
     @property
     def ONOS_ENABLED(self):
-	return self._ONOS_ENABLED
+        return self._ONOS_ENABLED
     
     @property
     def AVAILABILITY_ZONE(self):

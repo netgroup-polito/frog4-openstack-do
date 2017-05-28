@@ -143,7 +143,7 @@ The last step is to configure ovs in each compute node to listen on port 6640, b
 Finally add the two configuration files:
 
 	curl --user onos:rocks -X POST -H "Content-Type: application/json" http://ONOS_IP_:8181/onos/v1/network/configuration/ -d @OpenstackInterface.json
-		curl --user onos:rocks -X POST -H "Content-Type: application/json" http://ONOS_IP_:8181/onos/v1/network/configuration/ -d @OpenstackNode.json
+	curl --user onos:rocks -X POST -H "Content-Type: application/json" http://ONOS_IP_:8181/onos/v1/network/configuration/ -d @OpenstackNode.json
 
 
 Now you should see on OVS at each compute node, an integration bridge with a VXLAN port setted. Run

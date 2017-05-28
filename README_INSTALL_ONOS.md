@@ -55,8 +55,8 @@ As an additional step we need to install networking-onos, a Neutron ML2 plug-in 
 	    - In the [ml2] section set the following options: 
         
         		[ml2]
-        		type_drivers = gre,vlan,vxlan
-        		tenant_network_types = vxlan, gre
+        		type_drivers = vxlan
+        		tenant_network_types = vxlan
         		mechanism_drivers = onos_ml2
         		extension_drivers = port_security
 
@@ -65,12 +65,6 @@ As an additional step we need to install networking-onos, a Neutron ML2 plug-in 
         		[ml2_type_vxlan]
         		...
         		vni_ranges = 1:1000
-
-        - In the [ml2_type_gre] section, configure the VXLAN network identifier range for networks:
-
-        		[ml2_type_gre]
-        		...
-        		tunnel_id_ranges = 1:1000
 
         - In the [securitygroup] section, set the following options:
 
@@ -106,9 +100,54 @@ At the end check that ONOS is running all the required applications for communic
 	*  82 org.onosproject.openstacknetworking  1.8.4    OpenStack Networking App
 If not, type this command within ONOS CLI:
 	
+	app activate org.onosproject.drivers.ovsdb
+	app activate org.onosproject.ovsdb-base
 	app activate org.onosproject.openstacknetworking
 	app activate org.onosproject.openflow-base
 If some apps still missing, type those commands:
 	
 	feature:install <MISSING_APP>
 	app activate <MISSING_APP>
+
+### Sona Configuration
+
+* SONA(Simplified Overlay Network Architecture), basically, it's a set of ONOS applications which provides OpenStack Neutron ML2 mechanism driver and L3 service plugin. In the actual ONOS version (1.10), SONA is composed of three ONOS applications: openstackNode, openstackNetworking, and vRouter. We used ONOS 1.9 so SONA includes also openstackInterface, substituted later in version 1.10 by third parts library. SONA supports only VXLAN type driver, so the network it's seen as a big switch where each ovs in the compute node is part of that, all of them connected through VXLAN
+* OpenstackNode application is in charge of managing and bootstrapping compute and gateway nodes. In our case will have only compute nodes, so the connectivity of the various network through a router is not available.
+* OpenstackNetworking application is in charge of managing virtual network states and providing a network connectivity to virtual machines by setting flow rules to compute and gateway node's OVS. This application also expose REST api, previously configure in neutron conf file, which are called by networking-onos. So OpenstackNetworking handle East-West traffic in each compute node(remember that North-South traffic is not handled).
+* Each application has its own configuration file, an example for each app is provided within config folder.
+---
+Now we have to configure OpenstackInterface and OpenstackNode applications. Once you have a running ONOS instance with all the required apps running, you can configure SONA:
+First of all write your configuration files. In the OpenstackNode's config file add all of your compute nodes, assigning a different id to each integration bridge. Also update "devices" section with all the integration bridge, one for each compute node.
+
+About OpenstackInterface's config file, unfortunately it uses the old v2 keystone and neutron api. So you have to make ONOS able to authenticate through keystone:
+
+Type this command to retrieve the domain id:
+
+	openstack domain list
+	
+Then add the domain id within /etc/keystone/keystone.conf like this:
+
+	[identity] 
+	
+	default_domain_id  = YOUR_DOMAIN_ID
+
+Then run keystone DB sync:
+
+	$ sudo su
+	# /bin/sh -c "keystone-manage --config-file /etc/keystone/keystone.conf db_sync" keystone
+	
+The last step is to configure ovs in each compute node to listen on port 6640, because after posting the configuration files, OpenstackNode apps will connect to OVSDB at each node and then will create an integration bridge setting Openflow controller to your ONOS instance:
+
+		$ ovs-appctl -t ovsdb-server ovsdb-server/add-remote ptcp:6640:[compute_node_ip]
+	
+Finally add the two configuration files:
+
+	curl --user onos:rocks -X POST -H "Content-Type: application/json" http://ONOS_IP_:8181/onos/v1/network/configuration/ -d @OpenstackInterface.json
+		curl --user onos:rocks -X POST -H "Content-Type: application/json" http://ONOS_IP_:8181/onos/v1/network/configuration/ -d @OpenstackNode.json
+
+
+Now you should see on OVS at each compute node, an integration bridge with a VXLAN port setted. Run
+
+	$ sudo ovs-vsctl show
+	
+to check the configuration.

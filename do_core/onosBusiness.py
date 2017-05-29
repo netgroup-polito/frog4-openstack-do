@@ -68,10 +68,10 @@ class ONOSBusiness(object):
             response = ONOS().getPorts(self.onosEndpoint, self.onosUsername, self.onosPassword, bridgeID.text)
 
         else:
-            raise BridgeNotFound(port + " not found")
+            raise BridgeNotFound(bridge_name + " not found")
 
         if response.status_code is 404:
-            raise BridgeNotFound(port + " not found")
+            raise BridgeNotFound(bridge_name + " not found by ID")
 
         device = response.text
 

@@ -30,6 +30,7 @@ class ONOS(object):
         self.onos_patch_path  = '/patch_peer/'
         self.onos_gre_path    = '/gre'
         self.onos_devices     = '/devices'
+        self.onos_api_port    = '/%s/ports'
 
     def getOvsdbIP(self, onos_endpoint, onos_user, onos_pass):
         '''
@@ -57,6 +58,23 @@ class ONOS(object):
         
         bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
         url = onos_endpoint + bridge_path
+        
+        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+http://130.192.225.173:8181/onos/v1/devices/of%3A00000000000000a1/ports
+    def getPorts(self, onos_endpoint, onos_user, onos_pass, br_ID):
+        '''
+        Retrieve a port number given the ID of a bridge
+        Args:
+            br_name: name of the bridge
+        '''
+        headers = {'Accept': 'text/plain'}
+
+        url = self.onos_api + self.onos_devices + self.onos_api_port % (br_ID)
+
+        print(url)
         
         response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
 

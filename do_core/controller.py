@@ -30,7 +30,12 @@ INGRESS_SWITCH = Configuration().INGRESS_SWITCH
 EXIT_SWITCH = Configuration().EXIT_SWITCH
 INTEGRATION_BRIDGE= Configuration().INTEGRATION_BRIDGE
 DOMAIN_DESCRIPTION_FILE = Configuration().DOMAIN_DESCRIPTION_FILE
-INTEGRATION_BRIDGE_LOCAL_IP = Configuration().INTEGRATION_BRIDGE_LOCAL_IP
+ONOS_ENABLED = Configuration().ONOS_ENABLED
+if ONOS_ENABLED == 'false':
+    INTEGRATION_BRIDGE_LOCAL_IP = Configuration().INTEGRATION_BRIDGE_LOCAL_IP
+else:
+    INTEGRATION_BRIDGE_LOCAL_IP = Configuration().ONOS_INTEGRATION_BRIDGE_LOCAL_IP
+
 
 class OpenstackOrchestratorController(object):
     def __init__(self, user_data):
@@ -54,7 +59,7 @@ class OpenstackOrchestratorController(object):
         #self.glanceEndpoint = self.token.get_endpoint_URL('image','public')  # not needed because it is read from the templates
         self.neutronEndpoint = self.token.get_endpoint_URL('network','public')
 
-    self.isOnosEnabled   = Configuration().ONOS_ENABLED
+    self.isOnosEnabled   = ONOS_ENABLED
 
     if self.isOnosEnabled == 'false':
 
@@ -329,7 +334,7 @@ class OpenstackOrchestratorController(object):
                         
         # Delete end-point and end-point resources
         for endpoint in updated_nffg.end_points[:]:
-            if endpoint.status == 'to_be_deleted':10.0.0.1
+            if endpoint.status == 'to_be_deleted':
                 self.deleteEndpoint(endpoint, updated_nffg)
                 Graph().deleteEndpoint(endpoint.id, graph_id)
                 Graph().deleteEndpointResourceAndResources(endpoint.db_id)
@@ -346,18 +351,18 @@ class OpenstackOrchestratorController(object):
                 ODL().deleteFlow(self.odlendpoint, self.odlusername, self.odlpassword, flow.node_id, flow.internal_id, flow.table_id)
                 Graph().deleteFlowRule(flow.id)
         Graph().deleteFlowRule(flowrule.db_id)
-        nf_fg.flow_rules.remove(flowrule)            
+        nf_fg.flow_rules.remove(flowrule)
 
-'''
-*********************************
-*    Endpoints deletetion       *
-*********************************
-'''
+    '''
+    *********************************
+    *    Endpoints deletetion       *
+    *********************************
+    '''
 
     def deleteEndpoints(self, nffg):
         for endpoint in nffg.end_points[:]:
             self.deleteEndpoint(endpoint, nffg)
-          
+
     def deleteEndpoint(self, endpoint, nffg):
         logging.debug("Deleting endpoint type: "+str(endpoint.type))
         if endpoint.type == 'interface-out' or endpoint.type == 'vlan':
@@ -430,11 +435,11 @@ class OpenstackOrchestratorController(object):
         
             self.onosBusiness.deleteGreTunnel(ovsdbIP, gre_port, INTEGRATION_BRIDGE)
 
-'''
-*****************************************
-*     Endpoints instantiation     *
-*****************************************
-'''
+    '''
+    *****************************************
+    *     Endpoints instantiation     *
+    *****************************************
+    '''
 
 
     def instantiateEndpoints(self, nffg):
@@ -447,16 +452,16 @@ class OpenstackOrchestratorController(object):
             self.manageIngressEndpoint(end_point)    #INGRESS_SWITCH
         elif end_point.type == 'interface-out' or end_point.type == 'vlan':
             self.manageExitEndpoint(nffg, end_point)    #EXIT_SWITCH
-        elif end_point.type == "internal":      "annotations": {
+        elif end_point.type == "internal":
             self.manageInternalEndpoint(nffg, end_point)    #INTERNAL_BRIDGE
         elif end_point.type == "gre-tunnel":
             self.manageGreEndpoint(nffg, end_point)        #INTEGRATION_BRIDGE
 
         self.res_desc.addEndpoint(end_point)
 
-'''
-Managing an endpoint which type is interface
-'''
+    '''
+    Managing an endpoint which type is interface
+    '''
 
     def manageIngressEndpoint(self, ingress_end_point):
         port_to_int_bridge = "to-" + INTEGRATION_BRIDGE
@@ -490,11 +495,11 @@ Managing an endpoint which type is interface
             
             ingress_end_point.interface_internal_id = port_to_ingress_switch
 
-'''
-Managing an endpoint which type is interface-out or vlan
-'''
+    '''
+    Managing an endpoint which type is interface-out or vlan
+    '''
                 
-    def manageExitEndpoint(self, nffg, egress_end_point):      "annotations": {
+    def manageExitEndpoint(self, nffg, egress_end_point):
         port_to_int_bridge = nffg.id + "-" + egress_end_point.id + "-to-" + INTEGRATION_BRIDGE
         port_to_exit_switch =  nffg.id + "-" + egress_end_point.id + "-to-" + EXIT_SWITCH
 
@@ -526,9 +531,9 @@ Managing an endpoint which type is interface-out or vlan
             
             egress_end_point.interface_internal_id =  port_to_exit_switch
 
-'''
-Managing an endpoint which type is internal
-'''
+    '''
+    Managing an endpoint which type is internal
+    '''
         
     def manageInternalEndpoint(self, nffg, internal_end_point):
         if internal_end_point.node_id is None:
@@ -561,9 +566,9 @@ Managing an endpoint which type is internal
             
             internal_end_point.interface_internal_id = port_to_internal_bridge
 
-'''
-Managing an endpoint which type is gre-tunnel
-'''
+    '''
+    Managing an endpoint which type is gre-tunnel
+    '''
         
     def manageGreEndpoint(self, nffg, gre_end_point):
         gre_port = nffg.id + "-gre-" + gre_end_point.id
@@ -582,17 +587,17 @@ Managing an endpoint which type is gre-tunnel
 
             ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
                             
-            self.onosBusiness.createGrePort(ovsdbIP, INTEGRATION_BRIDGE, gre_port, , gre_end_point.local_ip, gre_end_point.remote_ip, gre_end_point.gre_key)
+            self.onosBusiness.createGrePort(ovsdbIP, INTEGRATION_BRIDGE, gre_port, gre_end_point.local_ip, gre_end_point.remote_ip, gre_end_point.gre_key)
             
             gre_end_point.interface_internal_id = gre_port
             # This is needed in order to uniform the processFlowrule function regardless of the endpoint type
             gre_end_point.node_id = gre_end_point.local_ip
 
-'''
-*********************************************************
-*     Instantiation of resources within OpenStack       *
-*********************************************************
-'''
+    '''
+    *********************************************************
+    *     Instantiation of resources within OpenStack       *
+    *********************************************************
+    '''
         
     def openstackResourcesInstantiation(self, profile_graph, nf_fg):
         for network in profile_graph.networks:
@@ -617,11 +622,11 @@ Managing an endpoint which type is gre-tunnel
             if endpoint.status == "new":
                 Graph().setEndpointLocation(nf_fg.db_id, endpoint.id, endpoint.interface)
 
-'''
-********************************************
-*         Flow Rules Management            *
-********************************************
-'''
+    '''
+    ********************************************
+    *         Flow Rules Management            *
+    ********************************************
+    '''
                                 
     def instantiateFlowrules(self, profile_graph, graph_id):
         if JOLNET_MODE is False:
@@ -655,9 +660,9 @@ Managing an endpoint which type is gre-tunnel
                 if flowrule.status =='new':
                     self.instantiateFlowrule(profile_graph, graph_id, flowrule)
 
-'''
-If one of this methods are called it means that all the resources have been instantiated within OpenStack
-'''
+    '''
+    If one of this methods are called it means that all the resources have been instantiated within OpenStack
+    '''
                 
     def instantiateFlowrule(self, profile_graph, graph_id, flowrule):
         # Only flowrules that involve a VNF and an endpoint are installed
@@ -666,7 +671,7 @@ If one of this methods are called it means that all the resources have been inst
             port1_type = tmp1[0]
             #port1_id = tmp1[1]
             if port1_type == 'vnf':
-                if len(flowrule.actions) > 1 or flowrule.actions[0].output is None:
+                if len(flowrule.    actions) > 1 or flowrule.actions[0].output is None:
                     raise GraphError("Multiple actions or action different from output are not supported")
                 action = flowrule.actions[0]
                 if action.output.split(':')[0] == "endpoint":
@@ -688,13 +693,13 @@ If one of this methods are called it means that all the resources have been inst
         matchPort = flowrule.match.port_in.split(':',2)
         port1_type = matchPort[0]
         port1_id = matchPort[1]
-'''
-    Is the port in traffic coming from a VNF or an endpoint? 
-'''  
+        '''
+            Is the port in traffic coming from a VNF or an endpoint? 
+        '''  
         if port1_type == "vnf":
-'''
-    VNF 
-''' 
+            '''
+                VNF 
+            ''' 
             vnf_portOut = None
             vnf = profile_graph.functions[port1_id]
             vnf_port = vnf.ports[matchPort[2]]
@@ -710,9 +715,9 @@ If one of this methods are called it means that all the resources have been inst
                     break
 
             match = Match(flowrule.match) 
-'''
-        If endpoint is not none the traffic have to be forwarded to an endpoint
-'''            
+            '''
+                    If endpoint is not none the traffic have to be forwarded to an endpoint
+            '''            
             if endpoint is not None:
 
                 if self.isOnosEnabled == 'false':
@@ -735,26 +740,26 @@ If one of this methods are called it means that all the resources have been inst
 
                     elif end_point.type == "gre-tunnel":
                         of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
-'''
-        The endpoint is none so the traffic have to be forwarded to a VNF
-''' 
-            else:
 
+            else:
+                '''
+                        The endpoint is none so the traffic have to be forwarded to a VNF
+                ''' 
                 if self.isOnosEnabled == 'false':
 
                     ovs_id = self.ovsdb.getOVSId(INTEGRATION_BRIDGE_LOCAL_IP)
                     of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
 
                 else:
-'''
-                    ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
+
+                    ovsdbIP = self.onosBusiness.getOvsdbIP(INTEGRATION_BRIDGE_LOCAL_IP)
 
                     of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
-'''
 
-'''
-        Get the VNF port which match the port in criteria
-'''
+
+            '''
+                    Get the VNF port which match the port in criteria
+            '''
 
             if vnf_port.of_port is None:
 
@@ -771,7 +776,7 @@ If one of this methods are called it means that all the resources have been inst
             match.setInputMatch(vnf_port.of_port)
 
             actions = []
-    # Set actions
+            # Set actions
             if endpoint is not None and endpoint.type == "vlan":
 
                 if self.isOnosEnabled == 'false':
@@ -834,11 +839,11 @@ If one of this methods are called it means that all the resources have been inst
                     output_action.setOutputAction(vnf_portOut.of_port)
                     actions.append(output_action)
 
-'''
-*******************************
-*        Flow Creation        *
-*******************************
-'''
+            '''
+            *******************************
+            *        Flow Creation        *
+            *******************************
+            '''
             
             if self.isOnosEnabled == 'false':
             
@@ -851,8 +856,8 @@ If one of this methods are called it means that all the resources have been inst
 
                 flowj = OnosFlow(priority=16385+flowrule.priority, of_switch_id, actions=actions, match=match)
                 json_req = flowj.getJSON()
-
-                # flow_id = self.onosBusiness.createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
+                print (json_req)
+                # flow_id = self.onosBusiness.createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req)
                 
             
             flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)
@@ -870,11 +875,11 @@ If one of this methods are called it means that all the resources have been inst
             
                 flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=110)
                 Graph().addFlowRule(graph_id, flow_rule, None)
-
-'''
-    Is the port_in traffic coming from a VNF or an endpoint? Endpoint
-'''       
+      
         elif port1_type == "endpoint":
+            '''
+                Is the port_in traffic coming from a VNF or an endpoint? Endpoint
+            ''' 
             endpoint = profile_graph.endpoints[port1_id]
             
             for action in flowrule.actions:
@@ -956,11 +961,11 @@ If one of this methods are called it means that all the resources have been inst
                         output_action.setOutputAction(vnf_port.of_port)
                         actions.append(output_action)
 
-'''
-*******************************
-*        Flow Creation        *
-*******************************
-'''
+            '''
+            ###############################
+            #        Flow Creation        #
+            ###############################
+            '''
             if self.isOnosEnabled == 'false':
 
                 flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
@@ -981,11 +986,11 @@ If one of this methods are called it means that all the resources have been inst
             flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)  
             Graph().addFlowRule(graph_id, flow_rule, None)
 
-'''
-######################################################################################################
-#############################    Resources preparation phase        ##################################
-######################################################################################################
-'''
+    '''
+    ######################################################################################################
+    #############################    Resources preparation phase        ##################################
+    ######################################################################################################
+    '''
 
     def prepareNFFG(self, nffg):
         manager = NFFG_Manager(nffg)  

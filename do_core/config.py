@@ -49,7 +49,6 @@ class Configuration(object, metaclass=Singleton):
             else:
                 self._JOLNET_NETWORKS = None
 
-
             self._INTEGRATION_BRIDGE = config.get('topology','integration_bridge')
             self._EXIT_SWITCH = config.get('topology','exit_switch')
             self._INGRESS_SWITCH = config.get('topology','ingress_switch')
@@ -59,6 +58,7 @@ class Configuration(object, metaclass=Singleton):
                 self._ONOS_USERNAME = config.get('onos','username')
                 self._ONOS_PASSWORD = config.get('onos','password')
                 self._ONOS_ENABLED  = config.get('onos','enabled')
+                self._ONOS_INTEGRATION_BRIDGE_LOCAL_IP = config.get('onos', 'onos_integration_bridge_local_ip')
 
             if config.has_option('odl', 'address'):
                 self._ODL_ADDRESS = config.get('odl','address')
@@ -216,4 +216,8 @@ class Configuration(object, metaclass=Singleton):
     @property
     def INTEGRATION_BRIDGE_LOCAL_IP(self):
         return self._INTEGRATION_BRIDGE_LOCAL_IP
+
+    @property
+    def ONOS_INTEGRATION_BRIDGE_LOCAL_IP(self):
+        return self._ONOS_INTEGRATION_BRIDGE_LOCAL_IP
     

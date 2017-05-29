@@ -30,7 +30,6 @@ class ONOS(object):
         self.onos_patch_path  = '/patch_peer/'
         self.onos_gre_path    = '/gre'
         self.onos_devices     = '/devices'
-        self.onos_bridgeID    = '/onos/ovsdb/bridge'
 
     def getOvsdbIP(self, onos_endpoint, onos_user, onos_pass):
         '''
@@ -39,6 +38,8 @@ class ONOS(object):
         headers = {'Accept': 'application/json'}
         
         url = onos_endpoint + self.onos_api + self.onos_devices
+
+        logging.debug(url)
         
         response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
 
@@ -55,7 +56,7 @@ class ONOS(object):
         headers = {'Accept': 'text/plain', 'Content-type': 'text/plain'}
         
         bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
-        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='')
+        url = onos_endpoint + bridge_path
         
         response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
 
@@ -70,9 +71,11 @@ class ONOS(object):
         '''
         headers = {'Accept': 'text/plain'}
         
-        bridge_path = self.onos_bridgeID % (br_name)
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
 
-        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='')
+        url = onos_endpoint + bridge_path
+
+        print(url)
         
         response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
 

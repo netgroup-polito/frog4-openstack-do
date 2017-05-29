@@ -79,6 +79,6 @@ app.add_url_rule(
     methods=["GET"]
 )
 
-Messaging().publishDomainDescription()
+#Messaging().publishDomainDescription()
 
 logging.info("Flask Successfully started")

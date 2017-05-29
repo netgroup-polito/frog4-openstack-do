@@ -6,7 +6,7 @@ Created on may 2017
 '''
 
 from do_core.rest import ONOS
-from do_core.exception import BridgeNotFound, OnosInternalError
+from do_core.exception import BridgeNotFound, OnosInternalError, OVSDBNodeNotFound
 import json, logging, requests
 
 '''
@@ -21,14 +21,14 @@ class ONOSBusiness(object):
         self.onosUsername = onos_username
         self.onosPassword = onos_password
 
-'''
-The nodeIP should be the same of ovsdb ip. That's because nodeIP is an ip address representing a node where ovsdb is running and it's used by onos as management address for that node
-'''
+    '''
+    The nodeIP should be the same of ovsdb ip. That's because nodeIP is an ip address representing a node where ovsdb is running and it's used by onos as management address for that node
+    '''
     def getOvsdbIP(self, nodeIP):
         response = ONOS().getOvsdbIP(self.onosEndpoint, self.onosUsername, self.onosPassword)
         devices = response.text
 
-            json_object = json.loads(devices)['devices']
+        json_object = json.loads(devices)['devices']
 
         for node in json_object:
             if node['id'].split(':')[0] == 'ovsdb' and node['id'].split(":")[1] == nodeIP:
@@ -39,15 +39,15 @@ The nodeIP should be the same of ovsdb ip. That's because nodeIP is an ip addres
     def getBridgeID(self, ovsdbIP, bridge_name):
         bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)
 
-        if bridgeID.statu_code is 200
+        if bridgeID.status_code is 200:
             return bridgeID.text
 
         else:
-            raise BridgeNotFound(port + " not found")
+            raise BridgeNotFound(bridge_name + " not found")
 
     def getBridgePorts(self, ovsdbIP, bridge_name):
         bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)
-        if bridgeID.statu_code is 200
+        if bridgeID.status_code is 200:
             response = ONOS().getPorts(self.onosEndpoint, self.onosUsername, self.onosPassword, bridgeID.text)
 
         else:
@@ -62,9 +62,9 @@ The nodeIP should be the same of ovsdb ip. That's because nodeIP is an ip addres
 
         return len(json_objects)
 
-    def getOfPort(ovsdbIP, bridge_name, vnf_port):
+    def getOfPort(self, ovsdbIP, bridge_name, vnf_port):
         bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)
-        if bridgeID.statu_code is 200
+        if bridgeID.status_code is 200:
             response = ONOS().getPorts(self.onosEndpoint, self.onosUsername, self.onosPassword, bridgeID.text)
 
         else:
@@ -97,7 +97,7 @@ The nodeIP should be the same of ovsdb ip. That's because nodeIP is an ip addres
             raise OnosInternalError("500 Internal Server Error " + response.text)
 
     def createPatchPort(self, ovsdbIP, bridge_name, port_name, patch_peer):
-        response = ONOS().createPatchPort(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP,, bridge_name, port_name, patch_peer)
+        response = ONOS().createPatchPort(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name, port_name, patch_peer)
         if response.status_code is 404:
             raise BridgeNotFound(port + " not found")
         elif response.status_code is 500:

@@ -12,7 +12,7 @@ import logging
 ###############################################################################################################
 '''
 class OnosFlow(object):
-    def __init__(self, priority = 5, of_switch_id = None, timeout = 0, actions = None, match = None):
+    def __init__(self, priority = 5, timeout = 0, of_switch_id = None, actions = None, match = None):
         '''
         Constructor for the Flow
         Args:

@@ -49,6 +49,22 @@ class OpenstackOrchestratorController(object):
         # Num_net needed to create networks and subnets with different names
         self.num_net = 0
         self.res_desc = ResourceDescription(DOMAIN_DESCRIPTION_FILE)
+
+        self.isOnosEnabled   = ONOS_ENABLED
+
+        if self.isOnosEnabled == 'false':
+
+            self.odlendpoint = "http://" + Configuration().ODL_ADDRESS
+            self.odlusername = Configuration().ODL_USERNAME
+            self.odlpassword = Configuration().ODL_PASSWORD
+            self.ovsdb = OVSDB(self.odlendpoint, self.odlusername, self.odlpassword)
+
+        else:
+
+            self.onosEndpoint = Configuration().ONOS_ADDRESS
+            self.onosUsername = Configuration().ONOS_USERNAME
+            self.onosPassword = Configuration().ONOS_PASSWORD
+            self.onosBusiness = ONOSBusiness(self.onosEndpoint, self.onosUsername, self.onosPassword)
               
     def getAuthTokenAndEndpoints(self):
         self.node_endpoint = OPENSTACK_IP # IP Openstack
@@ -58,22 +74,6 @@ class OpenstackOrchestratorController(object):
         self.novaEndpoint = self.token.get_endpoint_URL('compute', 'public')
         #self.glanceEndpoint = self.token.get_endpoint_URL('image','public')  # not needed because it is read from the templates
         self.neutronEndpoint = self.token.get_endpoint_URL('network','public')
-
-    self.isOnosEnabled   = ONOS_ENABLED
-
-    if self.isOnosEnabled == 'false':
-
-        self.odlendpoint = "http://" + Configuration().ODL_ADDRESS
-        self.odlusername = Configuration().ODL_USERNAME
-        self.odlpassword = Configuration().ODL_PASSWORD
-        self.ovsdb = OVSDB(self.odlendpoint, self.odlusername, self.odlpassword)
-
-    else:
-
-        self.onosEndpoint = Configuration().ONOS_ADDRESS
-        self.onosUsername = Configuration().ONOS_USERNAME
-        self.onosPassword = Configuration().ONOS_PASSWORD
-        self.onosBusiness = ONOSBusiness(self.onosEndpoint, self.onosUsername, self.onosPassword)
      
     def get(self, nffg_id):
         session = Session().get_active_user_session_by_nf_fg_id(nffg_id, error_aware=False)
@@ -854,7 +854,7 @@ class OpenstackOrchestratorController(object):
                 
             else:
 
-                flowj = OnosFlow(priority=16385+flowrule.priority, of_switch_id, actions=actions, match=match)
+                flowj = OnosFlow(priority=16385+flowrule.priority, of_switch_id=of_switch_id, actions=actions, match=match)
                 json_req = flowj.getJSON()
                 print (json_req)
                 # flow_id = self.onosBusiness.createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req)
@@ -913,7 +913,6 @@ class OpenstackOrchestratorController(object):
             match.setInputMatch(str(input_port))
             
             actions = []
-            # Set actions
 
             if endpoint.type == "vlan":
 
@@ -976,10 +975,11 @@ class OpenstackOrchestratorController(object):
 
                 ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
 
-            else:
+            #else:
 
-                flowj = OnosFlow(priority=16385+flowrule.priority, of_switch_id, actions=actions, match=match)
-                json_req = flowj.getJSON()
+                #flowj = OnosFlow(priority=16385+flowrule.priority, of_switch_id, actions=actions, match=match)
+                #json_req = flowj.getJSON()
+                #print(json_req)
 
                 # flow_id = self.onosBusiness.createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
             

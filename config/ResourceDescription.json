@@ -1,0 +1,97 @@
+{
+  "netgroup-domain:informations": {
+    "name": "openstack",
+    "type": "OS",
+    "id": "001",
+    "capabilities": {
+      "functional-capabilities": {
+        "functional-capability": [
+          {
+            "type": "nat",
+            "ready": "true",
+            "function-specifications": {
+              "function-specification": [
+                {
+                  "mean": "equal",
+                  "value": "10.0.0.254",
+                  "unit": "ip-address",
+                  "name": "ip"
+                },
+                {
+                  "mean": "lower_bound",
+                  "value": "10000",
+                  "unit": "-",
+                  "name": "port-range"
+                },
+                {
+                  "mean": "upper_bound",
+                  "value": "30000",
+                  "unit": "-",
+                  "name": "port-range"
+                }
+              ]
+            },
+            "template": "http://130.192.225.92:8080/v2/nf_template/natVM",
+            "family": "Network",
+            "name": "nat"
+          }
+        ]
+      },
+      "infrastructural-capabilities": {
+        "infrastructural-capability": [
+          {
+            "type": "cpu_architecture",
+            "name": "x86-64"
+          },
+          {
+            "type": "compute_controller",
+            "name": "openstack"
+          }
+        ]
+      }
+    },
+    "hardware-informations": {
+      "interfaces": {
+        "interface": [
+          {
+            "config": {
+              "type": "ethernetCsmacd",
+              "description": "endpoint on device 02",
+              "enabled": true
+            },
+            "netgroup-if-side:side": "edge",
+            "name": "of:000084802d9d0540/5101",
+            "netgroup-neighbor:neighbors": {
+              "netgroup-neighbor:neighbor": [
+                {
+                  "remote-interface": "of:000084802d9d0540/5101",
+                  "domain-name": "onos_domain"
+                }
+              ]
+            },
+            "netgroup-if-ethernet:ethernet": {
+              "netgroup-vlan:vlans": {
+                "netgroup-vlan:vlan": [
+                  {
+                    "netgroup-vlan:config": {
+                      "netgroup-vlan:vlan-id": 295
+                    },
+                    "netgroup-vlan:vlan-id": 295
+                  },
+                  {
+                    "netgroup-vlan:config": {
+                      "netgroup-vlan:vlan-id": 296
+                    },
+                    "netgroup-vlan:vlan-id": 296
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "management-address": "127.0.0.1:9200"
+  }
+}
+

@@ -1,66 +1,66 @@
 {
   "netgroup-domain:informations": {
-    "name": "openstack",
-    "type": "OS",
-    "id": "001",
     "capabilities": {
       "functional-capabilities": {
         "functional-capability": [
           {
-            "type": "nat",
-            "ready": "true",
             "function-specifications": {
               "function-specification": [
                 {
-                  "mean": "equal",
+                  "name": "ip",
                   "value": "10.0.0.254",
-                  "unit": "ip-address",
-                  "name": "ip"
+                  "mean": "equal",
+                  "unit": "ip-address"
                 },
                 {
-                  "mean": "lower_bound",
+                  "name": "port-range",
                   "value": "10000",
-                  "unit": "-",
-                  "name": "port-range"
+                  "mean": "lower_bound",
+                  "unit": "-"
                 },
                 {
-                  "mean": "upper_bound",
+                  "name": "port-range",
                   "value": "30000",
-                  "unit": "-",
-                  "name": "port-range"
+                  "mean": "upper_bound",
+                  "unit": "-"
                 }
               ]
             },
-            "template": "http://130.192.225.92:8080/v2/nf_template/natVM",
+            "type": "nat",
+            "name": "nat",
+            "ready": "true",
             "family": "Network",
-            "name": "nat"
+            "template": "http://130.192.225.92:8080/v2/nf_template/natVM"
           }
         ]
       },
       "infrastructural-capabilities": {
         "infrastructural-capability": [
           {
-            "type": "cpu_architecture",
-            "name": "x86-64"
+            "name": "x86-64",
+            "type": "cpu_architecture"
           },
           {
-            "type": "compute_controller",
-            "name": "openstack"
+            "name": "openstack",
+            "type": "compute_controller"
           }
         ]
       }
     },
+    "id": "001",
+    "name": "openstack",
+    "management-address": "127.0.0.1:9200",
+    "type": "OS",
     "hardware-informations": {
       "interfaces": {
         "interface": [
           {
+            "netgroup-if-side:side": "edge",
             "config": {
               "type": "ethernetCsmacd",
               "description": "endpoint on device 02",
               "enabled": true
             },
-            "netgroup-if-side:side": "edge",
-            "name": "of:000084802d9d0540/5101",
             "netgroup-neighbor:neighbors": {
               "netgroup-neighbor:neighbor": [
                 {
@@ -86,12 +86,11 @@
                   }
                 ]
               }
-            }
+            },
+            "name": "of:000084802d9d0540/5101"
           }
         ]
       }
-    },
-    "management-address": "127.0.0.1:9200"
+    }
   }
 }
-

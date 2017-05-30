@@ -52,15 +52,16 @@ class OnosFlow(object):
         Gets the JSON.
         '''
         j_flow = {}
+        j_flows = {}
+        j_list_flow = []
         j_list_action = []
         
-        
-        j_flow[''] = {}
-        j_flow['']['priority'] = self.priority
-        j_flow['']['timeout'] = self.timeout
-        j_flow['']['isPermanent'] = self.isPermanent
-        j_flow['']['deviceId'] = self.of_switch_id
-        #j_flow['']['strict'] = self.strict
+        j_flows['flows'] = {}
+        j_flow['priority'] = self.priority
+        j_flow['timeout'] = self.timeout
+        j_flow['isPermanent'] = self.isPermanent
+        j_flow['deviceId'] = self.of_switch_id
+        #j_flow['strict'] = self.strict
         #j_flow['flow']['id'] = self.flow_id
         #j_flow['flow']['table_id'] = self.table_id
 
@@ -68,8 +69,8 @@ class OnosFlow(object):
         #j_flow['flow']['hard-timeout'] = self.hard_timeout
         #j_flow['flow']['idle-timeout'] = self.idle_timeout
         
-        j_flow['']['treatment'] = {}
-        j_flow['']['treatment']['instructions'] = {}
+        j_flow['treatment'] = {}
+        j_flow['treatment']['instructions'] = {}
         #j_flow['flow']['instructions']['instruction']['order'] = str(0)
         #j_flow['flow']['instructions']['instruction']['apply-actions'] = {}
         
@@ -79,27 +80,30 @@ class OnosFlow(object):
             j_list_action.append(j_action)
             i = i + 1
                
-        j_flow['']['treatment']['instructions'] = j_list_action
+        j_flow['treatment']['instructions'] = j_list_action
         
         if (self.match is not None):
-            j_flow['']['selector'] = {}
-            j_flow['']['selector']['criteria'] = {}
+            j_flow['selector'] = {}
+            j_flow['selector']['criteria'] = {}
+            j_list_criteria = []
+            j_match = {}
             
             if (self.match.input_port is not None):
-                j_flow['']['selector']['criteria']['type'] = "IN_PORT"
-                j_flow['']['selector']['criteria']['port'] = self.match.input_port
+                j_match['type'] = "IN_PORT"
+                j_match['port'] = self.match.input_port
+                j_list_criteria.append(j_match)
                 
             if (self.match.ip_source is not None):
-                j_flow['']['selector']['criteria']['type'] = "IPV4_SRC"
-                j_flow['']['selector']['criteria']['ip']   = self.match.ip_source
+                j_flow['selector']['criteria']['type'] = "IPV4_SRC"
+                j_flow['selector']['criteria']['ip']   = self.match.ip_source
                 
             if (self.match.ip_dest is not None):
-                j_flow['']['selector']['criteria']['type'] = "IPV4_DST"
-                j_flow['']['selector']['criteria']['ip']   = self.match.ip_dest
+                j_flow['selector']['criteria']['type'] = "IPV4_DST"
+                j_flow['selector']['criteria']['ip']   = self.match.ip_dest
                 
             if (self.match.ip_protocol is not None):
-                j_flow['']['selector']['criteria']['type'] = "IP_PROTO"
-                j_flow['']['selector']['criteria']['type'] = self.match.ip_protocol
+                j_flow['selector']['criteria']['type'] = "IP_PROTO"
+                j_flow['selector']['criteria']['type'] = self.match.ip_protocol
         
             if (self.match.port_source is not None):
             
@@ -107,13 +111,13 @@ class OnosFlow(object):
                     protocol = self.match.ip_protocol
                     if protocol == "6":
                         #protocol = "tcp"
-                        j_flow['']['selector']['criteria']['type'] = "TCP_SRC"
-                        j_flow['']['selector']['criteria']['tcpPort'] = self.match.port_source
+                        j_flow['selector']['criteria']['type'] = "TCP_SRC"
+                        j_flow['selector']['criteria']['tcpPort'] = self.match.port_source
                         
                     elif protocol == "17":
                         #protocol = "udp"
-                        j_flow['']['selector']['criteria']['type'] = "UDP_SRC"
-                        j_flow['']['selector']['criteria']['udpPort'] = self.match.port_source
+                        j_flow['selector']['criteria']['type'] = "UDP_SRC"
+                        j_flow['selector']['criteria']['udpPort'] = self.match.port_source
                 else:
                     logging.warning('sourcePort discarded. You have to set also the "protocol" field')
         
@@ -122,40 +126,44 @@ class OnosFlow(object):
                     protocol = self.match.ip_protocol
                     if protocol == "6":
                         #protocol = "tcp"
-                        j_flow['']['selector']['criteria']['type'] = "TCP_DST"
-                        j_flow['']['selector']['criteria']['tcpPort'] = self.match.port_dest
+                        j_flow['selector']['criteria']['type'] = "TCP_DST"
+                        j_flow['selector']['criteria']['tcpPort'] = self.match.port_dest
                         
                     elif protocol == "17":
                         #protocol = "udp"
-                        j_flow['']['selector']['criteria']['type'] = "UDP_DST"
-                        j_flow['']['selector']['criteria']['udpPort'] = self.match.port_dest
+                        j_flow['selector']['criteria']['type'] = "UDP_DST"
+                        j_flow['selector']['criteria']['udpPort'] = self.match.port_dest
                 else:
                     logging.warning('destPort discarded. You have to set also the "protocol" field')
                     
             if (self.match.vlan_id is not None):
             
-                j_flow['']['selector']['criteria']['type'] = "VLAN_VID"
-                j_flow['']['selector']['criteria']['vlanId'] = self.match.vlan_id
+                j_flow['selector']['criteria']['type'] = "VLAN_VID"
+                j_flow['selector']['criteria']['vlanId'] = self.match.vlan_id
                 #j_flow['flow']['match']['vlan-match']['vlan-id']['vlan-id-present'] = self.match.vlan_id_present
                 
             if (self.match.eth_match is True):
                 
                 if (self.match.ethertype is not None):
 
-                    j_flow['']['selector']['criteria']['type'] = "ETH_TYPE"
-                    j_flow['']['selector']['criteria']['ethType'] = self.match.ethertype
+                    j_flow['selector']['criteria']['type'] = "ETH_TYPE"
+                    j_flow['selector']['criteria']['ethType'] = self.match.ethertype
                     
                 if (self.match.eth_source is not None):
                 
-                    j_flow['']['selector']['criteria']['type'] = "ETH_SRC"
-                    j_flow['']['selector']['criteria']['mac']  = self.match.eth_source
+                    j_flow['selector']['criteria']['type'] = "ETH_SRC"
+                    j_flow['selector']['criteria']['mac']  = self.match.eth_source
                     
                 if (self.match.eth_dest is not None):
                 
-                    j_flow['']['selector']['criteria']['type'] = "ETH_DST"
-                    j_flow['']['selector']['criteria']['mac']  = self.match.eth_dest
+                    j_flow['selector']['criteria']['type'] = "ETH_DST"
+                    j_flow['selector']['criteria']['mac']  = self.match.eth_dest
 
-        return json.dumps(j_flow)
+        j_flow['selector']['criteria'] = j_list_criteria
+        j_list_flow.append(j_flow)
+        j_flows['flows'] = j_list_flow
+
+        return json.dumps(j_flows, indent=2, sort_keys=True)
         
 class OnosAction(object):
     def __init__(self, action = None):
@@ -242,7 +250,6 @@ class OnosAction(object):
                 the order number of this action in the Flow list
         '''
         j_action = {}
-        j_action['order'] = order
         
         if self.action_type == "L2MODIFICATION":
         

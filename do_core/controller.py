@@ -856,12 +856,15 @@ class OpenstackOrchestratorController(object):
 
                 flowj = OnosFlow(priority=16385+flowrule.priority, of_switch_id=of_switch_id, actions=actions, match=match)
                 json_req = flowj.getJSON()
-                print (json_req)
-                # flow_id = self.onosBusiness.createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req)
+
+                if DEBUG_MODE is True:
+                    with open('onos_flow.txt', 'w') as outfile:
+                        outfile.write(json_req)
+                self.onosBusiness.createFlow(json_req)
                 
             
-            flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)
-            Graph().addFlowRule(graph_id, flow_rule, None)
+            #flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)
+            #Graph().addFlowRule(graph_id, flow_rule, None)
 
             if self.isOnosEnabled == 'false':
 

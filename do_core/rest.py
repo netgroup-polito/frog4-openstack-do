@@ -31,6 +31,7 @@ class ONOS(object):
         self.onos_gre_path    = '/gre'
         self.onos_devices     = '/devices'
         self.onos_api_port    = '/%s/ports'
+        self.onos_api_flow    = '/flows'
 
     def getOvsdbIP(self, onos_endpoint, onos_user, onos_pass):
         '''
@@ -39,8 +40,6 @@ class ONOS(object):
         headers = {'Accept': 'application/json'}
         
         url = onos_endpoint + self.onos_api + self.onos_devices
-
-        logging.debug(url)
         
         response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
 
@@ -63,20 +62,17 @@ class ONOS(object):
 
         return response
 
-http://130.192.225.173:8181/onos/v1/devices/of%3A00000000000000a1/ports
     def getPorts(self, onos_endpoint, onos_user, onos_pass, br_ID):
         '''
         Retrieve a port number given the ID of a bridge
         Args:
             br_name: name of the bridge
         '''
-        headers = {'Accept': 'text/plain'}
+        headers = {'Accept': 'application/json'}
 
-        url = self.onos_api + self.onos_devices + self.onos_api_port % (br_ID)
-
-        print(url)
+        url = onos_endpoint + self.onos_api + self.onos_devices + self.onos_api_port % (br_ID)
         
-        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+        response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
 
         return response
 
@@ -92,10 +88,8 @@ http://130.192.225.173:8181/onos/v1/devices/of%3A00000000000000a1/ports
         bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
 
         url = onos_endpoint + bridge_path
-
-        print(url)
         
-        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+        response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
 
         return response
 
@@ -237,6 +231,24 @@ http://130.192.225.173:8181/onos/v1/devices/of%3A00000000000000a1/ports
         response = requests.delete(url, headers=headers, auth=(onos_user, onos_pass))
 
         return response.status_code
+
+    def createFlow(self, onos_endpoint, onos_user, onos_pass, app_id, json_req):
+        '''
+        Create a flow
+        Args:
+            app_id: It's used to know to which app each node is related. It's useful when you have a lot of flows and there are problem in the network,
+                    in this case you can delete all the flows, belonging to an app, which are causing the problem
+            json_req: The json that describes the flow
+        '''
+        headers = {'Accept': 'application/json', 'Content-type': 'application/json'}
+        parameter = {'appId': app_id}
+
+        url = onos_endpoint + self.onos_api + self.onos_api_flow
+
+        response = requests.post(url, json_req, params=parameter, headers=headers, auth=(onos_user, onos_pass))
+        print(response.url)
+
+        return response
 
 '''
 ######################################################################################################

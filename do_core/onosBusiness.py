@@ -20,6 +20,7 @@ class ONOSBusiness(object):
         self.onosEndpoint = onos_endpoint
         self.onosUsername = onos_username
         self.onosPassword = onos_password
+        self.appID = 'org.onosproject.ovsdbrest'
 
     '''
     The nodeIP should be the same of ovsdb ip. That's because nodeIP is an ip address representing a node where ovsdb is running and it's used by onos as management address for that node
@@ -64,6 +65,7 @@ class ONOSBusiness(object):
 
     def getOfPort(self, ovsdbIP, bridge_name, vnf_port):
         bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)
+
         if bridgeID.status_code is 200:
             response = ONOS().getPorts(self.onosEndpoint, self.onosUsername, self.onosPassword, bridgeID.text)
 
@@ -83,6 +85,10 @@ class ONOSBusiness(object):
                 return port['port']
 
         raise PortNotFound(vnf_port + " not found")
+
+    def createFlow(self, json_req):
+        response = ONOS().createFlow(self.onosEndpoint, self.onosUsername, self.onosPassword, self.appID, json_req)
+        print(response.status_code)
 
     def createBridge(self, ovsdbIP, bridge_name):
         response = ONOS().createBridge(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)

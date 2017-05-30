@@ -7,7 +7,7 @@
       "selector": {
         "criteria": [
           {
-            "port": "74",
+            "port": "98",
             "type": "IN_PORT"
           }
         ]
@@ -16,7 +16,7 @@
       "treatment": {
         "instructions": [
           {
-            "port": "75",
+            "port": "99",
             "type": "OUTPUT"
           }
         ]

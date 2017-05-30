@@ -90,6 +90,25 @@ class ONOSBusiness(object):
         response = ONOS().createFlow(self.onosEndpoint, self.onosUsername, self.onosPassword, self.appID, json_req)
         print(response.status_code)
 
+        if response.status_code is 200:
+
+            flowResponse = response.text
+            json_object = json.loads(flowResponse)['flows']
+
+            for flowID in json_object:
+                return flowID['flowId']
+
+        else:
+            response.raise_for_status()
+            return None
+
+    def deleteFlow(self, of_switch_id, flowID):
+
+        response = ONOS().deleteFlow(self.onosEndpoint, self.onosUsername, self.onosPassword, of_switch_id, flowID)
+
+        if response.status_code is 500:
+            raise OnosInternalError("500 Internal Server Error " + response.text)
+
     def createBridge(self, ovsdbIP, bridge_name):
         response = ONOS().createBridge(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)
         if response.status_code is 500:

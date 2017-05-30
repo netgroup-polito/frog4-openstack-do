@@ -250,6 +250,21 @@ class ONOS(object):
 
         return response
 
+    def deleteFlow(self, onos_endpoint, onos_user, onos_pass, of_switch_id, flowID):
+        '''
+        Delete a flow
+        Args:
+            of_switch_id: Openflow ID of the device which the flowRule refers to
+            flowID: ID of the flow to delete
+        '''
+
+        url = onos_endpoint + self.onos_api + self.onos_api_flow +'/' + of_switch_id + '/' + flowID
+
+        response = requests.delete(url, auth=(onos_user, onos_pass))
+        print(response.url)
+
+        return response
+
 '''
 ######################################################################################################
 ############################    OpenDaylight  REST calls        ################################

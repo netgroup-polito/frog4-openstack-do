@@ -1,36 +1,38 @@
 {
   "netgroup-domain:informations": {
+    "id": "001",
+    "name": "openstack",
     "capabilities": {
       "functional-capabilities": {
         "functional-capability": [
           {
+            "template": "http://130.192.225.92:8080/v2/nf_template/natVM",
+            "name": "nat",
+            "ready": "true",
+            "type": "nat",
             "function-specifications": {
               "function-specification": [
                 {
-                  "name": "ip",
-                  "value": "10.0.0.254",
                   "mean": "equal",
-                  "unit": "ip-address"
+                  "unit": "ip-address",
+                  "name": "ip",
+                  "value": "10.0.0.254"
                 },
                 {
-                  "name": "port-range",
-                  "value": "10000",
                   "mean": "lower_bound",
-                  "unit": "-"
+                  "unit": "-",
+                  "name": "port-range",
+                  "value": "10000"
                 },
                 {
-                  "name": "port-range",
-                  "value": "30000",
                   "mean": "upper_bound",
-                  "unit": "-"
+                  "unit": "-",
+                  "name": "port-range",
+                  "value": "30000"
                 }
               ]
             },
-            "type": "nat",
-            "name": "nat",
-            "ready": "true",
-            "family": "Network",
-            "template": "http://130.192.225.92:8080/v2/nf_template/natVM"
+            "family": "Network"
           }
         ]
       },
@@ -47,28 +49,13 @@
         ]
       }
     },
-    "id": "001",
-    "name": "openstack",
-    "management-address": "127.0.0.1:9200",
     "type": "OS",
     "hardware-informations": {
       "interfaces": {
         "interface": [
           {
+            "name": "of:000084802d9d0540/5101",
             "netgroup-if-side:side": "edge",
-            "config": {
-              "type": "ethernetCsmacd",
-              "description": "endpoint on device 02",
-              "enabled": true
-            },
-            "netgroup-neighbor:neighbors": {
-              "netgroup-neighbor:neighbor": [
-                {
-                  "remote-interface": "of:000084802d9d0540/5101",
-                  "domain-name": "onos_domain"
-                }
-              ]
-            },
             "netgroup-if-ethernet:ethernet": {
               "netgroup-vlan:vlans": {
                 "netgroup-vlan:vlan": [
@@ -87,10 +74,23 @@
                 ]
               }
             },
-            "name": "of:000084802d9d0540/5101"
+            "netgroup-neighbor:neighbors": {
+              "netgroup-neighbor:neighbor": [
+                {
+                  "domain-name": "onos_domain",
+                  "remote-interface": "of:000084802d9d0540/5101"
+                }
+              ]
+            },
+            "config": {
+              "description": "endpoint on device 02",
+              "enabled": true,
+              "type": "ethernetCsmacd"
+            }
           }
         ]
       }
-    }
+    },
+    "management-address": "127.0.0.1:9200"
   }
 }

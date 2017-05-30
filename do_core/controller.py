@@ -31,7 +31,7 @@ EXIT_SWITCH = Configuration().EXIT_SWITCH
 INTEGRATION_BRIDGE= Configuration().INTEGRATION_BRIDGE
 DOMAIN_DESCRIPTION_FILE = Configuration().DOMAIN_DESCRIPTION_FILE
 ONOS_ENABLED = Configuration().ONOS_ENABLED
-if ONOS_ENABLED == 'false':
+if ONOS_ENABLED is False:
     INTEGRATION_BRIDGE_LOCAL_IP = Configuration().INTEGRATION_BRIDGE_LOCAL_IP
 else:
     INTEGRATION_BRIDGE_LOCAL_IP = Configuration().ONOS_INTEGRATION_BRIDGE_LOCAL_IP
@@ -50,9 +50,7 @@ class OpenstackOrchestratorController(object):
         self.num_net = 0
         self.res_desc = ResourceDescription(DOMAIN_DESCRIPTION_FILE)
 
-        self.isOnosEnabled   = ONOS_ENABLED
-
-        if self.isOnosEnabled == 'false':
+        if ONOS_ENABLED is False:
 
             self.odlendpoint = "http://" + Configuration().ODL_ADDRESS
             self.odlusername = Configuration().ODL_USERNAME
@@ -300,7 +298,12 @@ class OpenstackOrchestratorController(object):
             if flow.type == "external" and flow.status == "complete":
                 if flow.table_id is None:
                     flow.table_id = 0
-                ODL().deleteFlow(self.odlendpoint, self.odlusername, self.odlpassword, flow.node_id, flow.internal_id, flow.table_id)
+                if ONOS_ENABLED is False:
+                    ODL().deleteFlow(self.odlendpoint, self.odlusername, self.odlpassword, flow.node_id, flow.internal_id, flow.table_id)
+
+                else:
+                    self.onosBusiness.deleteFlow(flow.node_id, flow.internal_id)
+
         token_id = self.token.get_token()
         vnfs = Graph().getVNFs(graph_id)
         for vnf in vnfs:
@@ -348,7 +351,13 @@ class OpenstackOrchestratorController(object):
             if flow.type == "external" and flow.status == "complete":
                 if flow.table_id is None:
                     flow.table_id = 0
-                ODL().deleteFlow(self.odlendpoint, self.odlusername, self.odlpassword, flow.node_id, flow.internal_id, flow.table_id)
+
+                if ONOS_ENABLED is False:
+                    ODL().deleteFlow(self.odlendpoint, self.odlusername, self.odlpassword, flow.node_id, flow.internal_id, flow.table_id)
+
+                else:
+                    self.onosBusiness.deleteFlow(flow.node_id, flow.internal_id)
+
                 Graph().deleteFlowRule(flow.id)
         Graph().deleteFlowRule(flowrule.db_id)
         nf_fg.flow_rules.remove(flowrule)
@@ -378,7 +387,7 @@ class OpenstackOrchestratorController(object):
         port_to_int_bridge = nffg.id + "-" + endpoint.id + "-to-" + INTEGRATION_BRIDGE
         port_to_exit_switch =  nffg.id + "-" + endpoint.id + "-to-" + EXIT_SWITCH
         
-        if self.isOnosEnabled == 'false':
+        if ONOS_ENABLED is False:
             ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
         
             self.ovsdb.deletePort(ovs_id, port_to_int_bridge, EXIT_SWITCH)
@@ -397,7 +406,7 @@ class OpenstackOrchestratorController(object):
         port_to_internal_bridge = nffg.id + "-" + endpoint.id + "-to-" + internal_bridge_id
         port_to_integration_bridge =  nffg.id + "-" + endpoint.id + "-to-" + INTEGRATION_BRIDGE
         
-        if self.isOnosEnabled == 'false':
+        if ONOS_ENABLED is False:
             ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
         
             self.ovsdb.deletePort(ovs_id, port_to_integration_bridge, internal_bridge_id)
@@ -424,7 +433,7 @@ class OpenstackOrchestratorController(object):
     def deleteGreEndpoint(self, nffg, endpoint):
         gre_port = nffg.id + "-gre-" + endpoint.id
         
-        if self.isOnosEnabled == 'false':
+        if ONOS_ENABLED is False:
 
             ovs_id = self.ovsdb.getOVSId(endpoint.local_ip)
                     
@@ -467,7 +476,7 @@ class OpenstackOrchestratorController(object):
         port_to_int_bridge = "to-" + INTEGRATION_BRIDGE
         port_to_ingress_switch =  "to-" + INGRESS_SWITCH
 
-        if self.isOnosEnabled == 'false':
+        if ONOS_ENABLED is False:
         
             ovs_id = self.ovsdb.getOVSId(ingress_end_point.node_id)
 
@@ -503,7 +512,7 @@ class OpenstackOrchestratorController(object):
         port_to_int_bridge = nffg.id + "-" + egress_end_point.id + "-to-" + INTEGRATION_BRIDGE
         port_to_exit_switch =  nffg.id + "-" + egress_end_point.id + "-to-" + EXIT_SWITCH
 
-        if self.isOnosEnabled == 'false':
+        if ONOS_ENABLED is False:
         
             ovs_id = self.ovsdb.getOVSId(egress_end_point.node_id)
 
@@ -542,7 +551,7 @@ class OpenstackOrchestratorController(object):
         port_to_internal_bridge = nffg.id + "-" + internal_end_point.id + "-to-" + internal_bridge_id
         port_to_integration_bridge =  nffg.id + "-" + internal_end_point.id + "-to-" + INTEGRATION_BRIDGE
 
-        if self.isOnosEnabled == 'false':
+        if ONOS_ENABLED is False:
         
             ovs_id = self.ovsdb.getOVSId(internal_end_point.node_id)
 
@@ -573,7 +582,7 @@ class OpenstackOrchestratorController(object):
     def manageGreEndpoint(self, nffg, gre_end_point):
         gre_port = nffg.id + "-gre-" + gre_end_point.id
 
-        if self.isOnosEnabled == 'false':
+        if ONOS_ENABLED is False:
         
             ovs_id = self.ovsdb.getOVSId(gre_end_point.local_ip)
                             
@@ -720,7 +729,7 @@ class OpenstackOrchestratorController(object):
             '''            
             if endpoint is not None:
 
-                if self.isOnosEnabled == 'false':
+                if ONOS_ENABLED is False:
 
                     ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
                     of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
@@ -745,7 +754,7 @@ class OpenstackOrchestratorController(object):
                 '''
                         The endpoint is none so the traffic have to be forwarded to a VNF
                 ''' 
-                if self.isOnosEnabled == 'false':
+                if ONOS_ENABLED is False:
 
                     ovs_id = self.ovsdb.getOVSId(INTEGRATION_BRIDGE_LOCAL_IP)
                     of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
@@ -763,7 +772,7 @@ class OpenstackOrchestratorController(object):
 
             if vnf_port.of_port is None:
 
-                if self.isOnosEnabled == 'false':
+                if ONOS_ENABLED is False:
 
                     input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_port.internal_id[0:8])
                     vnf_port.of_port = str(input_port)
@@ -779,7 +788,7 @@ class OpenstackOrchestratorController(object):
             # Set actions
             if endpoint is not None and endpoint.type == "vlan":
 
-                if self.isOnosEnabled == 'false':
+                if ONOS_ENABLED is False:
                     push_vlan_action = Action()
                     push_vlan_action.setPushVlanAction()
                     set_vlan_action = Action()
@@ -798,7 +807,7 @@ class OpenstackOrchestratorController(object):
                 
             if endpoint is not None:
             
-                if self.isOnosEnabled == 'false':
+                if ONOS_ENABLED is False:
                 
                     output_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, endpoint.interface_internal_id)
                     output_action = Action()
@@ -815,7 +824,7 @@ class OpenstackOrchestratorController(object):
             else:
             
                 if vnf_portOut.of_port is None:
-                    if self.isOnosEnabled == 'false':
+                    if ONOS_ENABLED is False:
                     
                        out_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_portOut.internal_id[0:8])
                        vnf_portOut.of_port = str(out_port)
@@ -827,7 +836,7 @@ class OpenstackOrchestratorController(object):
                         # Input port is returned as a number which identify the port within that bridge
                         vnf_portOut.of_port = str(out_port)
 
-                if self.isOnosEnabled == 'false':
+                if ONOS_ENABLED is False:
                     output_action = Action()
                     output_action.setOutputAction(vnf_portOut.of_port, 65535)
                     actions.append(output_action)
@@ -845,7 +854,7 @@ class OpenstackOrchestratorController(object):
             *******************************
             '''
             
-            if self.isOnosEnabled == 'false':
+            if ONOS_ENABLED is False:
             
                 flowj = Flow(flow_id, table_id=0, priority=16385+flowrule.priority, actions=actions, match=match)
                 json_req = flowj.getJSON()
@@ -860,13 +869,13 @@ class OpenstackOrchestratorController(object):
                 if DEBUG_MODE is True:
                     with open('onos_flow.txt', 'w') as outfile:
                         outfile.write(json_req)
-                self.onosBusiness.createFlow(json_req)
+                flow_id = self.onosBusiness.createFlow(json_req)
                 
             
-            #flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)
-            #Graph().addFlowRule(graph_id, flow_rule, None)
+            flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)
+            Graph().addFlowRule(graph_id, flow_rule, None)
 
-            if self.isOnosEnabled == 'false':
+            if ONOS_ENABLED is False:
 
                 flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
             
@@ -899,7 +908,7 @@ class OpenstackOrchestratorController(object):
                     
             match = Match(flowrule.match)
 
-            if self.isOnosEnabled == 'false':
+            if ONOS_ENABLED is False:
 
                 ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
                 of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
@@ -919,7 +928,7 @@ class OpenstackOrchestratorController(object):
 
             if endpoint.type == "vlan":
 
-                if self.isOnosEnabled == 'false':
+                if ONOS_ENABLED is False:
                     match.setVlanMatch(endpoint.vlan_id)
                     pop_vlan_action = Action()
                     pop_vlan_action.setPopVlanAction()
@@ -943,7 +952,7 @@ class OpenstackOrchestratorController(object):
             
                 if vnf_port.of_port is None:
             
-                    if self.isOnosEnabled == 'false':
+                    if ONOS_ENABLED is False:
 
                         output_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_port.internal_id[0:8])
                         vnf_port.of_port = str(output_port)
@@ -968,7 +977,7 @@ class OpenstackOrchestratorController(object):
             #        Flow Creation        #
             ###############################
             '''
-            if self.isOnosEnabled == 'false':
+            if ONOS_ENABLED is False:
 
                 flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
 

@@ -1,5 +1,6 @@
 '''
 @author: stefanopetrangeli
+@author: ReliableLion
 '''
 import json
 import logging
@@ -724,9 +725,7 @@ class OpenstackOrchestratorController(object):
                     break
 
             match = Match(flowrule.match) 
-            '''
-                    If endpoint is not none the traffic have to be forwarded to an endpoint
-            '''            
+         
             if endpoint is not None:
 
                 if ONOS_ENABLED is False:
@@ -751,9 +750,7 @@ class OpenstackOrchestratorController(object):
                         of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
 
             else:
-                '''
-                        The endpoint is none so the traffic have to be forwarded to a VNF
-                ''' 
+
                 if ONOS_ENABLED is False:
 
                     ovs_id = self.ovsdb.getOVSId(INTEGRATION_BRIDGE_LOCAL_IP)
@@ -987,13 +984,15 @@ class OpenstackOrchestratorController(object):
 
                 ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
 
-            #else:
+            else:
 
-                #flowj = OnosFlow(priority=16385+flowrule.priority, of_switch_id, actions=actions, match=match)
-                #json_req = flowj.getJSON()
-                #print(json_req)
+                flowj = OnosFlow(priority=16385+flowrule.priority, of_switch_id=of_switch_id, actions=actions, match=match)
+                json_req = flowj.getJSON()
 
-                # flow_id = self.onosBusiness.createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
+                if DEBUG_MODE is True:
+                    with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                        outfile.write(json_req)
+                flow_id = self.onosBusiness.createFlow(json_req)
             
             flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)  
             Graph().addFlowRule(graph_id, flow_rule, None)

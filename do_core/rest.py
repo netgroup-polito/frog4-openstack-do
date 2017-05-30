@@ -3,6 +3,7 @@ Created on 15 apr 2016
 
 @author: vida
 @author: stefanopetrangeli
+@author: ReliableLion
 '''
 
 import requests, urllib

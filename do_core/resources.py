@@ -1,6 +1,7 @@
 '''
 @author: vida
 @author: stefanopetrangeli
+@author: ReliableLion
 '''
 
 import json
@@ -18,16 +19,12 @@ class OnosFlow(object):
         Args:
             flow_id:
                 identifier of the flow (to be recorded for further deletion)
-            table_id:
-                identifier of the table where to install the flow (in OF1.0 can be only table0!!)
             priority:
                 flow priority
-            installHw:
-                boolean to force installation on the switch (default = True)
-            hard_timeout:
-                time before flow deletion (default = 0 = no timeout)
-            idle_timeout:
-                inactivity time before flow deletion (default = 0 = no timeout)
+            isPermanent:
+                boolean variable means that the flow is permanent or not
+            of_switch_id:
+                Openflow ID of the device referred by the flowRule
             actions:
                 list of Actions for this flow
             match:
@@ -94,30 +91,36 @@ class OnosFlow(object):
                 j_list_criteria.append(j_match)
                 
             if (self.match.ip_source is not None):
-                j_flow['selector']['criteria']['type'] = "IPV4_SRC"
-                j_flow['selector']['criteria']['ip']   = self.match.ip_source
+                j_match['selector']['criteria']['type'] = "IPV4_SRC"
+                j_match['selector']['criteria']['ip']   = self.match.ip_source
+                j_list_criteria.append(j_match)
                 
             if (self.match.ip_dest is not None):
-                j_flow['selector']['criteria']['type'] = "IPV4_DST"
-                j_flow['selector']['criteria']['ip']   = self.match.ip_dest
+                j_match['selector']['criteria']['type'] = "IPV4_DST"
+                j_match['selector']['criteria']['ip']   = self.match.ip_dest
+                j_list_criteria.append(j_match)
                 
             if (self.match.ip_protocol is not None):
-                j_flow['selector']['criteria']['type'] = "IP_PROTO"
-                j_flow['selector']['criteria']['type'] = self.match.ip_protocol
-        
+                j_match['selector']['criteria']['type'] = "IP_PROTO"
+                j_match['selector']['criteria']['type'] = self.match.ip_protocol
+                j_list_criteria.append(j_match)
+                
             if (self.match.port_source is not None):
             
                 if (self.match.ip_protocol is not None):
                     protocol = self.match.ip_protocol
                     if protocol == "6":
                         #protocol = "tcp"
-                        j_flow['selector']['criteria']['type'] = "TCP_SRC"
-                        j_flow['selector']['criteria']['tcpPort'] = self.match.port_source
-                        
+                        j_match['selector']['criteria']['type'] = "TCP_SRC"
+                        j_match['selector']['criteria']['tcpPort'] = self.match.port_source
+                        j_list_criteria.append(j_match)
+                
                     elif protocol == "17":
                         #protocol = "udp"
-                        j_flow['selector']['criteria']['type'] = "UDP_SRC"
-                        j_flow['selector']['criteria']['udpPort'] = self.match.port_source
+                        j_match['selector']['criteria']['type'] = "UDP_SRC"
+                        j_match['selector']['criteria']['udpPort'] = self.match.port_source
+                        j_list_criteria.append(j_match)
+                
                 else:
                     logging.warning('sourcePort discarded. You have to set also the "protocol" field')
         
@@ -126,44 +129,50 @@ class OnosFlow(object):
                     protocol = self.match.ip_protocol
                     if protocol == "6":
                         #protocol = "tcp"
-                        j_flow['selector']['criteria']['type'] = "TCP_DST"
-                        j_flow['selector']['criteria']['tcpPort'] = self.match.port_dest
-                        
+                        j_match['selector']['criteria']['type'] = "TCP_DST"
+                        j_match['selector']['criteria']['tcpPort'] = self.match.port_dest
+                        j_list_criteria.append(j_match)
+                
                     elif protocol == "17":
                         #protocol = "udp"
-                        j_flow['selector']['criteria']['type'] = "UDP_DST"
-                        j_flow['selector']['criteria']['udpPort'] = self.match.port_dest
+                        j_match['selector']['criteria']['type'] = "UDP_DST"
+                        j_match['selector']['criteria']['udpPort'] = self.match.port_dest
+                        j_list_criteria.append(j_match)
+                
                 else:
                     logging.warning('destPort discarded. You have to set also the "protocol" field')
                     
             if (self.match.vlan_id is not None):
             
-                j_flow['selector']['criteria']['type'] = "VLAN_VID"
-                j_flow['selector']['criteria']['vlanId'] = self.match.vlan_id
-                #j_flow['flow']['match']['vlan-match']['vlan-id']['vlan-id-present'] = self.match.vlan_id_present
+                j_match['selector']['criteria']['type'] = "VLAN_VID"
+                j_match['selector']['criteria']['vlanId'] = self.match.vlan_id
+                j_list_criteria.append(j_match)
                 
             if (self.match.eth_match is True):
                 
                 if (self.match.ethertype is not None):
 
-                    j_flow['selector']['criteria']['type'] = "ETH_TYPE"
-                    j_flow['selector']['criteria']['ethType'] = self.match.ethertype
-                    
+                    j_match['selector']['criteria']['type'] = "ETH_TYPE"
+                    j_match['selector']['criteria']['ethType'] = self.match.ethertype
+                    j_list_criteria.append(j_match)
+                
                 if (self.match.eth_source is not None):
                 
-                    j_flow['selector']['criteria']['type'] = "ETH_SRC"
-                    j_flow['selector']['criteria']['mac']  = self.match.eth_source
-                    
+                    j_match['selector']['criteria']['type'] = "ETH_SRC"
+                    j_match['selector']['criteria']['mac']  = self.match.eth_source
+                    j_list_criteria.append(j_match)
+                
                 if (self.match.eth_dest is not None):
                 
-                    j_flow['selector']['criteria']['type'] = "ETH_DST"
-                    j_flow['selector']['criteria']['mac']  = self.match.eth_dest
-
+                    j_match['selector']['criteria']['type'] = "ETH_DST"
+                    j_match['selector']['criteria']['mac']  = self.match.eth_dest
+                    j_list_criteria.append(j_match)
+                
         j_flow['selector']['criteria'] = j_list_criteria
         j_list_flow.append(j_flow)
         j_flows['flows'] = j_list_flow
 
-        return json.dumps(j_flows, indent=2, sort_keys=True)
+        return json.dumps(j_flows, indent=2, sort_keys=False)
         
 class OnosAction(object):
     def __init__(self, action = None):

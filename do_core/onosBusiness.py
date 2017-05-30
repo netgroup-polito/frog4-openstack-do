@@ -1,7 +1,7 @@
 '''
 Created on may 2017
 
-@author: davidemaraschio
+@author: ReliableLion
 
 '''
 

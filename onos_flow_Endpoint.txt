@@ -5,7 +5,7 @@
       "treatment": {
         "instructions": [
           {
-            "port": "3",
+            "port": "25",
             "type": "OUTPUT"
           }
         ]
@@ -15,7 +15,7 @@
       "selector": {
         "criteria": [
           {
-            "port": "25",
+            "port": "3",
             "type": "IN_PORT"
           }
         ]

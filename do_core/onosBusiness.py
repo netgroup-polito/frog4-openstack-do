@@ -6,7 +6,7 @@ Created on may 2017
 '''
 
 from do_core.rest import ONOS
-from do_core.exception import BridgeNotFound, OnosInternalError, OVSDBNodeNotFound
+from do_core.exception import BridgeNotFound, OnosInternalError, OVSDBNodeNotFound, PortNotFound
 import json, logging, requests
 
 '''
@@ -63,7 +63,11 @@ class ONOSBusiness(object):
 
         return len(json_objects)
 
-    def getOfPort(self, ovsdbIP, bridge_name, vnf_port):
+    def getOfPort(self, ovsdbIP, bridge_name, isAVNF, portID):
+
+        print(ovsdbIP)
+        print(bridge_name)
+        print(portID)
         bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)
 
         if bridgeID.status_code is 200:
@@ -79,23 +83,36 @@ class ONOSBusiness(object):
 
         json_objects = json.loads(device)['ports']
 
-        for port in json_objects:
-            if port['annotations']['portName'] == 'tap'+vnf_port:
+        vnfPort = "tap"+str(portID)
+        print(vnfPort)
 
+        for port in json_objects:
+            #print("CONFRONTO: " + port['annotations']['portName'] + " CON " + vnfPort)
+            if port['annotations']['portName'] == vnfPort:
                 return port['port']
 
-        raise PortNotFound(vnf_port + " not found")
+        for port in json_objects:
+            #print("NON ERA UNA VNF!!!!!!!!!!!!!!!!!!!!!!! CONFRONTO: " + port['annotations']['portName'] + " CON " + str(port))
+            if port['annotations']['portName'] == str(portID):
+                return port['port']
+
+        print("NON HO TROVATO: " + str(portID))
+
+        raise PortNotFound(str(portID) + " not found")
 
     def getHostBridgeID(self, vnfPort):
-        hosts = ONOS().getHostBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, vnfPort)
+        response = ONOS().getHostBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, vnfPort)
+
+        hosts = response.text
 
         jsonHost = json.loads(hosts)['hosts']
-
+        print(vnfPort)
         for host in jsonHost:
-            if host['annotations']['portId'][0:11] == vnf_port:
+            print(host['annotations']['portId'][0:11])
+            if host['annotations']['portId'][0:11] == vnfPort:
                 return host['location']['elementId']
 
-    raise PortNotFound(vnf_port + " not found")
+        raise PortNotFound(vnfPort + " not found")
 
     def getBridgeOvdbNodeIP(self, brID):
         bridgeInfo = ONOS().getBridgeOvdbNodeIP(self.onosEndpoint, self.onosUsername, self.onosPassword, brID)

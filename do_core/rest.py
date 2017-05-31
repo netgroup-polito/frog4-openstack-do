@@ -107,7 +107,7 @@ class ONOS(object):
         
         device_path = self.onos_api + self.onos_devices + '/' + br_id + '/ports'
 
-        url = onos_endpoint + urllib.parse.quote(device_path, safe='')
+        url = onos_endpoint + device_path
         
         response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
 
@@ -121,7 +121,9 @@ class ONOS(object):
         '''
         headers = {'Accept': 'application/json'}
         
-        url = self.onos_api + self.onos_devices + self.onos_api_host
+        url = onos_endpoint + self.onos_api + self.onos_api_host
+
+        print(url)
         
         response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
 
@@ -135,7 +137,7 @@ class ONOS(object):
         '''
         headers = {'Accept': 'application/json'}
         
-        url = self.onos_api + self.onos_devices + '/' + br_ID
+        url = onos_endpoint + self.onos_api + self.onos_devices + '/' + br_ID
         
         response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
 
@@ -154,7 +156,7 @@ class ONOS(object):
         
         bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
         port_path = self.onos_port_path % (port_name)
-        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(port_path, safe='')
+        url = onos_endpoint + bridge_path + port_path
 
         response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
 
@@ -174,11 +176,11 @@ class ONOS(object):
         
         bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
         patch_path = self.onos_port_path % (port_name) + self.onos_patch_path + patch_peer
-        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(patch_path, safe='')
+        url = onos_endpoint + bridge_path + patch_path
 
         response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
 
-        return response.status_code
+        return response
 
     #This method returns 200 OK if it sucessful create a GRE tunnel, 404 if the related bridge doesn't exist, 500 otherwise
     def createGreTunnel(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name, local_ip, remote_ip, tunnel_key):
@@ -197,11 +199,11 @@ class ONOS(object):
         bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
         port_path = self.onos_port_path % (port_name)
         gre_path = self.onos_gre_path + '/' + local_ip + '/' + remote_ip + '/' + tunnel_key
-        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(port_path, safe='') + urllib.parse.quote(gre_path, safe='')
+        url = onos_endpoint + bridge_path + port_path +gre_path
 
         response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
 
-        return response.status_code
+        return response
 
     #This method returns 200 OK if it sucessful delete a bridge, 500 otherwise
     def deleteBridge(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name):
@@ -214,11 +216,11 @@ class ONOS(object):
         headers = {'Accept': 'text/plain', 'Content-type': 'text/plain'}
         
         bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
-        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='')
+        url = onos_endpoint +bridge_path
         
         response = requests.delete(url, headers=headers, auth=(onos_user, onos_pass))
 
-        return response.status_code
+        return response
 
     #This method returns 200 OK if it sucessful delete a port/patch port, 404 if the related bridge doesn't exist, 500 otherwise
     def deletePort(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name):
@@ -233,11 +235,11 @@ class ONOS(object):
         
         bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
         port_path = self.onos_port_path % (port_name)
-        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(port_path, safe='')
+        url = onos_endpoint +bridge_path +port_path
 
         response = requests.delete(url, headers=headers, auth=(onos_user, onos_pass))
 
-        return response.status_code
+        return response
 
     #This method returns 200 OK if it sucessful delete a GRE tunnel, 500 otherwise
     def deleteGreTunnel(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name):
@@ -256,11 +258,11 @@ class ONOS(object):
         bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
         port_path = self.onos_port_path % (port_name)
 
-        url = onos_endpoint + urllib.parse.quote(bridge_path, safe='') + urllib.parse.quote(port_path, safe='') + self.onos_gre_path
+        url = onos_endpoint +bridge_path +port_path + self.onos_gre_path
 
         response = requests.delete(url, headers=headers, auth=(onos_user, onos_pass))
 
-        return response.status_code
+        return response
 
     def createFlow(self, onos_endpoint, onos_user, onos_pass, app_id, json_req):
         '''

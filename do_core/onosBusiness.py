@@ -86,6 +86,28 @@ class ONOSBusiness(object):
 
         raise PortNotFound(vnf_port + " not found")
 
+    def getHostBridgeID(self, vnfPort):
+        hosts = ONOS().getHostBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, vnfPort)
+
+        jsonHost = json.loads(hosts)['hosts']
+
+        for host in jsonHost:
+            if host['annotations']['portId'][0:11] == vnf_port:
+                return host['location']['elementId']
+
+    raise PortNotFound(vnf_port + " not found")
+
+    def getBridgeOvdbNodeIP(self, brID):
+        bridgeInfo = ONOS().getBridgeOvdbNodeIP(self.onosEndpoint, self.onosUsername, self.onosPassword, brID)
+
+        bridge = json.loads(bridgeInfo.text)['annotations']
+
+        if bridge is not None:
+
+            return bridge['managementAddress']
+
+        raise BridgeNotFound(bridge_name + " not found")
+
     def createFlow(self, json_req):
         response = ONOS().createFlow(self.onosEndpoint, self.onosUsername, self.onosPassword, self.appID, json_req)
         print(response.status_code)

@@ -725,7 +725,13 @@ class OpenstackOrchestratorController(object):
                     break
 
             match = Match(flowrule.match) 
-         
+
+            '''
+                Get the OF device id to which the relative VNF or endpoint belong to. In case of an
+                endpoint, the device id is the br-int ID because the traffic will be forwarded to
+                the patch port connected to the bridge with that endpoint.
+
+            '''
             if endpoint is not None:
 
                 if ONOS_ENABLED is False:
@@ -736,18 +742,7 @@ class OpenstackOrchestratorController(object):
                 else:
 
                     ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
-
-                    if end_point.type == "interface":
-                        of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INGRESS_SWITCH)
-
-                    elif end_point.type == 'interface-out' or end_point.type == 'vlan':
-                        of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, EXIT_SWITCH)
-
-                    elif end_point.type == "internal":
-                        of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTERNAL_BRIDGE)
-
-                    elif end_point.type == "gre-tunnel":
-                        of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
+                    of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
 
             else:
 
@@ -764,7 +759,7 @@ class OpenstackOrchestratorController(object):
 
 
             '''
-                    Get the VNF port which match the port in criteria
+                    Get the VNF port which match the port_in criteria
             '''
 
             if vnf_port.of_port is None:
@@ -827,6 +822,11 @@ class OpenstackOrchestratorController(object):
                        vnf_portOut.of_port = str(out_port)
                        
                     else:
+
+                        # Check if the VNF belong to the same br-int
+                        if self.onosBusiness.getHostBridgeID(vnf_portOut.internal_id[0:11]) != self.onosBusiness.getHostBridgeID(vnf_port.internal_id[0:11]):
+                            #Should create a gre tunnel between VNF and create a flow to push the traffic on that tunnel. You could use self.onosBusiness.getBridgeOvdbNodeIP
+                            #method to retrieve the ovsdb node IP address where each bridge is located
 
                         # [0:11] because internal_id will be like tapXXXXXXXX-XX
                         out_port = self.onosBusiness.getOfPort(ovsdbIP, INTEGRATION_BRIDGE, vnf_portOut.internal_id[0:11])

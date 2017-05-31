@@ -33,6 +33,7 @@ class ONOS(object):
         self.onos_devices     = '/devices'
         self.onos_api_port    = '/%s/ports'
         self.onos_api_flow    = '/flows'
+        self.onos_api_host    = '/hosts'
 
     def getOvsdbIP(self, onos_endpoint, onos_user, onos_pass):
         '''
@@ -109,6 +110,34 @@ class ONOS(object):
         url = onos_endpoint + urllib.parse.quote(device_path, safe='')
         
         response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    def getHostBridgeID(self, onos_endpoint, onos_user, onos_pass, vnf_port):
+        '''
+        Get the bridge id to which a vnf belong to
+        Args:
+            vnf_port: port of the vnf
+        '''
+        headers = {'Accept': 'application/json'}
+        
+        url = self.onos_api + self.onos_devices + self.onos_api_host
+        
+        response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    def getBridgeOvdbNodeIP(self, onos_endpoint, onos_user, onos_pass, br_ID):
+        '''
+        Get the ovsdb node IP address of a specific bridge
+        Args:
+            br_ID: ID of the bridge
+        '''
+        headers = {'Accept': 'application/json'}
+        
+        url = self.onos_api + self.onos_devices + '/' + br_ID
+        
+        response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
 
         return response
 

@@ -65,7 +65,7 @@ class ONOSBusiness(object):
 
     def getOfPort(self, ovsdbIP, bridge_name, isAVNF, portID):
 
-        print(ovsdbIP)
+        print("Sono in getOfPort" + ovsdbIP)
         print(bridge_name)
         print(portID)
         bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)

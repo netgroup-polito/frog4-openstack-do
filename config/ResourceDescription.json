@@ -1,75 +1,14 @@
 {
   "netgroup-domain:informations": {
-    "capabilities": {
-      "infrastructural-capabilities": {
-        "infrastructural-capability": [
-          {
-            "name": "x86-64",
-            "type": "cpu_architecture"
-          },
-          {
-            "name": "openstack",
-            "type": "compute_controller"
-          }
-        ]
-      },
-      "functional-capabilities": {
-        "functional-capability": [
-          {
-            "name": "nat",
-            "type": "nat",
-            "family": "Network",
-            "ready": "true",
-            "template": "http://130.192.225.92:8080/v2/nf_template/natVM",
-            "function-specifications": {
-              "function-specification": [
-                {
-                  "mean": "equal",
-                  "value": "10.0.0.254",
-                  "unit": "ip-address",
-                  "name": "ip"
-                },
-                {
-                  "mean": "lower_bound",
-                  "value": "10000",
-                  "unit": "-",
-                  "name": "port-range"
-                },
-                {
-                  "mean": "upper_bound",
-                  "value": "30000",
-                  "unit": "-",
-                  "name": "port-range"
-                }
-              ]
-            }
-          }
-        ]
-      }
-    },
+    "id": "001",
+    "name": "openstack",
+    "management-address": "127.0.0.1:9200",
+    "type": "OS",
     "hardware-informations": {
       "interfaces": {
         "interface": [
           {
-            "name": "of:000084802d9d0540/5101",
-            "netgroup-if-ethernet:ethernet": {
-              "netgroup-vlan:vlans": {
-                "netgroup-vlan:vlan": [
-                  {
-                    "netgroup-vlan:vlan-id": 295,
-                    "netgroup-vlan:config": {
-                      "netgroup-vlan:vlan-id": 295
-                    }
-                  },
-                  {
-                    "netgroup-vlan:vlan-id": 296,
-                    "netgroup-vlan:config": {
-                      "netgroup-vlan:vlan-id": 296
-                    }
-                  }
-                ]
-              }
-            },
+            "netgroup-if-side:side": "edge",
             "netgroup-neighbor:neighbors": {
               "netgroup-neighbor:neighbor": [
                 {
@@ -78,19 +17,80 @@
                 }
               ]
             },
-            "netgroup-if-side:side": "edge",
             "config": {
-              "description": "endpoint on device 02",
+              "type": "ethernetCsmacd",
               "enabled": true,
-              "type": "ethernetCsmacd"
+              "description": "endpoint on device 02"
+            },
+            "name": "of:000084802d9d0540/5101",
+            "netgroup-if-ethernet:ethernet": {
+              "netgroup-vlan:vlans": {
+                "netgroup-vlan:vlan": [
+                  {
+                    "netgroup-vlan:config": {
+                      "netgroup-vlan:vlan-id": 295
+                    },
+                    "netgroup-vlan:vlan-id": 295
+                  },
+                  {
+                    "netgroup-vlan:config": {
+                      "netgroup-vlan:vlan-id": 296
+                    },
+                    "netgroup-vlan:vlan-id": 296
+                  }
+                ]
+              }
             }
           }
         ]
       }
     },
-    "name": "openstack",
-    "type": "OS",
-    "management-address": "127.0.0.1:9200",
-    "id": "001"
+    "capabilities": {
+      "infrastructural-capabilities": {
+        "infrastructural-capability": [
+          {
+            "type": "cpu_architecture",
+            "name": "x86-64"
+          },
+          {
+            "type": "compute_controller",
+            "name": "openstack"
+          }
+        ]
+      },
+      "functional-capabilities": {
+        "functional-capability": [
+          {
+            "family": "Network",
+            "template": "http://130.192.225.92:8080/v2/nf_template/natVM",
+            "name": "nat",
+            "function-specifications": {
+              "function-specification": [
+                {
+                  "unit": "ip-address",
+                  "value": "10.0.0.254",
+                  "name": "ip",
+                  "mean": "equal"
+                },
+                {
+                  "unit": "-",
+                  "value": "10000",
+                  "name": "port-range",
+                  "mean": "lower_bound"
+                },
+                {
+                  "unit": "-",
+                  "value": "30000",
+                  "name": "port-range",
+                  "mean": "upper_bound"
+                }
+              ]
+            },
+            "type": "nat",
+            "ready": "true"
+          }
+        ]
+      }
+    }
   }
 }

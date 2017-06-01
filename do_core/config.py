@@ -51,7 +51,6 @@ class Configuration(object, metaclass=Singleton):
 
             self._INTEGRATION_BRIDGE = config.get('topology','integration_bridge')
             self._EXIT_SWITCH = config.get('topology','exit_switch')
-            self._INGRESS_SWITCH = config.get('topology','ingress_switch')
 
             if config.has_option('onos', 'address'):
                 self._ONOS_ADDRESS  = config.get('onos','address')

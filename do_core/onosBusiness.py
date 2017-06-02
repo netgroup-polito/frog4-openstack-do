@@ -87,12 +87,10 @@ class ONOSBusiness(object):
         print(vnfPort)
 
         for port in json_objects:
-            #print("CONFRONTO: " + port['annotations']['portName'] + " CON " + vnfPort)
             if port['annotations']['portName'] == vnfPort:
                 return port['port']
 
         for port in json_objects:
-            #print("NON ERA UNA VNF!!!!!!!!!!!!!!!!!!!!!!! CONFRONTO: " + port['annotations']['portName'] + " CON " + str(port))
             if port['annotations']['portName'] == str(portID):
                 return port['port']
 
@@ -114,7 +112,7 @@ class ONOSBusiness(object):
 
         raise PortNotFound(vnfPort + " not found")
 
-    def getBridgeOvdbNodeIP(self, brID):
+    def getBridgeOvsdbNodeIP(self, brID):
         bridgeInfo = ONOS().getBridgeOvdbNodeIP(self.onosEndpoint, self.onosUsername, self.onosPassword, brID)
 
         bridge = json.loads(bridgeInfo.text)['annotations']
@@ -123,7 +121,7 @@ class ONOSBusiness(object):
 
             return bridge['managementAddress']
 
-        raise BridgeNotFound(bridge_name + " not found")
+        raise BridgeNotFound(brID + " not found")
 
     def createFlow(self, json_req):
         response = ONOS().createFlow(self.onosEndpoint, self.onosUsername, self.onosPassword, self.appID, json_req)
@@ -156,14 +154,14 @@ class ONOSBusiness(object):
     def createPort(self, ovsdbIP, bridge_name, port_name):
         response = ONOS().createPort(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name, port_name)
         if response.status_code is 404:
-            raise BridgeNotFound(port + " not found")
+            raise BridgeNotFound(bridge_name + " not found")
         elif response.status_code is 500:
             raise OnosInternalError("500 Internal Server Error " + response.text)
 
     def createPatchPort(self, ovsdbIP, bridge_name, port_name, patch_peer):
         response = ONOS().createPatchPort(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name, port_name, patch_peer)
         if response.status_code is 404:
-            raise BridgeNotFound(port + " not found")
+            raise BridgeNotFound(bridge_name + " not found")
         elif response.status_code is 500:
             raise OnosInternalError("500 Internal Server Error " + response.text)
 

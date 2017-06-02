@@ -829,10 +829,13 @@ class OpenstackOrchestratorController(object):
                     vnf_bridge_id = self.onosBusiness.getHostBridgeID(vnf_port.internal_id[0:11])
                     ovsdbIP = self.onosBusiness.getBridgeOvsdbNodeIP(vnf_bridge_id)
 
-                    of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
-                    # ovsdbIP = self.onosBusiness.getOvsdbIP(INTEGRATION_BRIDGE_LOCAL_IP)
+                    try:
+                        of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
+                        # ovsdbIP = self.onosBusiness.getOvsdbIP(INTEGRATION_BRIDGE_LOCAL_IP)
 
-                    # of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
+                        # of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
+                    except:
+                        of_switch_id = self.onosBusiness.getBridgeID(INTEGRATION_BRIDGE_LOCAL_IP, INTEGRATION_BRIDGE)
 
             '''
                     Get the VNF port which match the port_in criteria
@@ -851,8 +854,12 @@ class OpenstackOrchestratorController(object):
                     VNFBridgeID = self.onosBusiness.getHostBridgeID(vnf_port.internal_id[0:11])
                     ovsdbIPVNF  = self.onosBusiness.getBridgeOvsdbNodeIP(VNFBridgeID)
 
-                    # Input port is returned as a number which identifies the port within that bridge
-                    input_port = self.onosBusiness.getOfPort(ovsdbIPVNF, INTEGRATION_BRIDGE, True, vnf_port.internal_id[0:11])
+                    try:
+                        # Input port is returned as a number which identifies the port within that bridge
+                        input_port = self.onosBusiness.getOfPort(ovsdbIPVNF, INTEGRATION_BRIDGE, True, vnf_port.internal_id[0:11])
+                    except:
+                        tempIP = self.onosBusiness.getOvsdbIP(INTEGRATION_BRIDGE_LOCAL_IP)
+                        input_port = self.onosBusiness.getOfPort(tempIP, INTEGRATION_BRIDGE, True, vnf_port.internal_id[0:11])
                     vnf_port.of_port = str(input_port)
 
             match.setInputMatch(vnf_port.of_port)

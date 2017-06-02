@@ -94,7 +94,7 @@ class ONOSBusiness(object):
             if port['annotations']['portName'] == str(portID):
                 return port['port']
 
-        print("NON HO TROVATO: " + str(portID))
+        print("NOT FOUND " + str(portID))
 
         raise PortNotFound(str(portID) + " not found")
 
@@ -107,7 +107,7 @@ class ONOSBusiness(object):
         print(vnfPort)
         for host in jsonHost:
             print(host['annotations']['portId'][0:11])
-            if host['annotations']['portId'][0:11] == vnfPort:
+            if host['annotations']['portId'][0:11] == str(vnfPort):
                 return host['location']['elementId']
 
         raise PortNotFound(vnfPort + " not found")

@@ -52,10 +52,10 @@ class ONOSBusiness(object):
             response = ONOS().getPorts(self.onosEndpoint, self.onosUsername, self.onosPassword, bridgeID.text)
 
         else:
-            raise BridgeNotFound(port + " not found")
+            raise BridgeNotFound(bridge_name + " not found")
 
         if response.status_code is 404:
-            raise BridgeNotFound(port + " not found")
+            raise BridgeNotFound(bridge_name + " not found")
 
         device = response.text
 
@@ -65,7 +65,7 @@ class ONOSBusiness(object):
 
     def getOfPort(self, ovsdbIP, bridge_name, isAVNF, portID):
 
-        print("Sono in getOfPort" + ovsdbIP)
+        print("I'm in getOfPort" + ovsdbIP)
         print(bridge_name)
         print(portID)
         bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)
@@ -168,9 +168,10 @@ class ONOSBusiness(object):
             raise OnosInternalError("500 Internal Server Error " + response.text)
 
     def createGreTunnel(self, ovsdbIP, bridge_name, port_name, local_ip, remote_ip, tunnel_key):
-        response = ONOS().createGreTunnel(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name, port_name, local_ip, remote_ip, tunnel_key)
+        response = ONOS().createGreTunnel(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name,
+                                          port_name, local_ip, remote_ip, tunnel_key)
         if response.status_code is 404:
-            raise BridgeNotFound(port + " not found")
+            raise BridgeNotFound(bridge_name + " not found")
         elif response.status_code is 500:
             raise OnosInternalError("500 Internal Server Error " + response.text)
 

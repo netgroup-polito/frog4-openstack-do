@@ -2,14 +2,13 @@ import logging
 import os
 import inspect
 import json
-import pdb
 
 from flask import Flask
 from flasgger import Swagger
 
 from do_core.config import Configuration
 from do_core.orchestrator import OpenstackOrchestrator, NFFGStatus, UserAuth
-from do_core.messaging import Messaging
+# from do_core.messaging import Messaging
 
 conf = Configuration()
 
@@ -32,7 +31,6 @@ log_format = '%(asctime)s %(levelname)s %(message)s - %(filename)s'
 
 logging.basicConfig(filename=conf.LOG_FILE, level=log_level, format=log_format, datefmt='%m/%d/%Y %I:%M:%S %p')
 logging.debug("Openstack Domain Orchestrator Starting")
-pdb.set_trace()
 print("Welcome to the Openstack Domain Orchestrator")
 
 app = Flask(__name__)

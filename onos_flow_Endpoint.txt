@@ -1,23 +1,23 @@
 {
   "flows": [
     {
+      "selector": {
+        "criteria": [
+          {
+            "port": "40",
+            "type": "IN_PORT"
+          }
+        ]
+      },
       "timeout": 0,
+      "isPermanent": "true",
+      "priority": 50010,
       "deviceId": "of:00000000000000a1",
       "treatment": {
         "instructions": [
           {
-            "port": "23",
+            "port": "39",
             "type": "OUTPUT"
-          }
-        ]
-      },
-      "isPermanent": "true",
-      "priority": 50010,
-      "selector": {
-        "criteria": [
-          {
-            "port": "22",
-            "type": "IN_PORT"
           }
         ]
       }

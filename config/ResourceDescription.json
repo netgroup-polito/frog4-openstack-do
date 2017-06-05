@@ -1,28 +1,23 @@
 {
   "netgroup-domain:informations": {
-    "id": "001",
-    "name": "openstack",
-    "management-address": "127.0.0.1:9200",
-    "type": "OS",
     "hardware-informations": {
       "interfaces": {
         "interface": [
           {
-            "netgroup-if-side:side": "edge",
+            "name": "of:000084802d9d0540/5101",
+            "config": {
+              "enabled": true,
+              "description": "endpoint on device 02",
+              "type": "ethernetCsmacd"
+            },
             "netgroup-neighbor:neighbors": {
               "netgroup-neighbor:neighbor": [
                 {
-                  "domain-name": "onos_domain",
-                  "remote-interface": "of:000084802d9d0540/5101"
+                  "remote-interface": "of:000084802d9d0540/5101",
+                  "domain-name": "onos_domain"
                 }
               ]
             },
-            "config": {
-              "type": "ethernetCsmacd",
-              "enabled": true,
-              "description": "endpoint on device 02"
-            },
-            "name": "of:000084802d9d0540/5101",
             "netgroup-if-ethernet:ethernet": {
               "netgroup-vlan:vlans": {
                 "netgroup-vlan:vlan": [
@@ -40,57 +35,62 @@
                   }
                 ]
               }
-            }
+            },
+            "netgroup-if-side:side": "edge"
           }
         ]
       }
     },
+    "name": "openstack",
+    "management-address": "127.0.0.1:9200",
+    "id": "001",
     "capabilities": {
-      "infrastructural-capabilities": {
-        "infrastructural-capability": [
-          {
-            "type": "cpu_architecture",
-            "name": "x86-64"
-          },
-          {
-            "type": "compute_controller",
-            "name": "openstack"
-          }
-        ]
-      },
       "functional-capabilities": {
         "functional-capability": [
           {
-            "family": "Network",
             "template": "http://130.192.225.92:8080/v2/nf_template/natVM",
-            "name": "nat",
             "function-specifications": {
               "function-specification": [
                 {
                   "unit": "ip-address",
-                  "value": "10.0.0.254",
                   "name": "ip",
+                  "value": "10.0.0.254",
                   "mean": "equal"
                 },
                 {
                   "unit": "-",
-                  "value": "10000",
                   "name": "port-range",
+                  "value": "10000",
                   "mean": "lower_bound"
                 },
                 {
                   "unit": "-",
-                  "value": "30000",
                   "name": "port-range",
+                  "value": "30000",
                   "mean": "upper_bound"
                 }
               ]
             },
-            "type": "nat",
-            "ready": "true"
+            "ready": "true",
+            "name": "nat",
+            "family": "Network",
+            "type": "nat"
+          }
+        ]
+      },
+      "infrastructural-capabilities": {
+        "infrastructural-capability": [
+          {
+            "name": "x86-64",
+            "type": "cpu_architecture"
+          },
+          {
+            "name": "openstack",
+            "type": "compute_controller"
           }
         ]
       }
-    }
+    },
+    "type": "OS"
   }
 }

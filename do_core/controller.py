@@ -915,6 +915,7 @@ class OpenstackOrchestratorController(object):
                     VNFBridgeID = self.onosBusiness.getHostBridgeID(vnf_port.internal_id[0:11])
                     ovsdbIPVNF  = self.onosBusiness.getBridgeOvsdbNodeIP(VNFBridgeID)
 
+
                     if endpoint.node_id != ovsdbIPVNF and ONOS_ENABLED is True:
                         '''
                             The endpoint and the VNF are on different compute nodes
@@ -1038,15 +1039,12 @@ class OpenstackOrchestratorController(object):
                        
                     else:
 
-                        # Check if the VNF belong to the same br-int
-                        # if self.onosBusiness.getHostBridgeID(vnf_portOut.internal_id[0:11]) !=
-                        # self.onosBusiness.getHostBridgeID(vnf_port.internal_id[0:11]):
-                        # Should create a gre tunnel between VNF and create a flow to push the traffic on that tunnel.
-                        # You could use self.onosBusiness.getBridgeOvsdbNodeIP
-                        # method to retrieve the ovsdb node IP address where each bridge is located
-
-                        # [0:11] because internal_id will be like tapXXXXXXXX-XX
-                        out_port = self.onosBusiness.getOfPort(ovsdbIP, INTEGRATION_BRIDGE, True, vnf_portOut.internal_id[0:11])
+                        try:
+                            out_port = self.onosBusiness.getOfPort(ovsdbIP, INTEGRATION_BRIDGE, True,
+                                                                   vnf_portOut.internal_id[0:11])
+                        except:
+                            out_port = self.onosBusiness.getOfPort(INTEGRATION_BRIDGE_LOCAL_IP, INTEGRATION_BRIDGE, True,
+                                                                   vnf_portOut.internal_id[0:11])
                         # Input port is returned as a number which identify the port within that bridge
                         vnf_portOut.of_port = str(out_port)
 
@@ -1317,8 +1315,12 @@ class OpenstackOrchestratorController(object):
 
                         else:
 
-                            # [0:11] because internal_id will be like tapXXXXXXXX-XX
-                            output_port = self.onosBusiness.getOfPort(ovsdbIP, INTEGRATION_BRIDGE, True, vnf_port.internal_id[0:11])
+                            try:
+                                output_port = self.onosBusiness.getOfPort(ovsdbIP, INTEGRATION_BRIDGE, True,
+                                                                       vnf_port.internal_id[0:11])
+                            except:
+                                output_port = self.onosBusiness.getOfPort(INTEGRATION_BRIDGE_LOCAL_IP,
+                                                                          INTEGRATION_BRIDGE, True, vnf_port.internal_id[0:11])
                             # Input port is returned as a number which identify the port within that bridge
                             vnf_port.of_port = str(output_port)
 
@@ -1473,6 +1475,7 @@ class OpenstackOrchestratorController(object):
     '''
     def createServer(self, vnf, nf_fg):
         for port in vnf.listPort[:]:
+            print(port.id)
             self.createPort(port, vnf, nf_fg) 
         json_data = vnf.getResourceJSON()
         resp = Nova().createServer(self.novaEndpoint, self.token.get_token(), json_data)

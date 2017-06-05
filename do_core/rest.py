@@ -7,7 +7,7 @@ Created on 15 apr 2016
 '''
 
 import requests, urllib
-import json, logging
+import json, logging, time
 
 '''
 ######################################################################################################
@@ -123,7 +123,11 @@ class ONOS(object):
         
         url = onos_endpoint + self.onos_api + self.onos_api_host
 
-        print(url)
+        print("I'm in getHostBridgeID"+url)
+        # The following line of code is required because the time range between the creation of a port for a VNF and the
+        # REST call towards ONOS to retrieve all the attached VNF ports, is too small. So we need to wait that ONOS
+        # refresh its "database ports"
+        time.sleep(2)
         
         response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
 

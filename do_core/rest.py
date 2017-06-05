@@ -124,6 +124,7 @@ class ONOS(object):
         url = onos_endpoint + self.onos_api + self.onos_api_host
 
         print("I'm in getHostBridgeID"+url)
+
         # The following line of code is required because the time range between the creation of a port for a VNF and the
         # REST call towards ONOS to retrieve all the attached VNF ports, is too small. So we need to wait that ONOS
         # refresh its "database ports"

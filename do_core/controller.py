@@ -1045,6 +1045,7 @@ class OpenstackOrchestratorController(object):
                         except:
                             out_port = self.onosBusiness.getOfPort(INTEGRATION_BRIDGE_LOCAL_IP, INTEGRATION_BRIDGE, True,
                                                                    vnf_portOut.internal_id[0:11])
+
                         # Input port is returned as a number which identify the port within that bridge
                         vnf_portOut.of_port = str(out_port)
 

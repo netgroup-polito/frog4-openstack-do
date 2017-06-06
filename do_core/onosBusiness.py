@@ -1,9 +1,8 @@
-'''
+"""
 Created on may 2017
 
 @author: ReliableLion
-
-'''
+"""
 
 from do_core.rest import ONOS
 from do_core.exception import BridgeNotFound, OnosInternalError, OVSDBNodeNotFound, PortNotFound
@@ -13,6 +12,7 @@ import json, logging, requests
 This is a business class. This class interacts with onos Rest api to handle the requests from controller
 
 '''
+
 
 class ONOSBusiness(object):
 

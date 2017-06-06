@@ -34,6 +34,8 @@ ONOS_ENABLED = Configuration().ONOS_ENABLED
 if ONOS_ENABLED is False:
     INTEGRATION_BRIDGE_LOCAL_IP = Configuration().INTEGRATION_BRIDGE_LOCAL_IP
 else:
+    # This variable is used in case the compute node which hosts a VNF is the same where ONOS is running. In this case
+    # the getOvsdbIP method returns the ONOS instance IP that control the br-int, instead of the OVSDB node IP.
     INTEGRATION_BRIDGE_LOCAL_IP = Configuration().ONOS_INTEGRATION_BRIDGE_LOCAL_IP
 
 

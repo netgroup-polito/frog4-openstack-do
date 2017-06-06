@@ -6,6 +6,7 @@ import json
 import logging
 import uuid
 import time
+import pdb
 
 from do_core.exception import sessionNotFound, GraphError, StackError
 from do_core.sql.session import Session
@@ -838,6 +839,7 @@ class OpenstackOrchestratorController(object):
         matchPort = flowrule.match.port_in.split(':', 2)
         port1_type = matchPort[0]
         port1_id = matchPort[1]
+        pdb.set_trace()
 
         '''
         #################################################################
@@ -917,6 +919,7 @@ class OpenstackOrchestratorController(object):
                     # Get the ovsdb node IP where the input VNF is located
                     VNFBridgeID = self.onosBusiness.getHostBridgeID(vnf_port.internal_id[0:11])
                     ovsdbIPVNF  = self.onosBusiness.getBridgeOvsdbNodeIP(VNFBridgeID)
+                    #print("Get the vnf port matchin port_in "+ovsdbIPVNF+" del bridge "+VNFBridgeID)
 
                     try:
                         # Input port is returned as a number which identifies the port within that bridge
@@ -979,8 +982,10 @@ class OpenstackOrchestratorController(object):
                     VNFBridgeID = self.onosBusiness.getHostBridgeID(vnf_port.internal_id[0:11])
                     ovsdbIPVNF  = self.onosBusiness.getBridgeOvsdbNodeIP(VNFBridgeID)
 
+                    endpointIP = str(endpoint.node_id)
+                    vnfIP = str(ovsdbIPVNF)
 
-                    if endpoint.node_id != ovsdbIPVNF and ONOS_ENABLED is True:
+                    if endpointIP != vnfIP:
                         '''
                             The endpoint and the VNF are on different compute nodes
                         '''
@@ -989,7 +994,7 @@ class OpenstackOrchestratorController(object):
                         # Flow from VNF to GRE endpoint
                         # Flow from GRE endpoint2 to endpoint
 
-                        gre_port = graph_id + "-gre-" + endpoint.node_id
+                        gre_port = str(graph_id) + "-gre"
 
                         # Endpoint 1 it's the compute node that hosts the endpoint
                         endpoint1 = ovsdbIPVNF
@@ -998,14 +1003,15 @@ class OpenstackOrchestratorController(object):
                         endpoint2 = self.onosBusiness.getOvsdbIP(endpoint.node_id)
 
                         self.onosBusiness.createGreTunnel(endpoint1, INTEGRATION_BRIDGE, gre_port, endpoint1, endpoint2,
-                                                          graph_id)
+                                                          str(graph_id))
                         self.onosBusiness.createGreTunnel(endpoint2, INTEGRATION_BRIDGE, gre_port, endpoint2, endpoint1,
-                                                          graph_id)
+                                                          str(graph_id))
 
                         output_port = self.onosBusiness.getOfPort(endpoint1, INTEGRATION_BRIDGE, False, gre_port)
                         output_action = OnosAction()
                         output_action.setOutputAction(str(output_port))
                         actions.append(output_action)
+                        of_switch_id = self.onosBusiness.getBridgeID(endpoint1, INTEGRATION_BRIDGE)
 
                         '''
                         ###############################
@@ -1037,11 +1043,12 @@ class OpenstackOrchestratorController(object):
                         match.setInputMatch(str(input_port))
 
                         # [0:11] because internal_id will be like tapXXXXXXXX-XX
-                        output_port = self.onosBusiness.getOfPort(endpoint2, INTEGRATION_BRIDGE, False, endpoint.internal_id)
+                        output_port = self.onosBusiness.getOfPort(endpoint2, INTEGRATION_BRIDGE, False,
+                                                                  endpoint.interface_internal_id)
 
                         output_action = OnosAction()
                         output_action.setOutputAction(str(output_port))
-                        actions.append(output_action)
+                        actions = [output_action]
 
                         flowj = OnosFlow(priority=50000+flowrule.priority, of_switch_id=of_switch_id, actions=actions,
                                          match=match)
@@ -1063,7 +1070,7 @@ class OpenstackOrchestratorController(object):
                             The endpoint and the VNF are on the same compute node
                         '''
 
-                        print("Same compute Node: " + endpoint.interface_internal_id + " IP: " + ovsdbIP)
+                        #print("Same compute Node: " + endpoint.interface_internal_id + " IP: " + ovsdbIP)
                         output_port = self.onosBusiness.getOfPort(ovsdbIP, INTEGRATION_BRIDGE, False,
                                                                   endpoint.interface_internal_id)
                         output_action = OnosAction()
@@ -1207,8 +1214,6 @@ class OpenstackOrchestratorController(object):
                 ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
                 of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
 
-                print("I'm in controller row: 1143" + endpoint.interface_internal_id)
-
                 input_port = self.onosBusiness.getOfPort(ovsdbIP, INTEGRATION_BRIDGE, False,
                                                          endpoint.interface_internal_id)
 
@@ -1288,28 +1293,32 @@ class OpenstackOrchestratorController(object):
                 #####################################################################################
                 '''
 
-                if endpoint.node_id != ovsdbIPVNF and ONOS_ENABLED is True:
+                endpointIP = str(endpoint.node_id)
+                vnfIP = str(ovsdbIPVNF)
+
+                if endpointIP != vnfIP:
                     '''
                         The endpoint and the VNF are on different compute nodes
                     '''
-
+                    print("Endpoint-VNF on different nodes")
                     # Create GRE tunnel
                     # Flow from endpoint to GRE endpoint
                     # Flow from GRE endpoint2 to VNF
 
-                    gre_port = graph_id + "-gre-" + endpoint.node_id
+                    gre_port = str(graph_id) + "-gre"
                     endpoint1 = self.onosBusiness.getOvsdbIP(endpoint.node_id)
                     endpoint2 = ovsdbIPVNF
                                     
                     self.onosBusiness.createGreTunnel(endpoint1, INTEGRATION_BRIDGE, gre_port, endpoint1, endpoint2,
-                                                      graph_id)
+                                                      str(graph_id))
                     self.onosBusiness.createGreTunnel(endpoint2, INTEGRATION_BRIDGE, gre_port, endpoint2, endpoint1,
-                                                      graph_id)
+                                                      str(graph_id))
 
                     output_port = self.onosBusiness.getOfPort(endpoint1, INTEGRATION_BRIDGE, False, gre_port)
                     output_action = OnosAction()
                     output_action.setOutputAction(str(output_port))
                     actions.append(output_action)
+                    of_switch_id = self.onosBusiness.getBridgeID(endpoint1, INTEGRATION_BRIDGE)
 
                     '''
                     ###############################
@@ -1333,7 +1342,7 @@ class OpenstackOrchestratorController(object):
                     '''
 
                     of_switch_id = self.onosBusiness.getBridgeID(endpoint2, INTEGRATION_BRIDGE)
-                    input_port = self.ovsdb.getOfPort(endpoint2, INTEGRATION_BRIDGE, False, gre_port)
+                    input_port = self.onosBusiness.getOfPort(endpoint2, INTEGRATION_BRIDGE, False, gre_port)
 
                     match.setInputMatch(str(input_port))
 
@@ -1344,7 +1353,7 @@ class OpenstackOrchestratorController(object):
 
                     output_action = OnosAction()
                     output_action.setOutputAction(vnf_port.of_port)
-                    actions.append(output_action)
+                    actions = [output_action]
 
                     flowj = OnosFlow(priority=50000+flowrule.priority, of_switch_id=of_switch_id, actions=actions, match=match)
                     json_req = flowj.getJSON()
@@ -1387,7 +1396,7 @@ class OpenstackOrchestratorController(object):
                                 output_port = self.onosBusiness.getOfPort(INTEGRATION_BRIDGE_LOCAL_IP,
                                                                           INTEGRATION_BRIDGE, True, vnf_port.internal_id[0:11])
 
-                            print("ENDPOINT TO VNF, VNF PORT: "+str(output_port))
+                            #print("ENDPOINT TO VNF, VNF PORT: "+str(output_port))
                             # Input port is returned as a number which identify the port within that bridge
                             vnf_port.of_port = str(output_port)
 

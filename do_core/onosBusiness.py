@@ -65,9 +65,9 @@ class ONOSBusiness(object):
 
     def getOfPort(self, ovsdbIP, bridge_name, isAVNF, portID):
 
-        print("I'm in getOfPort" + ovsdbIP)
-        print(bridge_name)
-        print(portID)
+        #print("I'm in getOfPort" + ovsdbIP)
+        #print(bridge_name)
+        #print(portID)
         bridgeID = ONOS().getBridgeID(self.onosEndpoint, self.onosUsername, self.onosPassword, ovsdbIP, bridge_name)
 
         if bridgeID.status_code is 200:
@@ -84,17 +84,19 @@ class ONOSBusiness(object):
         json_objects = json.loads(device)['ports']
 
         vnfPort = "tap"+str(portID)
-        print(vnfPort)
+        #print(vnfPort)
 
         for port in json_objects:
+            #print("I've found this: "+port['annotations']['portName'])
             if port['annotations']['portName'] == vnfPort:
                 return port['port']
 
         for port in json_objects:
+            #print("I've found this: "+port['annotations']['portName'])
             if port['annotations']['portName'] == str(portID):
                 return port['port']
 
-        print("NOT FOUND " + str(portID))
+        #print("NOT FOUND " + str(portID))
 
         raise PortNotFound(str(portID) + " not found")
 
@@ -104,9 +106,9 @@ class ONOSBusiness(object):
         hosts = response.text
 
         jsonHost = json.loads(hosts)['hosts']
-        print(vnfPort)
+        #print(vnfPort)
         for host in jsonHost:
-            print(host['annotations']['portId'][0:11])
+            #print("I'm in onosBusiness"+host['annotations']['portId'][0:11])
             if host['annotations']['portId'][0:11] == str(vnfPort):
                 return host['location']['elementId']
 

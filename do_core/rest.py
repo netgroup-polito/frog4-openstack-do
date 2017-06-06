@@ -86,6 +86,8 @@ class ONOS(object):
             br_name: name of the bridge
         '''
         headers = {'Accept': 'text/plain'}
+
+        #print("I'm in getBridgeID con bridge e IP: "+br_name+ovsdb_ip)
         
         bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
 
@@ -123,7 +125,7 @@ class ONOS(object):
         
         url = onos_endpoint + self.onos_api + self.onos_api_host
 
-        print("I'm in getHostBridgeID"+url)
+        #print("I'm in getHostBridgeID"+url)
         '''        
         # The following line of code is required because the time range between the creation of a port for a VNF and the
         # REST call towards ONOS to retrieve all the attached VNF ports, is too small. So we need to wait that ONOS

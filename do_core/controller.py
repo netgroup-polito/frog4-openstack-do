@@ -374,7 +374,7 @@ class OpenstackOrchestratorController(object):
 
     def deleteEndpoint(self, endpoint, nffg):
         logging.debug("Deleting endpoint type: "+str(endpoint.type))
-        if endpoint.type == 'interface-out' or endpoint.type == 'vlan':
+        if endpoint.type == 'interface' or endpoint.type == 'vlan':
             self.deleteExitEndpoint(nffg, endpoint)
         elif endpoint.type == 'internal':
             self.deleteInternalEndpoint(nffg, endpoint)
@@ -384,8 +384,8 @@ class OpenstackOrchestratorController(object):
         nffg.end_points.remove(endpoint)
         
     def deleteExitEndpoint(self, nffg, endpoint):
-        port_to_int_bridge = nffg.id + "-" + endpoint.id + "-to-" + INTEGRATION_BRIDGE
-        port_to_exit_switch =  nffg.id + "-" + endpoint.id + "-to-" + EXIT_SWITCH
+        port_to_int_bridge = nffg.id + "-to-" + INTEGRATION_BRIDGE
+        port_to_exit_switch =  nffg.id + "-to-" + EXIT_SWITCH
         
         if ONOS_ENABLED is False:
             ovs_id = self.ovsdb.getOVSId(endpoint.node_id)

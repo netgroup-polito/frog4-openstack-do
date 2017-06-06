@@ -1,48 +1,6 @@
 {
   "netgroup-domain:informations": {
-    "management-address": "127.0.0.1:9200",
-    "name": "openstack",
-    "hardware-informations": {
-      "interfaces": {
-        "interface": [
-          {
-            "netgroup-neighbor:neighbors": {
-              "netgroup-neighbor:neighbor": [
-                {
-                  "domain-name": "onos_domain",
-                  "remote-interface": "of:000084802d9d0540/5101"
-                }
-              ]
-            },
-            "config": {
-              "description": "endpoint on device 02",
-              "type": "ethernetCsmacd",
-              "enabled": true
-            },
-            "netgroup-if-side:side": "edge",
-            "name": "of:000084802d9d0540/5101",
-            "netgroup-if-ethernet:ethernet": {
-              "netgroup-vlan:vlans": {
-                "netgroup-vlan:vlan": [
-                  {
-                    "netgroup-vlan:vlan-id": 295,
-                    "netgroup-vlan:config": {
-                      "netgroup-vlan:vlan-id": 295
-                    }
-                  },
-                  {
-                    "netgroup-vlan:vlan-id": 296,
-                    "netgroup-vlan:config": {
-                      "netgroup-vlan:vlan-id": 296
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        ]
-      }
-    },
+    "id": "001",
     "capabilities": {
       "infrastructural-capabilities": {
         "infrastructural-capability": [
@@ -59,38 +17,80 @@
       "functional-capabilities": {
         "functional-capability": [
           {
-            "family": "Network",
+            "ready": "true",
             "function-specifications": {
               "function-specification": [
                 {
                   "mean": "equal",
+                  "unit": "ip-address",
                   "value": "10.0.0.254",
-                  "name": "ip",
-                  "unit": "ip-address"
+                  "name": "ip"
                 },
                 {
                   "mean": "lower_bound",
+                  "unit": "-",
                   "value": "10000",
-                  "name": "port-range",
-                  "unit": "-"
+                  "name": "port-range"
                 },
                 {
                   "mean": "upper_bound",
+                  "unit": "-",
                   "value": "30000",
-                  "name": "port-range",
-                  "unit": "-"
+                  "name": "port-range"
                 }
               ]
             },
-            "name": "nat",
-            "ready": "true",
+            "template": "http://130.192.225.92:8080/v2/nf_template/natVM",
             "type": "nat",
-            "template": "http://130.192.225.92:8080/v2/nf_template/natVM"
+            "name": "nat",
+            "family": "Network"
           }
         ]
       }
     },
+    "hardware-informations": {
+      "interfaces": {
+        "interface": [
+          {
+            "netgroup-if-ethernet:ethernet": {
+              "netgroup-vlan:vlans": {
+                "netgroup-vlan:vlan": [
+                  {
+                    "netgroup-vlan:config": {
+                      "netgroup-vlan:vlan-id": 295
+                    },
+                    "netgroup-vlan:vlan-id": 295
+                  },
+                  {
+                    "netgroup-vlan:config": {
+                      "netgroup-vlan:vlan-id": 296
+                    },
+                    "netgroup-vlan:vlan-id": 296
+                  }
+                ]
+              }
+            },
+            "netgroup-neighbor:neighbors": {
+              "netgroup-neighbor:neighbor": [
+                {
+                  "remote-interface": "of:000084802d9d0540/5101",
+                  "domain-name": "onos_domain"
+                }
+              ]
+            },
+            "netgroup-if-side:side": "edge",
+            "config": {
+              "enabled": true,
+              "type": "ethernetCsmacd",
+              "description": "endpoint on device 02"
+            },
+            "name": "of:000084802d9d0540/5101"
+          }
+        ]
+      }
+    },
+    "management-address": "127.0.0.1:9200",
     "type": "OS",
-    "id": "001"
+    "name": "openstack"
   }
 }

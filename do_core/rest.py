@@ -129,7 +129,7 @@ class ONOS(object):
         # REST call towards ONOS to retrieve all the attached VNF ports, is too small. So we need to wait that ONOS
         # refresh its "database ports"
         '''
-        time.sleep(2)
+        time.sleep(4)
         
         response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
 

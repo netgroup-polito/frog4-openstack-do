@@ -68,87 +68,93 @@ class OnosFlow(object):
         j_list_criteria = []
         j_match = {}
 
-        if (self.match.input_port is not None):
-            j_match['type'] = "IN_PORT"
-            j_match['port'] = self.match.input_port
-            j_list_criteria.append(j_match)
+        if(self.match is not None):
 
-        if (self.match.ip_source is not None):
-            j_match['selector']['criteria']['type'] = "IPV4_SRC"
-            j_match['selector']['criteria']['ip']   = self.match.ip_source
-            j_list_criteria.append(j_match)
-
-        if (self.match.ip_dest is not None):
-            j_match['selector']['criteria']['type'] = "IPV4_DST"
-            j_match['selector']['criteria']['ip']   = self.match.ip_dest
-            j_list_criteria.append(j_match)
-
-        if (self.match.ip_protocol is not None):
-            j_match['selector']['criteria']['type'] = "IP_PROTO"
-            j_match['selector']['criteria']['type'] = self.match.ip_protocol
-            j_list_criteria.append(j_match)
-
-        if (self.match.port_source is not None):
-
-            if (self.match.ip_protocol is not None):
-                protocol = self.match.ip_protocol
-                if protocol == "6":
-                    #protocol = "tcp"
-                    j_match['selector']['criteria']['type'] = "TCP_SRC"
-                    j_match['selector']['criteria']['tcpPort'] = self.match.port_source
-                    j_list_criteria.append(j_match)
-
-                elif protocol == "17":
-                    #protocol = "udp"
-                    j_match['selector']['criteria']['type'] = "UDP_SRC"
-                    j_match['selector']['criteria']['udpPort'] = self.match.port_source
-                    j_list_criteria.append(j_match)
-
-            else:
-                logging.warning('sourcePort discarded. You have to set also the "protocol" field')
-
-        if (self.match.port_dest is not None):
-            if (self.match.ip_protocol is not None):
-                protocol = self.match.ip_protocol
-                if protocol == "6":
-                    #protocol = "tcp"
-                    j_match['selector']['criteria']['type'] = "TCP_DST"
-                    j_match['selector']['criteria']['tcpPort'] = self.match.port_dest
-                    j_list_criteria.append(j_match)
-
-                elif protocol == "17":
-                    #protocol = "udp"
-                    j_match['selector']['criteria']['type'] = "UDP_DST"
-                    j_match['selector']['criteria']['udpPort'] = self.match.port_dest
-                    j_list_criteria.append(j_match)
-
-            else:
-                logging.warning('destPort discarded. You have to set also the "protocol" field')
-
-        if (self.match.vlan_id is not None):
-
-            j_match['selector']['criteria']['type'] = "VLAN_VID"
-            j_match['selector']['criteria']['vlanId'] = self.match.vlan_id
-            j_list_criteria.append(j_match)
-
-        if (self.match.eth_match is True):
-
-            if (self.match.ethertype is not None):
-
-                j_match['selector']['criteria']['type'] = "ETH_TYPE"
-                j_match['selector']['criteria']['ethType'] = self.match.ethertype
+            if (self.match.input_port is not None):
+                j_match['type'] = "IN_PORT"
+                j_match['port'] = self.match.input_port
                 j_list_criteria.append(j_match)
 
-            if (self.match.eth_source is not None):
-
-                j_match['selector']['criteria']['type'] = "ETH_SRC"
-                j_match['selector']['criteria']['mac']  = self.match.eth_source
+            if (self.match.ip_source is not None):
+                j_match['selector']['criteria']['type'] = "IPV4_SRC"
+                j_match['selector']['criteria']['ip']   = self.match.ip_source
                 j_list_criteria.append(j_match)
 
-            if (self.match.eth_dest is not None):
+            if (self.match.ip_dest is not None):
+                j_match['selector']['criteria']['type'] = "IPV4_DST"
+                j_match['selector']['criteria']['ip']   = self.match.ip_dest
+                j_list_criteria.append(j_match)
 
-                j_match['selector']['criteria']['type'] = "ETH_DST"
-                j_match['selector']['criteria']['mac']  = self.match.eth_dest
+            if (self.match.ip_protocol is not None):
+                j_match['selector']['criteria']['type'] = "IP_PROTO"
+                j_match['selector']['criteria']['type'] = self.match.ip_protocol
+                j_list_criteria.append(j_match)
+
+            if (self.match.port_source is not None):
+
+                if (self.match.ip_protocol is not None):
+                    protocol = self.match.ip_protocol
+                    if protocol == "6":
+                        #protocol = "tcp"
+                        j_match['selector']['criteria']['type'] = "TCP_SRC"
+                        j_match['selector']['criteria']['tcpPort'] = self.match.port_source
+                        j_list_criteria.append(j_match)
+
+                    elif protocol == "17":
+                        #protocol = "udp"
+                        j_match['selector']['criteria']['type'] = "UDP_SRC"
+                        j_match['selector']['criteria']['udpPort'] = self.match.port_source
+                        j_list_criteria.append(j_match)
+
+                else:
+                    logging.warning('sourcePort discarded. You have to set also the "protocol" field')
+
+            if (self.match.port_dest is not None):
+                if (self.match.ip_protocol is not None):
+                    protocol = self.match.ip_protocol
+                    if protocol == "6":
+                        #protocol = "tcp"
+                        j_match['selector']['criteria']['type'] = "TCP_DST"
+                        j_match['selector']['criteria']['tcpPort'] = self.match.port_dest
+                        j_list_criteria.append(j_match)
+
+                    elif protocol == "17":
+                        #protocol = "udp"
+                        j_match['selector']['criteria']['type'] = "UDP_DST"
+                        j_match['selector']['criteria']['udpPort'] = self.match.port_dest
+                        j_list_criteria.append(j_match)
+
+                else:
+                    logging.warning('destPort discarded. You have to set also the "protocol" field')
+
+            if (self.match.vlan_id is not None):
+
+                j_match['selector']['criteria']['type'] = "VLAN_VID"
+                j_match['selector']['criteria']['vlanId'] = self.match.vlan_id
+                j_list_criteria.append(j_match)
+
+            if (self.match.eth_match is True):
+
+                if (self.match.ethertype is not None):
+
+                    j_match['selector']['criteria']['type'] = "ETH_TYPE"
+                    j_match['selector']['criteria']['ethType'] = self.match.ethertype
+                    j_list_criteria.append(j_match)
+
+                if (self.match.eth_source is not None):
+
+                    j_match['selector']['criteria']['type'] = "ETH_SRC"
+                    j_match['selector']['criteria']['mac']  = self.match.eth_source
+                    j_list_criteria.append(j_match)
+
+                if (self.match.eth_dest is not None):
+
+                    j_match['selector']['criteria']['type'] = "ETH_DST"
+                    j_match['selector']['criteria']['mac']  = self.match.eth_dest
+                    j_list_criteria.append(j_match)
+            else:
+                j_match['type'] = "IN_PORT"
+                j_match['port'] = self.match.input_port
                 j_list_criteria.append(j_match)
                 
         j_flow['selector']['criteria'] = j_list_criteria

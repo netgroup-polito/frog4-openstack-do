@@ -2,25 +2,25 @@
   "flows": [
     {
       "timeout": 0,
-      "deviceId": "of:00000000000000a2",
       "treatment": {
         "instructions": [
           {
-            "type": "OUTPUT",
-            "port": "29"
+            "port": "32",
+            "type": "OUTPUT"
           }
         ]
       },
+      "deviceId": "of:00000000000000a2",
       "priority": 50001,
       "selector": {
         "criteria": [
           {
-            "type": "IN_PORT",
-            "port": "30"
+            "port": "31",
+            "type": "IN_PORT"
           },
           {
-            "type": "IN_PORT",
-            "port": "30"
+            "port": "31",
+            "type": "IN_PORT"
           }
         ]
       },

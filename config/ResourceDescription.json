@@ -1,18 +1,66 @@
 {
   "netgroup-domain:informations": {
+    "name": "openstack",
+    "id": "001",
+    "type": "OS",
+    "capabilities": {
+      "functional-capabilities": {
+        "functional-capability": [
+          {
+            "name": "nat",
+            "ready": "true",
+            "type": "nat",
+            "template": "http://130.192.225.92:8080/v2/nf_template/natVM",
+            "function-specifications": {
+              "function-specification": [
+                {
+                  "name": "ip",
+                  "unit": "ip-address",
+                  "mean": "equal",
+                  "value": "10.0.0.254"
+                },
+                {
+                  "name": "port-range",
+                  "unit": "-",
+                  "mean": "lower_bound",
+                  "value": "10000"
+                },
+                {
+                  "name": "port-range",
+                  "unit": "-",
+                  "mean": "upper_bound",
+                  "value": "30000"
+                }
+              ]
+            },
+            "family": "Network"
+          }
+        ]
+      },
+      "infrastructural-capabilities": {
+        "infrastructural-capability": [
+          {
+            "name": "x86-64",
+            "type": "cpu_architecture"
+          },
+          {
+            "name": "openstack",
+            "type": "compute_controller"
+          }
+        ]
+      }
+    },
+    "management-address": "127.0.0.1:9200",
     "hardware-informations": {
       "interfaces": {
         "interface": [
           {
-            "netgroup-neighbor:neighbors": {
-              "netgroup-neighbor:neighbor": [
-                {
-                  "domain-name": "onos_domain",
-                  "remote-interface": "of:000084802d9d0540/5101"
-                }
-              ]
+            "name": "of:000084802d9d0540/5101",
+            "config": {
+              "enabled": true,
+              "description": "endpoint on device 02",
+              "type": "ethernetCsmacd"
             },
-            "netgroup-if-side:side": "edge",
             "netgroup-if-ethernet:ethernet": {
               "netgroup-vlan:vlans": {
                 "netgroup-vlan:vlan": [
@@ -31,66 +79,18 @@
                 ]
               }
             },
-            "name": "of:000084802d9d0540/5101",
-            "config": {
-              "enabled": true,
-              "description": "endpoint on device 02",
-              "type": "ethernetCsmacd"
-            }
-          }
-        ]
-      }
-    },
-    "id": "001",
-    "type": "OS",
-    "name": "openstack",
-    "capabilities": {
-      "functional-capabilities": {
-        "functional-capability": [
-          {
-            "family": "Network",
-            "type": "nat",
-            "name": "nat",
-            "ready": "true",
-            "function-specifications": {
-              "function-specification": [
+            "netgroup-neighbor:neighbors": {
+              "netgroup-neighbor:neighbor": [
                 {
-                  "mean": "equal",
-                  "value": "10.0.0.254",
-                  "unit": "ip-address",
-                  "name": "ip"
-                },
-                {
-                  "mean": "lower_bound",
-                  "value": "10000",
-                  "unit": "-",
-                  "name": "port-range"
-                },
-                {
-                  "mean": "upper_bound",
-                  "value": "30000",
-                  "unit": "-",
-                  "name": "port-range"
+                  "remote-interface": "of:000084802d9d0540/5101",
+                  "domain-name": "onos_domain"
                 }
               ]
             },
-            "template": "http://130.192.225.92:8080/v2/nf_template/natVM"
-          }
-        ]
-      },
-      "infrastructural-capabilities": {
-        "infrastructural-capability": [
-          {
-            "type": "cpu_architecture",
-            "name": "x86-64"
-          },
-          {
-            "type": "compute_controller",
-            "name": "openstack"
+            "netgroup-if-side:side": "edge"
           }
         ]
       }
-    },
-    "management-address": "127.0.0.1:9200"
+    }
   }
 }

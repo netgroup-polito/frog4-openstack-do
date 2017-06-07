@@ -670,6 +670,8 @@ class Port(object):
             resource['port']['device_id'] = self.device_id
         if self.mac is not None:
             resource['port']['mac_address'] = self.mac
+        # this entry should disable secuyrity policy on the VNFs port
+        # resource['port']['port_security_enabled'] = 'false'
         return resource
 
 class VNF(object):

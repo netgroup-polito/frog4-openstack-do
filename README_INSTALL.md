@@ -65,3 +65,6 @@ You can launch this domain orchestrator by executing the following script in the
 You can find some helpful scripts inside the [scripts](scripts) folder. For example, if you need to clean all sessions and graphs currently stored in the database, you can launch the following script in the domain orchestrator root folder:
         
         python3 -m scripts.clean_db_sessions
+#### ONOS support
+In order to use ONOS as network controller for the Openstack-do, you have to install the OVSDB-rest application. Just follow the guide at this link: https://github.com/netgroup-polito/onos-applications/tree/master/ovsdb-rest
+*Remember to update the ovsdb-rest consifguration based on your topology (usually an ovsdb node for each compute node)

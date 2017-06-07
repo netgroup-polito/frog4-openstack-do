@@ -67,4 +67,4 @@ You can find some helpful scripts inside the [scripts](scripts) folder. For exam
         python3 -m scripts.clean_db_sessions
 #### ONOS support
 In order to use ONOS as network controller for the Openstack-do, you have to install the OVSDB-rest application. Just follow the guide at this link: https://github.com/netgroup-polito/onos-applications/tree/master/ovsdb-rest
-*Remember to update the ovsdb-rest consifguration based on your topology (usually an ovsdb node for each compute node)
+* Remember to update the ovsdb-rest consifguration based on your topology (usually an ovsdb node for each compute node)

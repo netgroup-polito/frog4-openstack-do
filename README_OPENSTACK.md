@@ -327,12 +327,12 @@ The following operations have to be performed on the controller and on the compu
     -  The code in the first line of the output of the command is the OVS_ID.
             
             sudo ovs-vsctl show
+- WARNING: Now perform the following commands ONLY if you plan to use Opendaylight as network controller rather than ONOS:
 
-- Now perform the following commands:
-    - Replace OVS_ID with the Openvswitch ID just retrieved, IP with the IP address of the local machine and ODL_IP with the IP address of the OpenDaylight controller.
+  - Replace OVS_ID with the Openvswitch ID just retrieved, IP with the IP address of the local machine and ODL_IP with the IP address of the OpenDaylight controller.
 
-    		sudo ovs-vsctl set Open_vSwitch OVS_ID other_config={local_ip=IP}
-    		sudo ovs-vsctl set-manager tcp:<ODL_IP>:6640
+		sudo ovs-vsctl set Open_vSwitch OVS_ID other_config={local_ip=IP}
+		sudo ovs-vsctl set-manager tcp:<ODL_IP>:6640
 
 - Restart the neutron server (on controller node only):
 
@@ -341,7 +341,10 @@ The following operations have to be performed on the controller and on the compu
 
 ### Prototype configuration (compute node only)
 
+#### WARNING: Now perform the following commands ONLY if you plan to use Opendaylight as network controller rather than ONOS (because ONOS will take care of this operations based on your graph. Example: gre-endpoint on the br-ex):
+
 - Configure the external bridge
+
     - Add an L2 bridge that manage the exit traffic (it is necessary to deliver the traffic coming from the internet to the NF-FG graph of the correct user, which happens when multiple users are connected to your compute node):
 
             sudo ovs-vsctl add-br br-ex
@@ -374,20 +377,3 @@ The following operations have to be performed on the controller and on the compu
         - Remove the controller from br-ex (this is a bridge that does not need to be controlled by OpenDaylight):
 
                 sudo ovs-vsctl del-controller br-ex
-
-- Add the ingress bridge:
-
-    - Add an L2 bridge that manage the user traffic:
-
-            sudo ovs-vsctl add-br br-usr
-
-    - Add a port, where you will connect the devices that use the prototype, to the ingress bridge (all the ports bridged to this bridge will be called "LAN" port):
-    
-        Replace INTERFACE_NAME with the actual interface name. For example, eth0 or wlan0. More then one interface can be connected to this bridge. Connecting a device to those ports you are able to reach your service.
-
-            sudo ovs-vsctl add-port br-usr INTERFACE_NAME
-
-    - Configure the ingress interfaces in /etc/network/interfaces 
-
-            auto INTERFACE_NAME
-            iface INTERFACE_NAME inet manual

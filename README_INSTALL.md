@@ -68,3 +68,4 @@ You can find some helpful scripts inside the [scripts](scripts) folder. For exam
 #### ONOS support
 In order to use ONOS as network controller for the Openstack-do, you have to install the OVSDB-rest application. Just follow the guide at this link: https://github.com/netgroup-polito/onos-applications/tree/master/ovsdb-rest
 * Remember to update the ovsdb-rest consifguration based on your topology (usually an ovsdb node for each compute node)
+* If you followed the README of this repo to install onos, remember to clone the ONOS git at https://github.com/opennetworkinglab/onos in your home folder, and to type . onos/tools/dev/bash_profile. This enable some useful onos scripts, like onos-app, used to install ovsdb-rest app. That's because the guide uses a non developer ONOS version.

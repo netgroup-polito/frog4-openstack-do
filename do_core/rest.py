@@ -3,14 +3,313 @@ Created on 15 apr 2016
 
 @author: vida
 @author: stefanopetrangeli
+@author: ReliableLion
 '''
 
 import requests, urllib
-import json, logging
+import json, logging, time
 
+'''
+######################################################################################################
+##############################               ONOS  REST calls            ##############################
+######################################################################################################
+'''
+
+'''
+   This class interacts with an ONOS app, ovsdbrest, which exhibits REST api for the following actions:
+    - Create/delete a bridge
+    - Add/delete a port
+    - Add/delete a patch port (see man 5 ovs-vswitchd.conf.db for more info)
+    - Add/delete a GRE tunnel (see http://api.onosproject.org/1.7.1/org/onosproject/net/behaviour/DefaultTunnelDescription.Builder.html for more info about GRE tunnel in ONOS)
+'''
+class ONOS(object):
+
+    def __init__(self):
+        self.onos_api         = '/onos/v1'
+        self.onos_bridge_path = '/onos/ovsdb/%s/bridge/%s'
+        self.onos_port_path   = '/port/%s'
+        self.onos_patch_path  = '/patch_peer/'
+        self.onos_gre_path    = '/gre'
+        self.onos_devices     = '/devices'
+        self.onos_api_port    = '/%s/ports'
+        self.onos_api_flow    = '/flows'
+        self.onos_api_host    = '/hosts'
+
+    def getOvsdbIP(self, onos_endpoint, onos_user, onos_pass):
+        '''
+        Get all devices.
+        '''
+        headers = {'Accept': 'application/json'}
+        
+        url = onos_endpoint + self.onos_api + self.onos_devices
+        
+        response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    #This method returns 200 OK if it sucessful creates a bridge, 409 Conflict if the bridge already exists (There's no getBridge method), 500 otherwise
+    def createBridge(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name):
+        '''
+        Create a bridge
+        Args:
+            br_name: name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge are
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'text/plain'}
+        
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        url = onos_endpoint + bridge_path
+        
+        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    def getPorts(self, onos_endpoint, onos_user, onos_pass, br_ID):
+        '''
+        Retrieve a port number given the ID of a bridge
+        Args:
+            br_name: name of the bridge
+        '''
+        headers = {'Accept': 'application/json'}
+
+        url = onos_endpoint + self.onos_api + self.onos_devices + self.onos_api_port % (br_ID)
+        
+        response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    #This method returns 200 OK if it sucessful retrieve a bridge ID, 404 if the bridge doesn't exists
+    def getBridgeID(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name):
+        '''
+        Retrieve a bridge ID from name
+        Args:
+            br_name: name of the bridge
+        '''
+        headers = {'Accept': 'text/plain'}
+
+        #print("I'm in getBridgeID con bridge e IP: "+br_name+ovsdb_ip)
+        
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+
+        url = onos_endpoint + bridge_path
+        
+        response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    #This method returns 200 OK if it sucessful retrieve a bridge ID, 404 if the bridge doesn't exists
+    def getBridgePorts(self, onos_endpoint, onos_user, onos_pass, br_id):
+        '''
+        Get the ports of a bridge
+        Args:
+            br_id: ID of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge is
+        '''
+        headers = {'Accept': 'text/plain'}
+        
+        device_path = self.onos_api + self.onos_devices + '/' + br_id + '/ports'
+
+        url = onos_endpoint + device_path
+        
+        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    def getHostBridgeID(self, onos_endpoint, onos_user, onos_pass, vnf_port):
+        '''
+        Get the bridge id to which a vnf belong to
+        Args:
+            vnf_port: port of the vnf
+        '''
+        headers = {'Accept': 'application/json'}
+        
+        url = onos_endpoint + self.onos_api + self.onos_api_host
+
+        #print("I'm in getHostBridgeID"+url)
+        '''        
+        # The following line of code is required because the time range between the creation of a port for a VNF and the
+        # REST call towards ONOS to retrieve all the attached VNF ports, is too small. So we need to wait that ONOS
+        # refresh its "database ports"
+        '''
+        time.sleep(4)
+        
+        response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    def getBridgeOvdbNodeIP(self, onos_endpoint, onos_user, onos_pass, br_ID):
+        '''
+        Get the ovsdb node IP address of a specific bridge
+        Args:
+            br_ID: ID of the bridge
+        '''
+        headers = {'Accept': 'application/json'}
+        
+        url = onos_endpoint + self.onos_api + self.onos_devices + '/' + br_ID
+        
+        response = requests.get(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    #This method returns 200 OK if it sucessful create and attach a port, 404 if the related bridge doesn't exist, 409 if the port already exists (There's no getPort method), 500 otherwise
+    def createPort(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name):
+        '''
+        Attach a port to a specified bridge
+        Args:
+            br_name: Name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge is
+            port_name: Name of the port to attach
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
+        
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        port_path = self.onos_port_path % (port_name)
+        url = onos_endpoint + bridge_path + port_path
+
+        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    #This method returns 200 OK if it sucessful create and attach a port, 404 if the related bridge doesn't exist, 409 if the port already exists (There's no getPort method), 500 otherwise
+    def createPatchPort(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name, patch_peer):
+        '''
+        Create and attach a patch port to a specified bridge
+        Args:
+            br_name: Name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge is
+            port_name: Name of the port to attach
+            patch_peer: This is the name of the peer port
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
+        
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        patch_path = self.onos_port_path % (port_name) + self.onos_patch_path + patch_peer
+        url = onos_endpoint + bridge_path + patch_path
+
+        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    #This method returns 200 OK if it sucessful create a GRE tunnel, 404 if the related bridge doesn't exist, 500 otherwise
+    def createGreTunnel(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name, local_ip, remote_ip, tunnel_key):
+        '''
+        Create a Gre tunnel with a specific tunnel key
+        Args:
+            br_name: Name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge is
+            port_name: Name of the port to attach
+            local_ip: The local IP address (local GRE endpoint)
+            remote_ip: The remote IP address (remote GRE endpoint)
+            tunnel_key: This is the Tunnel key, usually (for GRE tunnel) a 32-bit number value
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
+
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        port_path = self.onos_port_path % (port_name)
+        gre_path = self.onos_gre_path + '/' + local_ip + '/' + remote_ip + '/' + tunnel_key
+        url = onos_endpoint + bridge_path + port_path +gre_path
+
+        response = requests.post(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    #This method returns 200 OK if it sucessful delete a bridge, 500 otherwise
+    def deleteBridge(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name):
+        '''
+        Create a bridge
+        Args:
+            br_name: name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge is
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'text/plain'}
+        
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        url = onos_endpoint +bridge_path
+        
+        response = requests.delete(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    #This method returns 200 OK if it sucessful delete a port/patch port, 404 if the related bridge doesn't exist, 500 otherwise
+    def deletePort(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name):
+        '''
+        Attach a port to a specified bridge
+        Args:
+            br_name: Name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge are
+            port_name: Name of the port to attach
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
+        
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        port_path = self.onos_port_path % (port_name)
+        url = onos_endpoint +bridge_path +port_path
+
+        response = requests.delete(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    #This method returns 200 OK if it sucessful delete a GRE tunnel, 500 otherwise
+    def deleteGreTunnel(self, onos_endpoint, onos_user, onos_pass, ovsdb_ip, br_name, port_name):
+        '''
+        Create a Gre tunnel with a specific tunnel key
+        Args:
+            br_name: Name of the bridge
+            ovsdb_ip: The endpoint to the ovsdb node where the bridge is
+            port_name: Name of the port to attach
+            local_ip: The local IP address (local GRE endpoint)
+            remote_ip: The remote IP address (remote GRE endpoint)
+            tunnel_key: This is the Tunnel key, usually (for GRE tunnel) a 32-bit number value
+        '''
+        headers = {'Accept': 'text/plain', 'Content-type': 'application/json'}
+
+        bridge_path = self.onos_bridge_path % (ovsdb_ip, br_name)
+        port_path = self.onos_port_path % (port_name)
+
+        url = onos_endpoint +bridge_path +port_path + self.onos_gre_path
+
+        response = requests.delete(url, headers=headers, auth=(onos_user, onos_pass))
+
+        return response
+
+    def createFlow(self, onos_endpoint, onos_user, onos_pass, app_id, json_req):
+        '''
+        Create a flow
+        Args:
+            app_id: It's used to know to which app each node is related. It's useful when you have a lot of flows and there are problem in the network,
+                    in this case you can delete all the flows, belonging to an app, which are causing the problem
+            json_req: The json that describes the flow
+        '''
+        headers = {'Accept': 'application/json', 'Content-type': 'application/json'}
+        parameter = {'appId': app_id}
+
+        url = onos_endpoint + self.onos_api + self.onos_api_flow
+
+        response = requests.post(url, json_req, params=parameter, headers=headers, auth=(onos_user, onos_pass))
+        print(response.url)
+
+        return response
+
+    def deleteFlow(self, onos_endpoint, onos_user, onos_pass, of_switch_id, flowID):
+        '''
+        Delete a flow
+        Args:
+            of_switch_id: Openflow ID of the device which the flowRule refers to
+            flowID: ID of the flow to delete
+        '''
+
+        url = onos_endpoint + self.onos_api + self.onos_api_flow +'/' + of_switch_id + '/' + flowID
+
+        response = requests.delete(url, auth=(onos_user, onos_pass))
+        print(response.url)
+
+        return response
+
+'''
 ######################################################################################################
 ############################    OpenDaylight  REST calls        ################################
 ######################################################################################################
+'''
 
 class ODL(object):
     

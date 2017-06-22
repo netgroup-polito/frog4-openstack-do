@@ -1,5 +1,6 @@
 '''
 @author: stefanopetrangeli
+@author: ReliableLion
 '''
 import json
 import logging
@@ -12,9 +13,11 @@ from do_core.sql.graph import Graph
 from do_core.config import Configuration
 from do_core.authentication import KeystoneAuthentication
 from do_core.rest import Glance, Nova, Neutron, ODL
-from do_core.resources import ProfileGraph, VNF, Net, Match, Action, Flow
+from do_core.resources import ProfileGraph, VNF, Net, Match, Action, Flow, OnosFlow, OnosAction
 from do_core.nffg_manager import NFFG_Manager
+from do_core.onosBusiness import ONOSBusiness
 from do_core.ovsdb import OVSDB
+
 from nffg_library.nffg import FlowRule
 from do_core.messaging import Messaging
 from do_core.resource_description import ResourceDescription
@@ -24,11 +27,17 @@ OPENSTACK_IP = Configuration().OPENSTACK_IP
 DEBUG_MODE = Configuration().DEBUG_MODE
 JOLNET_MODE = Configuration().JOLNET_MODE
 JOLNET_NETWORKS = Configuration().JOLNET_NETWORKS
-INGRESS_SWITCH = Configuration().INGRESS_SWITCH
 EXIT_SWITCH = Configuration().EXIT_SWITCH
 INTEGRATION_BRIDGE= Configuration().INTEGRATION_BRIDGE
 DOMAIN_DESCRIPTION_FILE = Configuration().DOMAIN_DESCRIPTION_FILE
-INTEGRATION_BRIDGE_LOCAL_IP = Configuration().INTEGRATION_BRIDGE_LOCAL_IP
+ONOS_ENABLED = Configuration().ONOS_ENABLED
+if ONOS_ENABLED is False:
+    INTEGRATION_BRIDGE_LOCAL_IP = Configuration().INTEGRATION_BRIDGE_LOCAL_IP
+else:
+    # This variable is used in case the compute node which hosts a VNF is the same where ONOS is running. In this case
+    # the getOvsdbIP method returns the ONOS instance IP that control the br-int, instead of the OVSDB node IP.
+    INTEGRATION_BRIDGE_LOCAL_IP = Configuration().ONOS_INTEGRATION_BRIDGE_LOCAL_IP
+
 
 class OpenstackOrchestratorController(object):
     def __init__(self, user_data):
@@ -42,6 +51,20 @@ class OpenstackOrchestratorController(object):
         # Num_net needed to create networks and subnets with different names
         self.num_net = 0
         self.res_desc = ResourceDescription(DOMAIN_DESCRIPTION_FILE)
+
+        if ONOS_ENABLED is False:
+
+            self.odlendpoint = "http://" + Configuration().ODL_ADDRESS
+            self.odlusername = Configuration().ODL_USERNAME
+            self.odlpassword = Configuration().ODL_PASSWORD
+            self.ovsdb = OVSDB(self.odlendpoint, self.odlusername, self.odlpassword)
+
+        else:
+
+            self.onosEndpoint = Configuration().ONOS_ADDRESS
+            self.onosUsername = Configuration().ONOS_USERNAME
+            self.onosPassword = Configuration().ONOS_PASSWORD
+            self.onosBusiness = ONOSBusiness(self.onosEndpoint, self.onosUsername, self.onosPassword)
               
     def getAuthTokenAndEndpoints(self):
         self.node_endpoint = OPENSTACK_IP # IP Openstack
@@ -51,12 +74,7 @@ class OpenstackOrchestratorController(object):
         self.novaEndpoint = self.token.get_endpoint_URL('compute', 'public')
         #self.glanceEndpoint = self.token.get_endpoint_URL('image','public')  # not needed because it is read from the templates
         self.neutronEndpoint = self.token.get_endpoint_URL('network','public')
-        
-        self.odlendpoint = "http://" + Configuration().ODL_ADDRESS
-        self.odlusername = Configuration().ODL_USERNAME
-        self.odlpassword = Configuration().ODL_PASSWORD
-        self.ovsdb = OVSDB(self.odlendpoint, self.odlusername, self.odlpassword)
-        
+     
     def get(self, nffg_id):
         session = Session().get_active_user_session_by_nf_fg_id(nffg_id, error_aware=False)
         logging.debug("Getting session: "+str(session.id))
@@ -92,7 +110,7 @@ class OpenstackOrchestratorController(object):
                 #Read the nf_fg JSON structure and map it into the proper objects and db entries
                 profile_graph = self.buildProfileGraph(nf_fg)
                 if JOLNET_MODE is False:
-                      self.instantiateEndpoints(nf_fg)
+                      self.instantiateEndpoints(nf_fg, nf_fg.db_id)
                 self.openstackResourcesInstantiation(profile_graph, nf_fg)
                 self.instantiateFlowrules(profile_graph, nf_fg.db_id)
                 logging.debug("Graph " + profile_graph.id + " correctly instantiated!")
@@ -129,7 +147,7 @@ class OpenstackOrchestratorController(object):
     
             profile_graph = self.buildProfileGraph(updated_nffg)
             if JOLNET_MODE is False:
-                  self.instantiateEndpoints(nf_fg)
+                  self.instantiateEndpoints(nf_fg, graph_id)
             self.openstackResourcesInstantiation(profile_graph, updated_nffg)
             self.instantiateFlowrules(profile_graph, graph_id)
             
@@ -282,7 +300,12 @@ class OpenstackOrchestratorController(object):
             if flow.type == "external" and flow.status == "complete":
                 if flow.table_id is None:
                     flow.table_id = 0
-                ODL().deleteFlow(self.odlendpoint, self.odlusername, self.odlpassword, flow.node_id, flow.internal_id, flow.table_id)
+                if ONOS_ENABLED is False:
+                    ODL().deleteFlow(self.odlendpoint, self.odlusername, self.odlpassword, flow.node_id, flow.internal_id, flow.table_id)
+
+                else:
+                    self.onosBusiness.deleteFlow(flow.node_id, flow.internal_id)
+
         token_id = self.token.get_token()
         vnfs = Graph().getVNFs(graph_id)
         for vnf in vnfs:
@@ -330,18 +353,30 @@ class OpenstackOrchestratorController(object):
             if flow.type == "external" and flow.status == "complete":
                 if flow.table_id is None:
                     flow.table_id = 0
-                ODL().deleteFlow(self.odlendpoint, self.odlusername, self.odlpassword, flow.node_id, flow.internal_id, flow.table_id)
+
+                if ONOS_ENABLED is False:
+                    ODL().deleteFlow(self.odlendpoint, self.odlusername, self.odlpassword, flow.node_id, flow.internal_id, flow.table_id)
+
+                else:
+                    self.onosBusiness.deleteFlow(flow.node_id, flow.internal_id)
+
                 Graph().deleteFlowRule(flow.id)
         Graph().deleteFlowRule(flowrule.db_id)
-        nf_fg.flow_rules.remove(flowrule)            
-    
+        nf_fg.flow_rules.remove(flowrule)
+
+    '''
+    *********************************
+    *    Endpoints deletetion       *
+    *********************************
+    '''
+
     def deleteEndpoints(self, nffg):
         for endpoint in nffg.end_points[:]:
             self.deleteEndpoint(endpoint, nffg)
-          
+
     def deleteEndpoint(self, endpoint, nffg):
         logging.debug("Deleting endpoint type: "+str(endpoint.type))
-        if endpoint.type == 'interface-out' or endpoint.type == 'vlan':
+        if endpoint.type == 'interface' or endpoint.type == 'vlan':
             self.deleteExitEndpoint(nffg, endpoint)
         elif endpoint.type == 'internal':
             self.deleteInternalEndpoint(nffg, endpoint)
@@ -351,86 +386,226 @@ class OpenstackOrchestratorController(object):
         nffg.end_points.remove(endpoint)
         
     def deleteExitEndpoint(self, nffg, endpoint):
-        port_to_int_bridge = nffg.id + "-" + endpoint.id + "-to-" + INTEGRATION_BRIDGE
-        port_to_exit_switch =  nffg.id + "-" + endpoint.id + "-to-" + EXIT_SWITCH
+        port_to_int_bridge = nffg.id + "-to-" + INTEGRATION_BRIDGE
+        port_to_exit_switch =  nffg.id + "-to-" + EXIT_SWITCH
         
-        ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+        if ONOS_ENABLED is False:
+            ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
         
-        self.ovsdb.deletePort(ovs_id, port_to_int_bridge, EXIT_SWITCH)
+            self.ovsdb.deletePort(ovs_id, port_to_int_bridge, EXIT_SWITCH)
         
-        self.ovsdb.deletePort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE)  
+            self.ovsdb.deletePort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE)
+
+        else:
+            ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
+
+            self.onosBusiness.deletePort(ovsdbIP, port_to_int_bridge, EXIT_SWITCH)
+    
+            self.onosBusiness.deletePort(ovsdbIP, port_to_exit_switch, INTEGRATION_BRIDGE)
             
     def deleteInternalEndpoint(self, nffg, endpoint):
         internal_bridge_id = "br-internal-"+ str(endpoint.internal_group)
         port_to_internal_bridge = nffg.id + "-" + endpoint.id + "-to-" + internal_bridge_id
         port_to_integration_bridge =  nffg.id + "-" + endpoint.id + "-to-" + INTEGRATION_BRIDGE
         
-        ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+        if ONOS_ENABLED is False:
+            ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
         
-        self.ovsdb.deletePort(ovs_id, port_to_integration_bridge, internal_bridge_id)
+            self.ovsdb.deletePort(ovs_id, port_to_integration_bridge, internal_bridge_id)
         
-        self.ovsdb.deletePort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE)
+            self.ovsdb.deletePort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE)
         
-        if len(self.ovsdb.getBridgePorts(ovs_id, internal_bridge_id)) == 1:
-            # There are no ports belonging to this bridge so we can delete it
-            self.ovsdb.deleteBridge(ovs_id, internal_bridge_id)
-            logging.debug("Deleting internal bridge: "+str(internal_bridge_id))
-            
+            if len(self.ovsdb.getBridgePorts(ovs_id, internal_bridge_id)) == 1:
+                # There are no ports belonging to this bridge so we can delete it
+                self.ovsdb.deleteBridge(ovs_id, internal_bridge_id)
+                logging.debug("Deleting internal bridge: "+str(internal_bridge_id))
+
+        else:
+            ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
+
+            self.onosBusiness.deletePort(ovsdbIP, port_to_integration_bridge, internal_bridge_id)
+    
+            self.onosBusiness.deletePort(ovsdbIP, port_to_internal_bridge, INTEGRATION_BRIDGE)
+
+            if len(self.onosBusiness.getBridgePorts(endpoint.node_id, internal_bridge_id)) == 1:
+                # There are no ports belonging to this bridge so we can delete it
+                self.onosBusiness.deleteBridge(endpoint.node_id, ovsdbIP, internal_bridge_id)
+                logging.debug("Deleting internal bridge: "+str(internal_bridge_id))
+
     def deleteGreEndpoint(self, nffg, endpoint):
         gre_port = nffg.id + "-gre-" + endpoint.id
         
-        ovs_id = self.ovsdb.getOVSId(endpoint.local_ip)
-                
-        self.ovsdb.deletePort(ovs_id, gre_port, INTEGRATION_BRIDGE)             
+        if ONOS_ENABLED is False:
 
-    def instantiateEndpoints(self, nffg):
+            ovs_id = self.ovsdb.getOVSId(endpoint.local_ip)
+                    
+            self.ovsdb.deletePort(ovs_id, gre_port, INTEGRATION_BRIDGE)
+
+        else:
+            ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.local_ip)
+        
+            self.onosBusiness.deleteGreTunnel(ovsdbIP, gre_port, EXIT_SWITCH)
+
+    '''
+    *****************************************
+    *     Endpoints instantiation     *
+    *****************************************
+    '''
+
+    def instantiateEndpoints(self, nffg, graph_id):
         for end_point in nffg.end_points[:]:
             if end_point.status == 'new' or end_point.status == 'to_be_updated':
-                self.instantiateEndPoint(nffg, end_point)
+                self.instantiateEndPoint(nffg, end_point, graph_id)
     
-    def instantiateEndPoint(self, nffg, end_point):
-        if end_point.type == "interface":
-            self.manageIngressEndpoint(end_point)
-        elif end_point.type == 'interface-out' or end_point.type == 'vlan':
-            self.manageExitEndpoint(nffg, end_point)
+    def instantiateEndPoint(self, nffg, end_point, graph_id):
+        if end_point.type == "interface" or end_point.type == 'vlan':
+            self.manageIngressEndpoint(nffg, end_point, graph_id)    # INTEGRATION_BRIDGE
+            # elif end_point.type == 'interface-out' or end_point.type == 'vlan':
+            # self.manageExitEndpoint(nffg, end_point)    #EXIT_SWITCH
         elif end_point.type == "internal":
-            self.manageInternalEndpoint(nffg, end_point)
+            self.manageInternalEndpoint(nffg, end_point)    # INTERNAL_BRIDGE
         elif end_point.type == "gre-tunnel":
-            self.manageGreEndpoint(nffg, end_point)            
+            self.manageGreEndpoint(nffg, end_point, graph_id)        # EXIT_SWITCH
 
         self.res_desc.addEndpoint(end_point)
 
-    def manageIngressEndpoint(self, ingress_end_point):
-        port_to_int_bridge = "to-" + INTEGRATION_BRIDGE
-        port_to_ingress_switch =  "to-" + INGRESS_SWITCH
-        
-        ovs_id = self.ovsdb.getOVSId(ingress_end_point.node_id)
+    '''
+    Managing an endpoint which type is interface
+    '''
 
-        self.ovsdb.createBridge(ovs_id, INGRESS_SWITCH)
-        
-        self.ovsdb.createPort(ovs_id, ingress_end_point.interface, INGRESS_SWITCH)
-        
-        self.ovsdb.createPatchPort(ovs_id, port_to_int_bridge, INGRESS_SWITCH, patch_peer = port_to_ingress_switch)
-        
-        self.ovsdb.createPatchPort(ovs_id, port_to_ingress_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)
-        
-        ingress_end_point.interface_internal_id = port_to_ingress_switch
-                
-    def manageExitEndpoint(self, nffg, egress_end_point):
-        port_to_int_bridge = nffg.id + "-" + egress_end_point.id + "-to-" + INTEGRATION_BRIDGE
-        port_to_exit_switch =  nffg.id + "-" + egress_end_point.id + "-to-" + EXIT_SWITCH
-        
-        ovs_id = self.ovsdb.getOVSId(egress_end_point.node_id)
+    def manageIngressEndpoint(self, nffg, ingress_end_point, graph_id):
+        port_to_int_bridge = nffg.id + "-to-" + INTEGRATION_BRIDGE
+        port_to_exit_switch =  nffg.id + "-to-" + EXIT_SWITCH
 
-        self.ovsdb.createBridge(ovs_id, EXIT_SWITCH)
+        if ONOS_ENABLED is False:
         
-        self.ovsdb.createPort(ovs_id, egress_end_point.interface, EXIT_SWITCH)
+            ovs_id = self.ovsdb.getOVSId(ingress_end_point.node_id)
+
+            self.ovsdb.createBridge(ovs_id, EXIT_SWITCH)
+            
+            self.ovsdb.createPort(ovs_id, ingress_end_point.interface, EXIT_SWITCH)
+            
+            self.ovsdb.createPatchPort(ovs_id, port_to_int_bridge, EXIT_SWITCH, patch_peer = port_to_exit_switch)
+            
+            self.ovsdb.createPatchPort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)
+            
+            ingress_end_point.interface_internal_id = port_to_exit_switch
+
+        else:
+
+            ovsdbIP = self.onosBusiness.getOvsdbIP(ingress_end_point.node_id)
+
+            self.onosBusiness.createBridge(ovsdbIP, EXIT_SWITCH)
+            
+            self.onosBusiness.createPort(ovsdbIP, EXIT_SWITCH, ingress_end_point.interface)
+            
+            self.onosBusiness.createPatchPort(ovsdbIP, EXIT_SWITCH, port_to_int_bridge, patch_peer = port_to_exit_switch)
+            
+            self.onosBusiness.createPatchPort(ovsdbIP, INTEGRATION_BRIDGE, port_to_exit_switch, patch_peer = port_to_int_bridge)
+            
+            ingress_end_point.interface_internal_id = port_to_exit_switch
+
+
+            '''
+            #######################################################
+            #     Flow from EXIT_SWITCH to INTEGRATION_BRIDGE     #
+            #######################################################
+            '''
+
+            of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, EXIT_SWITCH)
+
+            input_port = self.onosBusiness.getOfPort(ovsdbIP, EXIT_SWITCH, False, ingress_end_point.interface)
+            match = Match()
+            match.setInputMatch(str(input_port))
+
+            actions = []
+            output_port = self.onosBusiness.getOfPort(ovsdbIP, EXIT_SWITCH, False, port_to_int_bridge)
+            output_action = OnosAction()
+            output_action.setOutputAction(str(output_port))
+            actions.append(output_action)
+
+            flowj = OnosFlow(priority=50000, of_switch_id=of_switch_id, actions=actions, match=match)
+            json_req = flowj.getJSON()
+
+            if DEBUG_MODE is True:
+                with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                    outfile.write(json_req)
+            flow_id = self.onosBusiness.createFlow(json_req)
+
+            flow_rule = FlowRule(_id=nffg.id, node_id=of_switch_id, _type='external', status='complete',
+                                 priority=flowj.priority, internal_id=flow_id, table_id=0)
+            Graph().addFlowRule(graph_id, flow_rule, None)
+
+            '''
+            #######################################################
+            #     Flow from INTEGRATION_BRIDGE to EXIT_SWITCH     #
+            #######################################################
+            '''
+
+            input_port = self.onosBusiness.getOfPort(ovsdbIP, EXIT_SWITCH, False, port_to_int_bridge)
+            match = Match()
+            match.setInputMatch(str(input_port))
+
+            actions = []
+            output_port = self.onosBusiness.getOfPort(ovsdbIP, EXIT_SWITCH, False, ingress_end_point.interface)
+            output_action = OnosAction()
+            output_action.setOutputAction(str(output_port))
+            actions.append(output_action)
+
+            flowj = OnosFlow(priority=50000, of_switch_id=of_switch_id, actions=actions, match=match)
+            json_req = flowj.getJSON()
+
+            if DEBUG_MODE is True:
+                with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                    outfile.write(json_req)
+            flow_id = self.onosBusiness.createFlow(json_req)
+
+            flow_rule = FlowRule(_id=nffg.id, node_id=of_switch_id, _type='external', status='complete',
+                                 priority=flowj.priority, internal_id=flow_id, table_id=0)
+            Graph().addFlowRule(graph_id, flow_rule, None)
+
+
+            '''
+            Managing an endpoint which type is interface-out or vlan
+
+                        
+            def manageExitEndpoint(self, nffg, egress_end_point):
+                port_to_int_bridge = nffg.id + "-" + egress_end_point.id + "-to-" + INTEGRATION_BRIDGE
+                port_to_exit_switch =  nffg.id + "-" + egress_end_point.id + "-to-" + EXIT_SWITCH
+
+                if ONOS_ENABLED is False:
                 
-        self.ovsdb.createPatchPort(ovs_id, port_to_int_bridge, EXIT_SWITCH, patch_peer = port_to_exit_switch)
-        
-        self.ovsdb.createPatchPort(ovs_id, port_to_exit_switch, INTEGRATION_BRIDGE, patch_peer = port_to_int_bridge)        
-        
-        egress_end_point.interface_internal_id =  port_to_exit_switch
+                    ovs_id = self.ovsdb.getOVSId(egress_end_point.node_id)
+
+                    self.ovsdb.createBridge(ovs_id, EXIT_SWITCH)
+                    
+                    self.ovsdb.createPort(ovs_id, EXIT_SWITCH, egress_end_point.interface)
+                            
+                    self.ovsdb.createPatchPort(ovs_id, EXIT_SWITCH, port_to_int_bridge, patch_peer = port_to_exit_switch)
+                    
+                    self.ovsdb.createPatchPort(ovs_id, INTEGRATION_BRIDGE, port_to_exit_switch, patch_peer = port_to_int_bridge)        
+                    
+                    egress_end_point.interface_internal_id =  port_to_exit_switch
+
+                else:
+
+                    ovsdbIP = self.onosBusiness.getOvsdbIP(egress_end_point.node_id)
+
+                    self.onosBusiness.createBridge(ovsdbIP, EXIT_SWITCH)
+                    
+                    self.onosBusiness.createPort(ovsdbIP, EXIT_SWITCH, egress_end_point.interface, )
+                            
+                    self.onosBusiness.createPatchPort(ovsdbIP, EXIT_SWITCH, port_to_int_bridge, patch_peer = port_to_exit_switch)
+                    
+                    self.onosBusiness.createPatchPort(ovsdbIP, INTEGRATION_BRIDGE, port_to_exit_switch, patch_peer = port_to_int_bridge)        
+                    
+                    egress_end_point.interface_internal_id =  port_to_exit_switch
+
+            '''
+
+            '''
+            Managing an endpoint which type is internal
+            '''
         
     def manageInternalEndpoint(self, nffg, internal_end_point):
         if internal_end_point.node_id is None:
@@ -438,27 +613,133 @@ class OpenstackOrchestratorController(object):
         internal_bridge_id = "br-internal-"+ str(internal_end_point.internal_group)
         port_to_internal_bridge = nffg.id + "-" + internal_end_point.id + "-to-" + internal_bridge_id
         port_to_integration_bridge =  nffg.id + "-" + internal_end_point.id + "-to-" + INTEGRATION_BRIDGE
-        
-        ovs_id = self.ovsdb.getOVSId(internal_end_point.node_id)
 
-        self.ovsdb.createBridge(ovs_id, internal_bridge_id)
-                
-        self.ovsdb.createPatchPort(ovs_id, port_to_integration_bridge, internal_bridge_id, patch_peer = port_to_internal_bridge)
+        if ONOS_ENABLED is False:
         
-        self.ovsdb.createPatchPort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE, patch_peer = port_to_integration_bridge)
+            ovs_id = self.ovsdb.getOVSId(internal_end_point.node_id)
+
+            self.ovsdb.createBridge(ovs_id, internal_bridge_id)
+                    
+            self.ovsdb.createPatchPort(ovs_id, port_to_integration_bridge, internal_bridge_id, patch_peer = port_to_internal_bridge)
+            
+            self.ovsdb.createPatchPort(ovs_id, port_to_internal_bridge, INTEGRATION_BRIDGE, patch_peer = port_to_integration_bridge)
+            
+            internal_end_point.interface_internal_id = port_to_internal_bridge
+
+        else:
+
+            ovsdbIP = self.onosBusiness.getOvsdbIP(internal_end_point.node_id)
+
+            self.onosBusiness.createBridge(ovsdbIP, internal_bridge_id)
+                    
+            self.onosBusiness.createPatchPort(ovsdbIP, internal_bridge_id, port_to_integration_bridge, patch_peer = port_to_internal_bridge)
+            
+            self.onosBusiness.createPatchPort(ovsdbIP, INTEGRATION_BRIDGE, port_to_internal_bridge, patch_peer = port_to_integration_bridge)
+            
+            internal_end_point.interface_internal_id = port_to_internal_bridge
+
+    '''
+    #####################################################
+    #   Managing an endpoint which type is gre-tunnel   #
+    #####################################################
+    '''
         
-        internal_end_point.interface_internal_id = port_to_internal_bridge
-        
-    def manageGreEndpoint(self, nffg, gre_end_point):
+    def manageGreEndpoint(self, nffg, gre_end_point, graph_id):
         gre_port = nffg.id + "-gre-" + gre_end_point.id
+        port_to_int_bridge = nffg.id + "-to-" + INTEGRATION_BRIDGE
+        port_to_exit_switch = nffg.id + "-to-" + EXIT_SWITCH
+
+        if ONOS_ENABLED is False:
         
-        ovs_id = self.ovsdb.getOVSId(gre_end_point.local_ip)
-                        
-        self.ovsdb.createGrePort(ovs_id, gre_port, INTEGRATION_BRIDGE, gre_end_point.local_ip, gre_end_point.remote_ip, gre_end_point.gre_key)
-        
-        gre_end_point.interface_internal_id = gre_port
-        # This is needed in order to uniform the processFlowrule function regardless of the endpoint type
-        gre_end_point.node_id = gre_end_point.local_ip
+            ovs_id = self.ovsdb.getOVSId(gre_end_point.local_ip)
+                            
+            self.ovsdb.createGrePort(ovs_id, gre_port, INTEGRATION_BRIDGE, gre_end_point.local_ip, gre_end_point.remote_ip, gre_end_point.gre_key)
+            
+            gre_end_point.interface_internal_id = gre_port
+            # This is needed in order to uniform the processFlowrule function regardless of the endpoint type
+            gre_end_point.node_id = gre_end_point.local_ip
+
+        else:
+
+            ovsdbIP = self.onosBusiness.getOvsdbIP(gre_end_point.local_ip)
+                            
+            self.onosBusiness.createGreTunnel(ovsdbIP, EXIT_SWITCH, gre_port, gre_end_point.local_ip, gre_end_point.remote_ip, gre_end_point.gre_key)
+
+            self.onosBusiness.createPatchPort(ovsdbIP, EXIT_SWITCH, port_to_int_bridge,
+                                              patch_peer=port_to_exit_switch)
+
+            self.onosBusiness.createPatchPort(ovsdbIP, INTEGRATION_BRIDGE, port_to_exit_switch,
+                                              patch_peer=port_to_int_bridge)
+
+            # This variable identifies the patch port on the INTEGRATION_BRIDGE which receives the traffic
+            gre_end_point.interface_internal_id = port_to_exit_switch
+
+            # This is needed in order to uniform the processFlowrule function regardless of the endpoint type
+            gre_end_point.node_id = gre_end_point.local_ip
+
+            '''
+            #######################################################
+            #     Flow from EXIT_SWITCH to INTEGRATION_BRIDGE     #
+            #######################################################
+            '''
+
+            of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, EXIT_SWITCH)
+
+            input_port = self.onosBusiness.getOfPort(ovsdbIP, EXIT_SWITCH, False, gre_port)
+            match = Match()
+            match.setInputMatch(str(input_port))
+
+            actions = []
+            output_port = self.onosBusiness.getOfPort(ovsdbIP, EXIT_SWITCH, False, port_to_int_bridge)
+            output_action = OnosAction()
+            output_action.setOutputAction(str(output_port))
+            actions.append(output_action)
+
+            flowj = OnosFlow(priority=50000, of_switch_id=of_switch_id, actions=actions, match=match)
+            json_req = flowj.getJSON()
+
+            if DEBUG_MODE is True:
+                with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                    outfile.write(json_req)
+            flow_id = self.onosBusiness.createFlow(json_req)
+
+            flow_rule = FlowRule(_id=nffg.id, node_id=of_switch_id, _type='external', status='complete',
+                                 priority=flowj.priority, internal_id=flow_id, table_id=0)
+            Graph().addFlowRule(graph_id, flow_rule, None)
+
+            '''
+            #######################################################
+            #     Flow from INTEGRATION_BRIDGE to EXIT_SWITCH     #
+            #######################################################
+            '''
+
+            input_port = self.onosBusiness.getOfPort(ovsdbIP, EXIT_SWITCH, False, port_to_int_bridge)
+            match = Match()
+            match.setInputMatch(str(input_port))
+
+            actions = []
+            output_port = self.onosBusiness.getOfPort(ovsdbIP, EXIT_SWITCH, False, gre_port)
+            output_action = OnosAction()
+            output_action.setOutputAction(str(output_port))
+            actions.append(output_action)
+
+            flowj = OnosFlow(priority=50000, of_switch_id=of_switch_id, actions=actions, match=match)
+            json_req = flowj.getJSON()
+
+            if DEBUG_MODE is True:
+                with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                    outfile.write(json_req)
+            flow_id = self.onosBusiness.createFlow(json_req)
+
+            flow_rule = FlowRule(_id=nffg.id, node_id=of_switch_id, _type='external', status='complete',
+                                 priority=flowj.priority, internal_id=flow_id, table_id=0)
+            Graph().addFlowRule(graph_id, flow_rule, None)
+
+    '''
+    *********************************************************
+    *     Instantiation of resources within OpenStack       *
+    *********************************************************
+    '''
         
     def openstackResourcesInstantiation(self, profile_graph, nf_fg):
         for network in profile_graph.networks:
@@ -482,6 +763,12 @@ class OpenstackOrchestratorController(object):
         for endpoint in profile_graph.endpoints.values():
             if endpoint.status == "new":
                 Graph().setEndpointLocation(nf_fg.db_id, endpoint.id, endpoint.interface)
+
+    '''
+    ********************************************
+    *         Flow Rules Management            *
+    ********************************************
+    '''
                                 
     def instantiateFlowrules(self, profile_graph, graph_id):
         if JOLNET_MODE is False:
@@ -514,6 +801,10 @@ class OpenstackOrchestratorController(object):
             for flowrule in profile_graph.flowrules.values():
                 if flowrule.status =='new':
                     self.instantiateFlowrule(profile_graph, graph_id, flowrule)
+
+    '''
+    If one of this methods are called it means that all the resources have been instantiated within OpenStack
+    '''
                 
     def instantiateFlowrule(self, profile_graph, graph_id, flowrule):
         # Only flowrules that involve a VNF and an endpoint are installed
@@ -522,7 +813,7 @@ class OpenstackOrchestratorController(object):
             port1_type = tmp1[0]
             #port1_id = tmp1[1]
             if port1_type == 'vnf':
-                if len(flowrule.actions) > 1 or flowrule.actions[0].output is None:
+                if len(flowrule.    actions) > 1 or flowrule.actions[0].output is None:
                     raise GraphError("Multiple actions or action different from output are not supported")
                 action = flowrule.actions[0]
                 if action.output.split(':')[0] == "endpoint":
@@ -538,17 +829,31 @@ class OpenstackOrchestratorController(object):
                         self.processFlowrule(profile_graph, graph_id, flowrule)
                         
     def processFlowrule(self, profile_graph, graph_id, flowrule):
-        if flowrule.priority > 16382:
+        # Max flowrule priority within ONOS is 65535, and those flow are deployed with a priority >= 50000; otherwise
+        # they are ignored by ONOS in favor of its flows
+        if flowrule.priority > 15535:
             logging.warning("Flowrule priority cannot be greater than 16382 because it could break the "+ INTEGRATION_BRIDGE + " operation")
-            flowrule.priority = 16382
-        tmp1 = flowrule.match.port_in.split(':',2)
-        port1_type = tmp1[0]
-        port1_id = tmp1[1]
+            flowrule.priority = 15534
+
+        matchPort = flowrule.match.port_in.split(':', 2)
+        port1_type = matchPort[0]
+        port1_id = matchPort[1]
+
+        '''
+        #################################################################
+        #   Is the port_in traffic coming from a VNF or an endpoint?    # 
+        #################################################################
+        '''
         if port1_type == "vnf":
+            '''
+                FROM A VNF 
+            ''' 
             vnf_portOut = None
             vnf = profile_graph.functions[port1_id]
-            vnf_port = vnf.ports[tmp1[2]]
+            vnf_port = vnf.ports[matchPort[2]]
             endpoint = None
+            match = Match(flowrule.match)
+
             for action in flowrule.actions:
                 if action.output is not None and action.output.split(':')[0] == "endpoint":
                     endpoint = profile_graph.endpoints[action.output.split(':')[1]]
@@ -559,105 +864,674 @@ class OpenstackOrchestratorController(object):
                     vnf_portOut = vnfOut.ports[output[2]]
                     break
 
-            match = Match(flowrule.match)
+            '''
+                Get the OF device id to which the relative VNF or endpoint belong to. In case of an
+                endpoint, the device id is always the br-int ID because the traffic will be forwarded to
+                the patch port connected to the bridge with that endpoint.
+            '''
             if endpoint is not None:
-                ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
-                of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
+
+                if ONOS_ENABLED is False:
+
+                    ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+                    of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
+
+                else:
+
+                    ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
+                    of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
+
             else:
-                ovs_id = self.ovsdb.getOVSId(INTEGRATION_BRIDGE_LOCAL_IP)
-                of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
+
+                if ONOS_ENABLED is False:
+
+                    ovs_id = self.ovsdb.getOVSId(INTEGRATION_BRIDGE_LOCAL_IP)
+                    of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
+
+                else:
+
+                    vnf_bridge_id = self.onosBusiness.getHostBridgeID(vnf_port.internal_id[0:11])
+                    ovsdbIP = self.onosBusiness.getBridgeOvsdbNodeIP(vnf_bridge_id)
+
+                    try:
+                        of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
+                        # ovsdbIP = self.onosBusiness.getOvsdbIP(INTEGRATION_BRIDGE_LOCAL_IP)
+
+                        # of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
+                    except:
+                        of_switch_id = self.onosBusiness.getBridgeID(INTEGRATION_BRIDGE_LOCAL_IP, INTEGRATION_BRIDGE)
+
+            '''
+                    Get the VNF port which match the port_in criteria
+            '''
 
             if vnf_port.of_port is None:
-                input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_port.internal_id[0:8])
-                vnf_port.of_port = str(input_port)
+
+                if ONOS_ENABLED is False:
+
+                    input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_port.internal_id[0:8])
+                    vnf_port.of_port = str(input_port)
+
+                else:
+
+                    # Get the ovsdb node IP where the input VNF is located
+                    VNFBridgeID = self.onosBusiness.getHostBridgeID(vnf_port.internal_id[0:11])
+                    ovsdbIPVNF  = self.onosBusiness.getBridgeOvsdbNodeIP(VNFBridgeID)
+                    #print("Get the vnf port matchin port_in "+ovsdbIPVNF+" del bridge "+VNFBridgeID)
+
+                    try:
+                        # Input port is returned as a number which identifies the port within that bridge
+                        input_port = self.onosBusiness.getOfPort(ovsdbIPVNF, INTEGRATION_BRIDGE, True, vnf_port.internal_id[0:11])
+                    except:
+                        tempIP = self.onosBusiness.getOvsdbIP(INTEGRATION_BRIDGE_LOCAL_IP)
+                        input_port = self.onosBusiness.getOfPort(tempIP, INTEGRATION_BRIDGE, True, vnf_port.internal_id[0:11])
+                    vnf_port.of_port = str(input_port)
+
             match.setInputMatch(vnf_port.of_port)
+
+            '''
+            ########################################
+            #   Now it's time to get the actions   #
+            ########################################
+            '''
 
             actions = []
             if endpoint is not None and endpoint.type == "vlan":
-                push_vlan_action = Action()
-                push_vlan_action.setPushVlanAction()
-                set_vlan_action = Action()
-                set_vlan_action.setVlanAction(endpoint.vlan_id)
-                actions.append(push_vlan_action)
-                actions.append(set_vlan_action)
-            if endpoint is not None:
-                output_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, endpoint.interface_internal_id)
-                output_action = Action()
-                output_action.setOutputAction(str(output_port), 65535)
-                actions.append(output_action)
-            else:
-                if vnf_portOut.of_port is None:
-                   out_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_portOut.internal_id[0:8])
-                   vnf_portOut.of_port = str(out_port)
-                output_action = Action()
-                output_action.setOutputAction(vnf_portOut.of_port, 65535)
-                actions.append(output_action)
 
-            flow_id = str(profile_graph.id) + "_in_" + str(flowrule.id) 
-            
-            flowj = Flow(flow_id, table_id=0, priority=16385+flowrule.priority, actions=actions, match=match)
-            json_req = flowj.getJSON()
-
-            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
-            
-            flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)
-            Graph().addFlowRule(graph_id, flow_rule, None)
-
-            
-            flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
-            
-            flowj = Flow(flow_id, table_id=110, priority=16385+flowrule.priority, actions=actions, match=match)
-            json_req = flowj.getJSON()
-            #print (json_req)
-
-            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
-            
-            flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=110)
-            Graph().addFlowRule(graph_id, flow_rule, None)
-            
-        elif port1_type == "endpoint":
-            endpoint = profile_graph.endpoints[port1_id]
-            for action in flowrule.actions:
-                if action.output is not None:
-                    output = action.output.split(':',2)
-                    if output[0] == "vnf":
-                        vnf = profile_graph.functions[output[1]]
-                        vnf_port = vnf.ports[output[2]]
-                        break
+                if ONOS_ENABLED is False:
+                    push_vlan_action = Action()
+                    push_vlan_action.setPushVlanAction()
+                    set_vlan_action = Action()
+                    set_vlan_action.setVlanAction(endpoint.vlan_id)
+                    actions.append(push_vlan_action)
+                    actions.append(set_vlan_action)
                     
+                else:
+                    
+                    push_vlan_action = OnosAction()
+                    push_vlan_action.setPushVlanAction()
+                    set_vlan_action = OnosAction()
+                    set_vlan_action.setVlanAction(endpoint.vlan_id)
+                    actions.append(push_vlan_action)
+                    actions.append(set_vlan_action)
+                
+            if endpoint is not None:
+
+                '''
+                    It's a VNF-Endpoint flow
+                '''
+            
+                if ONOS_ENABLED is False:
+                
+                    output_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, False, endpoint.interface_internal_id)
+                    output_action = Action()
+                    output_action.setOutputAction(str(output_port), 65535)
+                    actions.append(output_action)
+                    
+                else:
+
+                    '''
+                    #####################################################################################
+                    #       Check if the endpoint and the VNF are on the same compute node or not       #
+                    #####################################################################################
+                    '''
+
+                    # Get the ovsdb node IP where the input VNF is located
+                    VNFBridgeID = self.onosBusiness.getHostBridgeID(vnf_port.internal_id[0:11])
+                    ovsdbIPVNF  = self.onosBusiness.getBridgeOvsdbNodeIP(VNFBridgeID)
+
+                    endpointIP = str(endpoint.node_id)
+                    vnfIP = str(ovsdbIPVNF)
+
+                    if endpointIP != vnfIP:
+                        '''
+                            The endpoint and the VNF are on different compute nodes
+                        '''
+
+                        # Create GRE tunnel
+                        # Flow from VNF to GRE endpoint
+                        # Flow from GRE endpoint2 to endpoint
+
+                        gre_port = str(graph_id) + "-gre"
+
+                        # Endpoint 1 it's the compute node that hosts the endpoint
+                        endpoint1 = ovsdbIPVNF
+
+                        # Endpoint 2 it's the compute node that hosts the VNF
+                        endpoint2 = self.onosBusiness.getOvsdbIP(endpoint.node_id)
+
+                        self.onosBusiness.createGreTunnel(endpoint1, INTEGRATION_BRIDGE, gre_port, endpoint1, endpoint2,
+                                                          str(graph_id))
+                        self.onosBusiness.createGreTunnel(endpoint2, INTEGRATION_BRIDGE, gre_port, endpoint2, endpoint1,
+                                                          str(graph_id))
+
+                        output_port = self.onosBusiness.getOfPort(endpoint1, INTEGRATION_BRIDGE, False, gre_port)
+                        output_action = OnosAction()
+                        output_action.setOutputAction(str(output_port))
+                        actions.append(output_action)
+                        of_switch_id = self.onosBusiness.getBridgeID(endpoint1, INTEGRATION_BRIDGE)
+
+                        '''
+                        ###############################
+                        #        Flow Creation        #
+                        ###############################
+                        '''
+
+                        flowj = OnosFlow(priority=50000+flowrule.priority, of_switch_id=of_switch_id, actions=actions,
+                                         match=match)
+                        json_req = flowj.getJSON()
+
+                        if DEBUG_MODE is True:
+                            with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                                outfile.write(json_req)
+                        flow_id = self.onosBusiness.createFlow(json_req)
+                        
+                        flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',
+                                             priority=flowj.priority, internal_id=flow_id, table_id=0)
+
+                        Graph().addFlowRule(graph_id, flow_rule, None)
+
+                        '''
+                            SECOND ENDPOINT
+                        '''
+
+                        of_switch_id = self.onosBusiness.getBridgeID(endpoint2, INTEGRATION_BRIDGE)
+                        input_port = self.onosBusiness.getOfPort(endpoint2, INTEGRATION_BRIDGE, False, gre_port)
+
+                        match.setInputMatch(str(input_port))
+
+                        # [0:11] because internal_id will be like tapXXXXXXXX-XX
+                        output_port = self.onosBusiness.getOfPort(endpoint2, INTEGRATION_BRIDGE, False,
+                                                                  endpoint.interface_internal_id)
+
+                        output_action = OnosAction()
+                        output_action.setOutputAction(str(output_port))
+                        actions = [output_action]
+
+                        flowj = OnosFlow(priority=50000+flowrule.priority, of_switch_id=of_switch_id, actions=actions,
+                                         match=match)
+                        json_req = flowj.getJSON()
+
+                        if DEBUG_MODE is True:
+                            with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                                outfile.write(json_req)
+                        flow_id = self.onosBusiness.createFlow(json_req)
+                        
+                        flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',
+                                             priority=flowj.priority, internal_id=flow_id, table_id=0)
+
+                        Graph().addFlowRule(graph_id, flow_rule, None)
+                    
+                    else:
+
+                        '''
+                            The endpoint and the VNF are on the same compute node
+                        '''
+
+                        #print("Same compute Node: " + endpoint.interface_internal_id + " IP: " + ovsdbIP)
+                        output_port = self.onosBusiness.getOfPort(ovsdbIP, INTEGRATION_BRIDGE, False,
+                                                                  endpoint.interface_internal_id)
+                        output_action = OnosAction()
+                        output_action.setOutputAction(str(output_port))
+                        actions.append(output_action)
+
+                        '''
+                        ###############################
+                        #        Flow Creation        #
+                        ###############################
+                        '''
+
+                        flowj = OnosFlow(priority=50000 + flowrule.priority, of_switch_id=of_switch_id, actions=actions,
+                                         match=match)
+                        json_req = flowj.getJSON()
+
+                        if DEBUG_MODE is True:
+                            with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                                outfile.write(json_req)
+                        flow_id = self.onosBusiness.createFlow(json_req)
+
+                        flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',
+                                             priority=flowj.priority, internal_id=flow_id, table_id=0)
+                        Graph().addFlowRule(graph_id, flow_rule, None)
+                
+            else:
+
+                '''
+                    It's a VNF-VNF flow
+                '''
+
+                '''
+                 #####################################################################################
+                 #       Check if the endpoint and the VNF are on the same compute node or not       #
+                 #####################################################################################
+                 '''
+
+                # Get the ovsdb node IP where the input VNF is located
+                VNFBridgeID = self.onosBusiness.getHostBridgeID(vnf_port.internal_id[0:11])
+                ovsdbIPVNF = self.onosBusiness.getBridgeOvsdbNodeIP(VNFBridgeID)
+
+                # Get the ovsdb node IP where the output VNF is located
+                VNFBridgeID2 = self.onosBusiness.getHostBridgeID(vnf_portOut.internal_id[0:11])
+                ovsdbIPVNF2 = self.onosBusiness.getBridgeOvsdbNodeIP(VNFBridgeID2)
+
+                vnfIP = str(ovsdbIPVNF)
+                vnfIP2 = str(ovsdbIPVNF2)
+
+                if vnfIP2 != vnfIP:
+                    '''
+                        The VNF1 and the VNF2 are on different compute nodes
+                    '''
+
+                    # Create GRE tunnel
+                    # Flow from VNF to GRE endpoint
+                    # Flow from GRE endpoint2 to endpoint
+
+                    gre_port = str(graph_id) + "-gre"
+
+                    # Endpoint 1 it's the compute node that hosts the endpoint
+                    endpoint1 = ovsdbIPVNF
+
+                    # Endpoint 2 it's the compute node that hosts the VNF
+                    endpoint2 = ovsdbIPVNF2
+
+                    self.onosBusiness.createGreTunnel(endpoint1, INTEGRATION_BRIDGE, gre_port, endpoint1, endpoint2,
+                                                      str(graph_id))
+                    self.onosBusiness.createGreTunnel(endpoint2, INTEGRATION_BRIDGE, gre_port, endpoint2, endpoint1,
+                                                      str(graph_id))
+
+                    output_port = self.onosBusiness.getOfPort(endpoint1, INTEGRATION_BRIDGE, False, gre_port)
+                    output_action = OnosAction()
+                    output_action.setOutputAction(str(output_port))
+                    actions.append(output_action)
+                    of_switch_id = self.onosBusiness.getBridgeID(endpoint1, INTEGRATION_BRIDGE)
+
+                    '''
+                    ###############################
+                    #        Flow Creation        #
+                    ###############################
+                    '''
+
+                    flowj = OnosFlow(priority=50000 + flowrule.priority, of_switch_id=of_switch_id, actions=actions,
+                                     match=match)
+                    json_req = flowj.getJSON()
+
+                    if DEBUG_MODE is True:
+                        with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                            outfile.write(json_req)
+                    flow_id = self.onosBusiness.createFlow(json_req)
+
+                    flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',
+                                         priority=flowj.priority, internal_id=flow_id, table_id=0)
+
+                    Graph().addFlowRule(graph_id, flow_rule, None)
+
+                    '''
+                        SECOND ENDPOINT
+                    '''
+
+                    of_switch_id = self.onosBusiness.getBridgeID(endpoint2, INTEGRATION_BRIDGE)
+                    input_port = self.onosBusiness.getOfPort(endpoint2, INTEGRATION_BRIDGE, False, gre_port)
+
+                    match.setInputMatch(str(input_port))
+
+                    # [0:11] because internal_id will be like tapXXXXXXXX-XX
+                    output_port = self.onosBusiness.getOfPort(endpoint2, INTEGRATION_BRIDGE, False,
+                                                              vnf_portOut.internal_id[0:11])
+
+                    output_action = OnosAction()
+                    output_action.setOutputAction(str(output_port))
+                    actions = [output_action]
+
+                    flowj = OnosFlow(priority=50000 + flowrule.priority, of_switch_id=of_switch_id, actions=actions,
+                                     match=match)
+                    json_req = flowj.getJSON()
+
+                    if DEBUG_MODE is True:
+                        with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                            outfile.write(json_req)
+                    flow_id = self.onosBusiness.createFlow(json_req)
+
+                    flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',
+                                         priority=flowj.priority, internal_id=flow_id, table_id=0)
+
+                    Graph().addFlowRule(graph_id, flow_rule, None)
+
+                else:
+
+                    '''
+                        The VNF1 and the VNF2 are on the same compute nodes
+                    '''
+
+                    if vnf_portOut.of_port is None:
+                        if ONOS_ENABLED is False:
+
+                           out_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_portOut.internal_id[0:8])
+                           vnf_portOut.of_port = str(out_port)
+
+                        else:
+
+                            try:
+                                out_port = self.onosBusiness.getOfPort(ovsdbIP, INTEGRATION_BRIDGE, True,
+                                                                       vnf_portOut.internal_id[0:11])
+                            except:
+                                out_port = self.onosBusiness.getOfPort(INTEGRATION_BRIDGE_LOCAL_IP, INTEGRATION_BRIDGE, True,
+                                                                       vnf_portOut.internal_id[0:11])
+
+                            # Input port is returned as a number which identify the port within that bridge
+                            vnf_portOut.of_port = str(out_port)
+
+                    if ONOS_ENABLED is False:
+                        output_action = Action()
+                        output_action.setOutputAction(vnf_portOut.of_port, 65535)
+                        actions.append(output_action)
+
+                    else:
+                        output_action = OnosAction()
+                        output_action.setOutputAction(vnf_portOut.of_port)
+                        actions.append(output_action)
+
+                    '''
+                    *******************************
+                    *        Flow Creation        *
+                    *******************************
+                    '''
+
+                    if ONOS_ENABLED is False:
+
+                        flow_id = str(profile_graph.id) + "_" + str(flowrule.id)
+
+                        flowj = Flow(flow_id, table_id=0, priority=16385+flowrule.priority, actions=actions, match=match)
+                        json_req = flowj.getJSON()
+                        #print (json_req)
+
+                        ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id,
+                                         flow_id, flowj.table_id)
+
+                    else:
+
+                        flowj = OnosFlow(priority=50000+flowrule.priority, of_switch_id=of_switch_id, actions=actions,
+                                         match=match)
+                        json_req = flowj.getJSON()
+
+                        if DEBUG_MODE is True:
+                            with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                                outfile.write(json_req)
+                        flow_id = self.onosBusiness.createFlow(json_req)
+
+                    flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',
+                                         priority=flowj.priority, internal_id=flow_id, table_id=0)
+
+                    Graph().addFlowRule(graph_id, flow_rule, None)
+
+                    if ONOS_ENABLED is False:
+
+                        flow_id = str(profile_graph.id) + "_" + str(flowrule.id)
+
+                        flowj = Flow(flow_id, table_id=110, priority=16385+flowrule.priority, actions=actions, match=match)
+                        json_req = flowj.getJSON()
+                        print (json_req)
+
+                        ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
+
+                        flow_rule = FlowRule(_id=flowrule.id,node_id=of_switch_id,_type='external', status='complete',
+                                             priority=flowj.priority, internal_id=flow_id, table_id=110)
+
+                        Graph().addFlowRule(graph_id, flow_rule, None)
+
+        elif port1_type == "endpoint":
+
+            '''
+            #########################################################################
+            #   Is the port_in traffic coming from a VNF or an endpoint? Endpoint   #
+            #########################################################################
+            ''' 
+
+            endpoint = profile_graph.endpoints[port1_id]
+            endpoint_out = None
             match = Match(flowrule.match)
 
-            ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
-            of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
-
-            input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, endpoint.interface_internal_id) 
-            match.setInputMatch(str(input_port))
+            for action in flowrule.actions:
             
+                if action.output is not None and action.output.split(':')[0] == "vnf":
+                    output = action.output.split(':', 2)
+                    vnf = profile_graph.functions[output[1]]
+                    vnf_port = vnf.ports[output[2]]
+                    break
+
+                if action.output is not None and action.output.split(':')[0] == "endpoint":
+                    endpoint_out = profile_graph.endpoints[action.output.split(':')[1]]
+                    break
+
+            if ONOS_ENABLED is False:
+
+                ovs_id = self.ovsdb.getOVSId(endpoint.node_id)
+                of_switch_id = self.getOpenFlowSwitchID(ovs_id, INTEGRATION_BRIDGE)
+
+                input_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, endpoint.interface_internal_id)
+
+            else:
+            
+                ovsdbIP = self.onosBusiness.getOvsdbIP(endpoint.node_id)
+                of_switch_id = self.onosBusiness.getBridgeID(ovsdbIP, INTEGRATION_BRIDGE)
+
+                input_port = self.onosBusiness.getOfPort(ovsdbIP, INTEGRATION_BRIDGE, False,
+                                                         endpoint.interface_internal_id)
+
+            match.setInputMatch(str(input_port))
+
             actions = []
             if endpoint.type == "vlan":
-                match.setVlanMatch(endpoint.vlan_id)
-                pop_vlan_action = Action()
-                pop_vlan_action.setPopVlanAction()
-                actions.append(pop_vlan_action)
-            if vnf_port.of_port is None:
-                output_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, vnf_port.internal_id[0:8])
-                vnf_port.of_port = str(output_port)
-            output_action = Action()
-            output_action.setOutputAction(vnf_port.of_port, 65535)
-            actions.append(output_action)
-            
-            flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
 
-            flowj = Flow(flow_id, table_id=0, priority=16385+flowrule.priority, actions=actions, match=match)
-            json_req = flowj.getJSON()
-            #print (json_req)
+                if ONOS_ENABLED is False:
+                    match.setVlanMatch(endpoint.vlan_id)
+                    pop_vlan_action = Action()
+                    pop_vlan_action.setPopVlanAction()
+                    actions.append(pop_vlan_action)
 
-            ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
+                else:
+
+                    match.setVlanMatch(endpoint.vlan_id)
+                    pop_vlan_action = OnosAction()
+                    pop_vlan_action.setPopVlanAction()
+                    actions.append(pop_vlan_action)
+                
+            if endpoint_out is not None:
+
+                '''
+                    It's a Endpoint-Endpoint flow
+                '''
             
-            flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)  
-            Graph().addFlowRule(graph_id, flow_rule, None)
-            
-        
+                output_port = self.onosBusiness.getOfPort(ovsdbIP, INTEGRATION_BRIDGE, False,
+                                                          endpoint_out.interface_internal_id)
+                output_action = OnosAction()
+                output_action.setOutputAction(str(output_port))
+                actions.append(output_action)
+
+                '''
+                ###############################
+                #        Flow Creation        #
+                ###############################
+                '''
+                if ONOS_ENABLED is False:
+
+                    flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
+
+                    flowj = Flow(flow_id, table_id=0, priority=16385+flowrule.priority, actions=actions, match=match)
+                    json_req = flowj.getJSON()
+                    # print (json_req)
+
+                    ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id,
+                                     flow_id, flowj.table_id)
+
+                else:
+
+                    flowj = OnosFlow(priority=50000+flowrule.priority, of_switch_id=of_switch_id, actions=actions,
+                                     match=match)
+                    json_req = flowj.getJSON()
+
+                    if DEBUG_MODE is True:
+                        with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                            outfile.write(json_req)
+                    flow_id = self.onosBusiness.createFlow(json_req)
+                
+                flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',
+                                     priority=flowj.priority, internal_id=flow_id, table_id=0)
+                Graph().addFlowRule(graph_id, flow_rule, None)
+                                
+            else:
+
+                '''
+                    It's a Endpoint-VNF flow
+                '''
+
+                VNFBridgeID = self.onosBusiness.getHostBridgeID(vnf_port.internal_id[0:11])
+                ovsdbIPVNF  = self.onosBusiness.getBridgeOvsdbNodeIP(VNFBridgeID)
+
+                '''
+                #####################################################################################
+                #       Check if the endpoint and the VNF are on the same compute node or not       #
+                #####################################################################################
+                '''
+
+                endpointIP = str(endpoint.node_id)
+                vnfIP = str(ovsdbIPVNF)
+
+                if endpointIP != vnfIP:
+                    '''
+                        The endpoint and the VNF are on different compute nodes
+                    '''
+                    print("Endpoint-VNF on different nodes")
+                    # Create GRE tunnel
+                    # Flow from endpoint to GRE endpoint
+                    # Flow from GRE endpoint2 to VNF
+
+                    gre_port = str(graph_id) + "-gre"
+                    endpoint1 = self.onosBusiness.getOvsdbIP(endpoint.node_id)
+                    endpoint2 = ovsdbIPVNF
+                                    
+                    self.onosBusiness.createGreTunnel(endpoint1, INTEGRATION_BRIDGE, gre_port, endpoint1, endpoint2,
+                                                      str(graph_id))
+                    self.onosBusiness.createGreTunnel(endpoint2, INTEGRATION_BRIDGE, gre_port, endpoint2, endpoint1,
+                                                      str(graph_id))
+
+                    output_port = self.onosBusiness.getOfPort(endpoint1, INTEGRATION_BRIDGE, False, gre_port)
+                    output_action = OnosAction()
+                    output_action.setOutputAction(str(output_port))
+                    actions.append(output_action)
+                    of_switch_id = self.onosBusiness.getBridgeID(endpoint1, INTEGRATION_BRIDGE)
+
+                    '''
+                    ###############################
+                    #        Flow Creation        #
+                    ###############################
+                    '''
+
+                    flowj = OnosFlow(priority=50000+flowrule.priority, of_switch_id=of_switch_id, actions=actions, match=match)
+                    json_req = flowj.getJSON()
+
+                    if DEBUG_MODE is True:
+                        with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                            outfile.write(json_req)
+                    flow_id = self.onosBusiness.createFlow(json_req)
+                    
+                    flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)  
+                    Graph().addFlowRule(graph_id, flow_rule, None)
+
+                    '''
+                        SECOND ENDPOINT
+                    '''
+
+                    of_switch_id = self.onosBusiness.getBridgeID(endpoint2, INTEGRATION_BRIDGE)
+                    input_port = self.onosBusiness.getOfPort(endpoint2, INTEGRATION_BRIDGE, False, gre_port)
+
+                    match.setInputMatch(str(input_port))
+
+                    # [0:11] because internal_id will be like tapXXXXXXXX-XX
+                    output_port = self.onosBusiness.getOfPort(endpoint2, INTEGRATION_BRIDGE, True, vnf_port.internal_id[0:11])
+                    # Input port is returned as a number which identify the port within that bridge
+                    vnf_port.of_port = str(output_port)
+
+                    output_action = OnosAction()
+                    output_action.setOutputAction(vnf_port.of_port)
+                    actions = [output_action]
+
+                    flowj = OnosFlow(priority=50000+flowrule.priority, of_switch_id=of_switch_id, actions=actions, match=match)
+                    json_req = flowj.getJSON()
+
+                    if DEBUG_MODE is True:
+                        with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                            outfile.write(json_req)
+                    flow_id = self.onosBusiness.createFlow(json_req)
+                    
+                    flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',
+                                         priority=flowj.priority, internal_id=flow_id, table_id=0)
+                    Graph().addFlowRule(graph_id, flow_rule, None)
+
+                else:
+                    '''
+                    #################################################
+                    #       Endpoint and VNF on the same node       #
+                    #################################################
+                    '''               
+                
+                    actions = []
+
+                    if vnf_port.of_port is None:
+                
+                        if ONOS_ENABLED is False:
+
+                            output_port = self.ovsdb.getOfPort(ovs_id, INTEGRATION_BRIDGE, True, vnf_port.internal_id[0:8])
+                            vnf_port.of_port = str(output_port)
+
+                            output_action = Action()
+                            output_action.setOutputAction(vnf_port.of_port, 65535)
+                            actions.append(output_action)
+
+                        else:
+
+                            try:
+                                output_port = self.onosBusiness.getOfPort(ovsdbIP, INTEGRATION_BRIDGE, True,
+                                                                       vnf_port.internal_id[0:11])
+                            except:
+                                output_port = self.onosBusiness.getOfPort(INTEGRATION_BRIDGE_LOCAL_IP,
+                                                                          INTEGRATION_BRIDGE, True, vnf_port.internal_id[0:11])
+
+                            #print("ENDPOINT TO VNF, VNF PORT: "+str(output_port))
+                            # Input port is returned as a number which identify the port within that bridge
+                            vnf_port.of_port = str(output_port)
+
+                            output_action = OnosAction()
+                            output_action.setOutputAction(vnf_port.of_port)
+                            actions.append(output_action)
+
+                    '''
+                    ###############################
+                    #        Flow Creation        #
+                    ###############################
+                    '''
+                    if ONOS_ENABLED is False:
+
+                        flow_id = str(profile_graph.id) + "_" + str(flowrule.id) 
+
+                        flowj = Flow(flow_id, table_id=0, priority=16385+flowrule.priority, actions=actions, match=match)
+                        json_req = flowj.getJSON()
+                        #print (json_req)
+
+                        ODL().createFlow(self.odlendpoint, self.odlusername, self.odlpassword, json_req, of_switch_id, flow_id, flowj.table_id)
+
+                    else:
+
+                        flowj = OnosFlow(priority=50000+flowrule.priority, of_switch_id=of_switch_id, actions=actions, match=match)
+                        json_req = flowj.getJSON()
+
+                        if DEBUG_MODE is True:
+                            with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                                outfile.write(json_req)
+                        flow_id = self.onosBusiness.createFlow(json_req)
+                    
+                    flow_rule = FlowRule(_id=flowrule.id, node_id=of_switch_id, _type='external', status='complete',priority=flowj.priority, internal_id=flow_id, table_id=0)  
+                    Graph().addFlowRule(graph_id, flow_rule, None)
+
     '''
     ######################################################################################################
     #############################    Resources preparation phase        ##################################
@@ -777,6 +1651,7 @@ class OpenstackOrchestratorController(object):
     '''
     def createServer(self, vnf, nf_fg):
         for port in vnf.listPort[:]:
+            print(port.id)
             self.createPort(port, vnf, nf_fg) 
         json_data = vnf.getResourceJSON()
         resp = Nova().createServer(self.novaEndpoint, self.token.get_token(), json_data)

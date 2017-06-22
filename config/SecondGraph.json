@@ -1,0 +1,58 @@
+
+{
+  "forwarding-graph": {
+    "id": "10100",
+    "name": "Forwarding graph",
+    "VNFs": [
+      {
+        "id": "00000001",
+        "name": "vnf1",
+        "vnf_template": "XSFU53",
+        "ports": [
+          {
+            "id": "inout:0"
+          }
+        ]
+      }
+    ],
+    "end-points": [
+      {
+        "id": "00000001",
+        "name": "ingress",
+        "type": "interface",
+        "interface": {
+          "node-id": "10.0.0.1",
+          "if-name": "eth0"
+        }
+      },
+    ],
+    "big-switch": {
+      "flow-rules": [
+        {
+          "id": "1",
+          "priority": 1,
+          "match": {
+            "port_in": "endpoint:00000001"
+          },
+          "actions": [
+            {
+              "output_to_port": "vnf:00000001:inout:0"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "priority": 1,
+          "match": {
+            "port_in": "vnf:00000001:inout:0"
+          },
+          "actions": [
+            {
+              "output_to_port": "endpoint:00000001"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

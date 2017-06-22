@@ -1,7 +1,16 @@
 # OpenStack brief installation guide
+
+You can set up a real OpenStack deployement or a devstack installation.
+
+## Deploying OpenStack through devstack
+
+To install devstack, follow the instructions provided [here](https://docs.openstack.org/developer/devstack/).
+
+## Real OpenStack deployement
+
 The installation guide has been tested with Ubuntu 14.04, OpenStack Mitaka and OpenDaylight Beryllium.
 
-## Vanilla OpenStack (stable/mitaka version):
+### Vanilla OpenStack (stable/mitaka version):
 
 During the development phase we leveraged the official guide (http://docs.openstack.org/mitaka/install-guide-ubuntu/) for the installation and the configuration of components of interest.
 Design your OpenStack network and configure it according to your needs.
@@ -18,14 +27,14 @@ Extras: we suggest also to install phpmyadmin on controller node, to get databas
 
 You can follow the official guide to install all these components except for the Networking service whose instructions are presented below. Therefore this is a partial guide and we assume that you have already installed all the required services.
 
-## Configure OpenDaylight
+### Configure OpenDaylight
 We recommend to install OpenDaylight on a separate VM with at least 2 core and 2GB of memory and to place it on the controller node. Of course you can also install it as a separate server, in case you don't care about saving space. Furthermore you can also install OpenDaylight directly on the controller node if you cannot deploy it in a fresh Ubuntu.
 
 Download OpenDaylight Beryllium (https://www.opendaylight.org/software/downloads/beryllium-sr2) and follow the installation guide (https://www.opendaylight.org/introduction-getting-started-guide) in order to install and run it.
 
 The only feature you need to install on the first run of ODL is "odl-ovsdb-openstack" and, then,  it is ready to be used as a Neutron ML2 plugin.
 
-## Networking service installation on the controller node
+### Networking service installation on the controller node
 
 Here are the steps required to install and configure the Neutron module on a OpenStack Mitaka controller node.
 
@@ -236,7 +245,7 @@ Here are the steps required to install and configure the Neutron module on a Ope
 		service neutron-metadata-agent restart
 
 
-## Networking service installation on the compute node
+### Networking service installation on the compute node
 
 Here are the steps required to install and configure the Neutron module on a OpenStack Mitaka compute node.
 
@@ -312,7 +321,7 @@ Here are the steps required to install and configure the Neutron module on a Ope
         sudo service nova-compute restart
 
 
-## Install Openvswitch (controller and compute node)
+### Install Openvswitch (controller and compute node)
 The following operations have to be performed on the controller and on the compute node.
 
 - Stop the Neutron server (on controller node only)
@@ -327,21 +336,24 @@ The following operations have to be performed on the controller and on the compu
     -  The code in the first line of the output of the command is the OVS_ID.
             
             sudo ovs-vsctl show
+- WARNING: Now perform the following commands ONLY if you plan to use Opendaylight as network controller rather than ONOS:
 
-- Now perform the following commands:
-    - Replace OVS_ID with the Openvswitch ID just retrieved, IP with the IP address of the local machine and ODL_IP with the IP address of the OpenDaylight controller.
+  - Replace OVS_ID with the Openvswitch ID just retrieved, IP with the IP address of the local machine and ODL_IP with the IP address of the OpenDaylight controller.
 
-    		sudo ovs-vsctl set Open_vSwitch OVS_ID other_config={local_ip=IP}
-    		sudo ovs-vsctl set-manager tcp:<ODL_IP>:6640
+		sudo ovs-vsctl set Open_vSwitch OVS_ID other_config={local_ip=IP}
+		sudo ovs-vsctl set-manager tcp:<ODL_IP>:6640
 
 - Restart the neutron server (on controller node only):
 
         service neutron-server start
 
 
-### Prototype configuration (compute node only)
+#### Prototype configuration (compute node only)
+
+##### WARNING: Now perform the following commands ONLY if you plan to use Opendaylight as network controller rather than ONOS (because ONOS will take care of this operations based on your graph. Example: gre-endpoint on the br-ex):
 
 - Configure the external bridge
+
     - Add an L2 bridge that manage the exit traffic (it is necessary to deliver the traffic coming from the internet to the NF-FG graph of the correct user, which happens when multiple users are connected to your compute node):
 
             sudo ovs-vsctl add-br br-ex
@@ -375,22 +387,6 @@ The following operations have to be performed on the controller and on the compu
 
                 sudo ovs-vsctl del-controller br-ex
 
-- Add the ingress bridge:
-
-    - Add an L2 bridge that manage the user traffic:
-
-            sudo ovs-vsctl add-br br-usr
-
-    - Add a port, where you will connect the devices that use the prototype, to the ingress bridge (all the ports bridged to this bridge will be called "LAN" port):
-    
-        Replace INTERFACE_NAME with the actual interface name. For example, eth0 or wlan0. More then one interface can be connected to this bridge. Connecting a device to those ports you are able to reach your service.
-
-            sudo ovs-vsctl add-port br-usr INTERFACE_NAME
-
-    - Configure the ingress interfaces in /etc/network/interfaces 
-
-            auto INTERFACE_NAME
-            iface INTERFACE_NAME inet manual
 ## Horizon installation:
 
 After installed the Dashboard when loaded on the browser it can give Bad Gataway error and it will not be loaded.

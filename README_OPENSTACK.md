@@ -1,7 +1,16 @@
 # OpenStack brief installation guide
+
+You can set up a real OpenStack deployement or a devstack installation.
+
+## Deploying OpenStack through devstack
+
+To install devstack, follow the instructions provided [here](https://docs.openstack.org/developer/devstack/).
+
+## Real OpenStack deployement
+
 The installation guide has been tested with Ubuntu 14.04, OpenStack Mitaka and OpenDaylight Beryllium.
 
-## Vanilla OpenStack (stable/mitaka version):
+### Vanilla OpenStack (stable/mitaka version):
 
 During the development phase we leveraged the official guide (http://docs.openstack.org/mitaka/install-guide-ubuntu/) for the installation and the configuration of components of interest.
 Design your OpenStack network and configure it according to your needs.
@@ -18,14 +27,14 @@ Extras: we suggest also to install phpmyadmin on controller node, to get databas
 
 You can follow the official guide to install all these components except for the Networking service whose instructions are presented below. Therefore this is a partial guide and we assume that you have already installed all the required services.
 
-## Configure OpenDaylight
+### Configure OpenDaylight
 We recommend to install OpenDaylight on a separate VM with at least 2 core and 2GB of memory and to place it on the controller node. Of course you can also install it as a separate server, in case you don't care about saving space. Furthermore you can also install OpenDaylight directly on the controller node if you cannot deploy it in a fresh Ubuntu.
 
 Download OpenDaylight Beryllium (https://www.opendaylight.org/software/downloads/beryllium-sr2) and follow the installation guide (https://www.opendaylight.org/introduction-getting-started-guide) in order to install and run it.
 
 The only feature you need to install on the first run of ODL is "odl-ovsdb-openstack" and, then,  it is ready to be used as a Neutron ML2 plugin.
 
-## Networking service installation on the controller node
+### Networking service installation on the controller node
 
 Here are the steps required to install and configure the Neutron module on a OpenStack Mitaka controller node.
 
@@ -236,7 +245,7 @@ Here are the steps required to install and configure the Neutron module on a Ope
 		service neutron-metadata-agent restart
 
 
-## Networking service installation on the compute node
+### Networking service installation on the compute node
 
 Here are the steps required to install and configure the Neutron module on a OpenStack Mitaka compute node.
 
@@ -312,7 +321,7 @@ Here are the steps required to install and configure the Neutron module on a Ope
         sudo service nova-compute restart
 
 
-## Install Openvswitch (controller and compute node)
+### Install Openvswitch (controller and compute node)
 The following operations have to be performed on the controller and on the compute node.
 
 - Stop the Neutron server (on controller node only)
@@ -339,9 +348,9 @@ The following operations have to be performed on the controller and on the compu
         service neutron-server start
 
 
-### Prototype configuration (compute node only)
+#### Prototype configuration (compute node only)
 
-#### WARNING: Now perform the following commands ONLY if you plan to use Opendaylight as network controller rather than ONOS (because ONOS will take care of this operations based on your graph. Example: gre-endpoint on the br-ex):
+##### WARNING: Now perform the following commands ONLY if you plan to use Opendaylight as network controller rather than ONOS (because ONOS will take care of this operations based on your graph. Example: gre-endpoint on the br-ex):
 
 - Configure the external bridge
 

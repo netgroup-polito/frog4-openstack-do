@@ -386,3 +386,20 @@ The following operations have to be performed on the controller and on the compu
         - Remove the controller from br-ex (this is a bridge that does not need to be controlled by OpenDaylight):
 
                 sudo ovs-vsctl del-controller br-ex
+
+## Horizon installation:
+
+After installed the Dashboard when loaded on the browser it can give Bad Gataway error and it will not be loaded.
+To solve the problem:
+
+- open the dashboard configuration file:
+
+        vim /etc/apache2/conf-available/openstack-dashboard.conf
+
+- Add the following line to the configturation:
+
+        WSGIApplicationGroup %{GLOBAL}
+
+- Reload the Apache
+
+        service apache2 reload

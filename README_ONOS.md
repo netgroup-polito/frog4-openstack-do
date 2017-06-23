@@ -10,7 +10,7 @@ In case you have deployed it through devstack, you have to execute the following
 	$ sudo ovs-vsctl del-br br-int
 	$ sudo ovs-vsctl del-br br-ex
 
-### Required packages
+## Required packages
 First of all, you need to install some required Ubuntu packages. To do that, please just follow the steps below:
 				
 	$ sudo apt-get install software-properties-common -y 
@@ -19,7 +19,7 @@ First of all, you need to install some required Ubuntu packages. To do that, ple
 	$ echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | sudo debconf-set-selections 
 	$ sudo apt-get install oracle-java8-installer oracle-java8-set-default -y
 
-### Install ONOS
+## Install ONOS
 Now we are able to install ONOS. In this guide we install ONOS 1.8.4; other versiona can be downloaded from [here](http://downloads.onosproject.org).  
 
 This are the steps to install it:  
@@ -31,8 +31,13 @@ This are the steps to install it:
 	$ sudo tar xzf onos-$ONOS_VERSION.tar.gz
 	$ sudo mv onos-$ONOS_VERSION onos
 	$ sudo chown -R USERNAME:GROUP onos
-`Substitute USERNAME and GROUP with your username and group so you don't have to run ONOS as root user. It's recommended to create an 
-unprivileged user named sdn. To do this just type "sudo adduser sdn --system --group" and substitute USERNAME and GROUP with sdn respectively.`
+	
+Substitute `USERNAME` and `GROUP` with your username and group so you do not have to run ONOS as root user. 
+It's recommended to create an unprivileged user named `sdn`:
+
+	$ sudo adduser sdn --system --group
+	
+and substitute USERNAME and GROUP with sdn respectively.`
 
 Now you can run ONOS by typing in a terminal:
 		

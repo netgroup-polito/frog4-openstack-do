@@ -57,7 +57,7 @@ To know the version of Java, use the command
 
 	$ file /etc/alternatives/java /etc/alternatives/javac
 
-Now restart the machine to load the environment variable.
+Now restart the machine to load the environment variable, and start again ONOS.
 
 ## Install ONOS Modular Layer 2 plug-in
 As an additional step we need to install networking-onos, a Neutron ML2 plug-in for ONOS:
@@ -94,12 +94,12 @@ The Modular Layer 2 (ML2) plug-in in OpenStack must be configured to use ONOS as
         		[securitygroup]
         		...
         		firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
-                enable_ipset = True
+                	enable_ipset = True
 
         - Add the [onos] section with the following options:
             - Replace ONOS_IP with the proper values.
 
-            		[onos]
+			[onos]
 			url_path = http://ONOS_IP:8181/onos/openstacknetworking
 			username = onos
 			password = rocks

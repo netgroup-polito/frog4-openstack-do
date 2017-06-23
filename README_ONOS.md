@@ -57,6 +57,8 @@ To know the version of Java, use the command
 
 	$ file /etc/alternatives/java /etc/alternatives/javac
 
+Now restart the machine to load the environment variable.
+
 ## Install ONOS Modular Layer 2 plug-in
 As an additional step we need to install networking-onos, a Neutron ML2 plug-in for ONOS:
 	

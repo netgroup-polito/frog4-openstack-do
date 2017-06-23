@@ -22,6 +22,10 @@ First of all, you need to install some required Ubuntu packages. To do that, ple
 ## Install ONOS
 Now we are able to install ONOS. In this guide we install ONOS 1.8.4; other versiona can be downloaded from [here](http://downloads.onosproject.org).  
 
+Before, we create an unprivileged user named `sdn`:
+
+	$ sudo adduser sdn --system --group
+	
 This are the steps to install it:  
 `Note that later we will use an URL path, within a configuration file, which is changed from "onos/openstackswitching" to "onos/openstacknetworking" since 1.8.0.`
 		
@@ -30,15 +34,8 @@ This are the steps to install it:
 	$ sudo wget -c http://downloads.onosproject.org/release/onos-$ONOS_VERSION.tar.gz
 	$ sudo tar xzf onos-$ONOS_VERSION.tar.gz
 	$ sudo mv onos-$ONOS_VERSION onos
-	$ sudo chown -R USERNAME:GROUP onos
+	$ sudo chown -R sdn:sdn onos
 	
-Substitute `USERNAME` and `GROUP` with your username and group so you do not have to run ONOS as root user. 
-It's recommended to create an unprivileged user named `sdn`:
-
-	$ sudo adduser sdn --system --group
-	
-and substitute USERNAME and GROUP with sdn respectively.
-
 Now you can run ONOS by typing in a terminal:
 		
 	$ cd /opt/onos/bin

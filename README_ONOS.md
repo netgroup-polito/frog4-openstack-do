@@ -41,7 +41,12 @@ Now you can run ONOS by typing in a terminal:
 	$ cd /opt/onos/bin
 	$ ./onos-service start  
 	
-* It's possible that ONOS will prompt a message saying JAVA_HOME is not set. To fix that problem shutdown ONOS typing within its CLI: system:shutdown, then follow the steps below: 
+It is possible that ONOS prompts a message saying *JAVA_HOME is not set*. 
+To fix that problem, shutdown as follows
+
+	onos> system:shutdown
+	
+The types the following commands: 
 
 	$ sudo gedit /etc/environment
 
@@ -49,7 +54,8 @@ Now you can run ONOS by typing in a terminal:
 	$ JAVA_HOME=/usr/lib/jvm/java-8-oracle
 		
 This path could be different if you use a different Java version. Now Restart Ubuntu to load the env variable.
-#### Install ONOS Modular Layer 2 plug-in
+
+## Install ONOS Modular Layer 2 plug-in
 As an additional step we need to install networking-onos, a Neutron ML2 plug-in for ONOS:
 	
 	$ cd

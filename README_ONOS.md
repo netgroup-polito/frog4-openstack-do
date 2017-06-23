@@ -51,7 +51,7 @@ The types the following commands:
 	$ sudo nano /etc/environment
 
 	#Add this line at the end of the file:
-	$ JAVA_HOME=/usr/lib/jvm/java-8-oracle
+	JAVA_HOME=/usr/lib/jvm/java-8-oracle
 		
 This path could be different if you use a different Java version. Now Restart Ubuntu to load the env variable.
 

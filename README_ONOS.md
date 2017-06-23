@@ -1,49 +1,58 @@
 # Install and configure ONOS (Open Network Operating System)
 The installation instructions below have been tested on ubuntu 16.10.
 
+## Preliminaries
+
+This README assumes that you have already deployed [OpenStack](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/README_OPENSTACK.md). 
+
+In case you have deployed it through devstack, you have to execute the following commands before continuing with the installation of ONOS:
+
+	$  sudo ovs-vsctl del-br br-int
+	$ sudo ovs-vsctl del-br br-ex
+
 ### Required packages
 First of all, you need to install some required Ubuntu packages. To do that, please just follow the steps below:
 				
-	sudo apt-get install software-properties-common -y && \
-	sudo add-apt-repository ppa:webupd8team/java -y && \
-	sudo apt-get update && \
-	echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | sudo debconf-set-selections && \
-	sudo apt-get install oracle-java8-installer oracle-java8-set-default -y
+	$ sudo apt-get install software-properties-common -y && \
+	$ sudo add-apt-repository ppa:webupd8team/java -y && \
+	$ sudo apt-get update && \
+	$ echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | sudo debconf-set-selections && \
+	$ sudo apt-get install oracle-java8-installer oracle-java8-set-default -y
 
 ### Install ONOS
 Now we are able to install ONOS. We installed ONOS 1.8.4, choose your preferred ONOS version from here (http://downloads.onosproject.org).  
 This are the steps to install it:  
 `Note that later we'll use an URL path, within a configuration file, which is changed from "onos/openstackswitching" to "onos/openstacknetworking" since 1.8.0.`
 		
-	cd /opt
-	sudo wget -c http://downloads.onosproject.org/release/onos-$ONOS_VERSION.tar.gz
-	sudo tar xzf onos-$ONOS_VERSION.tar.gz
-	sudo mv onos-$ONOS_VERSION onos
-	sudo chown -R USERNAME:GROUP onos
+	$ cd /opt
+	$ sudo wget -c http://downloads.onosproject.org/release/onos-$ONOS_VERSION.tar.gz
+	$ sudo tar xzf onos-$ONOS_VERSION.tar.gz
+	$ sudo mv onos-$ONOS_VERSION onos
+	$ sudo chown -R USERNAME:GROUP onos
 `Substitute USERNAME and GROUP with your username and group so you don't have to run ONOS as root user. It's recommended to create an 
 unprivileged user named sdn. To do this just type "sudo adduser sdn --system --group" and substitute USERNAME and GROUP with sdn respectively.`
 
 Now you can run ONOS by typing in a terminal:
 		
-	cd /opt/onos/bin
-	./onos-service start  
+	$ cd /opt/onos/bin
+	$ ./onos-service start  
 	
 * `It's possible that ONOS will prompt a message saying JAVA_HOME is not set. To fix that problem shutdown ONOS typing within its CLI: system:shutdown,  
 then follow the steps below:`  
 	
-		sudo gedit /etc/environment
-		
-		#Add this line at the end of the file:
-		JAVA_HOME=/usr/lib/jvm/java-8-oracle
+	$ sudo gedit /etc/environment
+	
+	#Add this line at the end of the file:
+	$ JAVA_HOME=/usr/lib/jvm/java-8-oracle
 		
 This path could be different if you use a different Java version. Now Restart Ubuntu to load the env variable.
 #### Install ONOS Modular Layer 2 plug-in
 As an additional step we need to install networking-onos, a Neutron ML2 plug-in for ONOS:
 	
-	cd
-	git clone https://github.com/openstack/networking-onos.git
-	cd networking-onos
-	sudo python setup.py install
+	$ cd
+	$ git clone https://github.com/openstack/networking-onos.git
+	$ cd networking-onos
+	$ sudo python setup.py install
 
 ### Configure ONOS
 

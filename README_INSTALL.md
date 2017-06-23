@@ -1,6 +1,6 @@
 # FROG4 OpenStack Domain Orchestrator Installation Guide
 
-The installation instructions below have been tested on ubuntu 16.04.
+The instructions below have been tested on ubuntu 16.04.
 
 ## OpenStack and ONOS
 

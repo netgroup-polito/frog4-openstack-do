@@ -37,18 +37,17 @@ It's recommended to create an unprivileged user named `sdn`:
 
 	$ sudo adduser sdn --system --group
 	
-and substitute USERNAME and GROUP with sdn respectively.`
+and substitute USERNAME and GROUP with sdn respectively.
 
 Now you can run ONOS by typing in a terminal:
 		
 	$ cd /opt/onos/bin
 	$ ./onos-service start  
 	
-* `It's possible that ONOS will prompt a message saying JAVA_HOME is not set. To fix that problem shutdown ONOS typing within its CLI: system:shutdown,  
-then follow the steps below:`  
-	
+* It's possible that ONOS will prompt a message saying JAVA_HOME is not set. To fix that problem shutdown ONOS typing within its CLI: system:shutdown, then follow the steps below: 
+
 	$ sudo gedit /etc/environment
-	
+
 	#Add this line at the end of the file:
 	$ JAVA_HOME=/usr/lib/jvm/java-8-oracle
 		

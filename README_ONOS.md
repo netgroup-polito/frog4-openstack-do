@@ -99,10 +99,10 @@ The Modular Layer 2 (ML2) plug-in in OpenStack must be configured to use ONOS as
         - Add the [onos] section with the following options:
             - Replace ONOS_IP with the proper values.
 
-			[onos]
-			url_path = http://ONOS_IP:8181/onos/openstacknetworking
-			username = onos
-			password = rocks
+        		[onos]
+        		url_path = http://ONOS_IP:8181/onos/openstacknetworking
+        		username = onos
+        		password = rocks
 `Remeber that since  ONOS 1.8.0 version the url_path is changed from "onos/openstackswitching" to "onos/openstacknetworking"`
 
 ### Testing the ONOS setup

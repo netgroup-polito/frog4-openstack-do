@@ -7,7 +7,7 @@ This README assumes that you have already deployed [OpenStack](https://github.co
 
 In case you have deployed it through devstack, you have to execute the following commands before continuing with the installation of ONOS:
 
-	$  sudo ovs-vsctl del-br br-int
+	$ sudo ovs-vsctl del-br br-int
 	$ sudo ovs-vsctl del-br br-ex
 
 ### Required packages

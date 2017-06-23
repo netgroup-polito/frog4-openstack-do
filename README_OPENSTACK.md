@@ -387,7 +387,7 @@ The following operations have to be performed on the controller and on the compu
 
                 sudo ovs-vsctl del-controller br-ex
 
-## Horizon installation:
+### Horizon installation:
 
 After installed the Dashboard when loaded on the browser it can give Bad Gataway error and it will not be loaded.
 To solve the problem:

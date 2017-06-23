@@ -144,7 +144,13 @@ If some apps still missing, type those commands:
 * Each application has its own configuration file, an example for each app is provided within config folder.
 ---
 Now we have to configure OpenstackInterface and OpenstackNode applications. Once you have a running ONOS instance with all the required apps running, you can configure SONA.
-First of all write your configuration files. In the OpenstackNode config file add all of your compute nodes, assigning a different id to each integration bridge. Also update "devices" section with all the integration bridge, one for each compute node.
+First of all write your configuration files. Copy the OpenstackNode and OpenstackInterface json file that you can find within config folder, and edit them with the correct information. (https://github.com/netgroup-polito/frog4-openstack-do/tree/master/config)
+About the OpenstackNode.json file, you can use this script https://github.com/netgroup-polito/frog4-openstack-do/blob/master/scripts/Generate_sona_openstack_conf.sh to generate such file. Run the script as follows:
+
+	./Generate_sona_openstack_conf.sh [#Compute nodes used] [Managament_IP_Compute_node1] [Managament_IP_Compute_node2]...
+
+If you have just one compute node or two, you can easily edit the provided configuration files.
+In the OpenstackNode config file add all of your compute nodes, assigning a different id to each integration bridge. Also update "devices" section with all the integration bridge, one for each compute node and set as driver "sona".
 
 About OpenstackInterface's config file, unfortunately it uses the old v2 keystone and neutron api. So you have to make ONOS able to authenticate through keystone:
 

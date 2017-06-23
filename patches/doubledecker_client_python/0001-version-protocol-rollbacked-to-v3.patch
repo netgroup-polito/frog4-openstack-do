@@ -1,0 +1,24 @@
+From 586f6600eb4e5daa1206f88d32a820b0c78a26d2 Mon Sep 17 00:00:00 2001
+From: DavideXX92 <davithepezz@hotmail.com>
+Date: Wed, 21 Jun 2017 15:58:45 +0200
+Subject: [PATCH] version protocol rollbacked to v3
+
+---
+ doubledecker/proto.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/doubledecker/proto.py b/doubledecker/proto.py
+index 2af123b..64229c1 100644
+--- a/doubledecker/proto.py
++++ b/doubledecker/proto.py
+@@ -32,7 +32,7 @@ __license__ = """
+   see <http://www.gnu.org/licenses/>.
+ """
+ # Double-decker definitions
+-proto_version = 0x0d0d0004
++proto_version = 0x0d0d0003
+ CMD_SEND = 0
+ CMD_FORWARD = 1
+ CMD_PING = 2
+-- 
+2.9.2.windows.1

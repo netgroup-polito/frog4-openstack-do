@@ -45,11 +45,21 @@ The most important fields that you have to consider are described in the followi
 
 In the section `[openstack_orchestrator]`, set the field `port` to the TCP port to be used to interact with the OpenStack domain orchestrator through its REST API.
 
+In this section, you must also configure the IP address of your OpenStack installation (`openstack_ip` field).
+
 In the [config](/config/) folder, make a new copy of the file `ResourceDescription.json` and rename it (e.g. `ResourceDescription.json`). Then, in the [configuration file](/config/default-config.ini) section `[domain_description]`, change the path in the `file` field so that it points to the new file (e.g. `file = configMyResourceDescription.json`).
 
 In the section `[doubledecker]`, you have to configure the connection towards the broker (note that this guide supposes that, if you need a broker, you have already installed it). Particularly, you can set the URL to be used to contact such a module (`broker_address`) and the file containing the key to be used (`dd_keyfile`).
 
 In the section `[templates]`, in case the NFs templates are stored in the Datastore, you have to set the field `source = vnf-repository`, while the field `epository_ur` must contain the URL to be used to contact the datastore itself.
+
+If you are using ONOS as SDN controller, edit the section `[onos]` with the proper information. Instead, if you are using OpenDaylight, edit the `[odl]` section.
+
+### JOLNET considerations
+
+If you are going to execute the OpenStack domain orchestrator on the JOLNET, set to true the parameter `jolnet_mode` in the section `[jolnet]`. In this section, you must also edit the parameter `jolnet_networks`, so that it contains the OpenStack networks to be used.
+
+Finally, in the `[openstack_orchestrator]` section, you have to set the field `identity_api_version` to `2`. 
 
 ## Create the SQL database
 The FROG4 OpenStack Domain Orchestrator uses a local mySQL database that has to be created and initialized by executing the steps below.

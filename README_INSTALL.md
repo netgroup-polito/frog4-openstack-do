@@ -4,7 +4,7 @@ The installation instructions below have been tested on ubuntu 16.04.
 
 ## OpenStack and ONOS
 
-To install OpenStack and the ONOS SDN controller, please follows the instructions provided respectively in [README_OPENSTACK](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/README_OPENSTACK.md) and in [README_INSTALL_ONOS](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/README_INSTALL_ONOS.md).
+To install OpenStack and the ONOS SDN controller, please follows the instructions provided respectively in [README_OPENSTACK](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/README_OPENSTACK.md) and in [README_ONOS](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/README_ONOS.md).
 Note that ONOS is optional but highly recommended.
 
 ## Required packages

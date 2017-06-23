@@ -20,11 +20,13 @@ First of all, you need to install some required Ubuntu packages. To do that, ple
 	$ sudo apt-get install oracle-java8-installer oracle-java8-set-default -y
 
 ### Install ONOS
-Now we are able to install ONOS. We installed ONOS 1.8.4, choose your preferred ONOS version from here (http://downloads.onosproject.org).  
+Now we are able to install ONOS. In this guide we install ONOS 1.8.4; other versiona can be downloaded from [here](http://downloads.onosproject.org).  
+
 This are the steps to install it:  
-`Note that later we'll use an URL path, within a configuration file, which is changed from "onos/openstackswitching" to "onos/openstacknetworking" since 1.8.0.`
+`Note that later we will use an URL path, within a configuration file, which is changed from "onos/openstackswitching" to "onos/openstacknetworking" since 1.8.0.`
 		
 	$ cd /opt
+	$ export ONOS_VERSION=1.8.0
 	$ sudo wget -c http://downloads.onosproject.org/release/onos-$ONOS_VERSION.tar.gz
 	$ sudo tar xzf onos-$ONOS_VERSION.tar.gz
 	$ sudo mv onos-$ONOS_VERSION onos

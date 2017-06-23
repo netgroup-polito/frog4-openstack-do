@@ -8,7 +8,7 @@ To install devstack, follow the instructions provided [here](https://docs.openst
 
 ## Real OpenStack deployement
 
-The installation guide has been tested with Ubuntu 14.04, OpenStack Mitaka and OpenDaylight Beryllium.
+The installation guide has been tested with Ubuntu 14.04, *OpenStack Mitaka* and *OpenDaylight Beryllium*.
 
 ### Vanilla OpenStack (stable/mitaka version):
 

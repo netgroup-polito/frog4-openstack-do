@@ -103,6 +103,12 @@ If you are going to execute the OpenStack domain orchestrator on the JOLNET, set
 
 Finally, in the `[openstack_orchestrator]` section, you have to set the field `identity_api_version` to `2`. 
 
+## Domain description
+
+As mentioned above, the file `MyResourceDescription.json` contains the decsription of the domain, both from the *networking* (e.g., information about boundary interfaces) and *computing* (i.e., functional capabilities) points of view.
+
+Note that the functional capabilties should correspond to those available in the Datastore used by the OpenStack domain orchestrator.
+
 
 # Adding the WEB GUI on top of the SDN domain orchestrator
 

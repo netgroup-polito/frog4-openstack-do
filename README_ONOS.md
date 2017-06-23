@@ -100,13 +100,14 @@ The Modular Layer 2 (ML2) plug-in in OpenStack must be configured to use ONOS as
             - Replace ONOS_IP with the proper values.
 
             		[onos]
-					url_path = http://ONOS_IP:8181/onos/openstacknetworking
-					username = onos
-					password = rocks
+			url_path = http://ONOS_IP:8181/onos/openstacknetworking
+			username = onos
+			password = rocks
 `Remeber that since  ONOS 1.8.0 version the url_path is changed from "onos/openstackswitching" to "onos/openstacknetworking"`
-* Now continue with the remaining steps within [README_OPENSTACK.md](https://github.com/netgroup-polito/frog4-openstack-do/blob/onos-support/README_OPENSTACK.md) file.
----
-At the end check that ONOS is running all the required applications for communicating with Neutron:
+
+### Testing the ONOS setup
+
+Check that ONOS is running all the required applications for communicating with Neutron:
 
 	onos> apps -s -a
 	*   8 org.onosproject.optical-model        1.8.4    Optical information model
@@ -121,6 +122,7 @@ At the end check that ONOS is running all the required applications for communic
 	*  43 org.onosproject.openstackrouting     1.8.4    OpenStack Routing App
 	*  76 org.onosproject.drivers              1.8.4    Default device drivers
 	*  82 org.onosproject.openstacknetworking  1.8.4    OpenStack Networking App
+	
 If not, type this command within ONOS CLI:
 	
 	app activate org.onosproject.drivers.ovsdb

@@ -59,6 +59,8 @@ To know the version of Java, use the command
 
 Now restart the machine to load the environment variable, and start again ONOS.
 
+After this procedure, ONOS can be reached through its REST API at the URL: `127.0.0.1:8181/onos/ui` . The username is `onos`, the password is `rocks`.
+
 ## Install ONOS Modular Layer 2 plug-in
 As an additional step we need to install networking-onos, a Neutron ML2 plug-in for ONOS:
 	

@@ -95,9 +95,15 @@ In the `[db]` section, you have to edit the `connection` parameter so that it in
 If you are going to execute the OpenStack domain orchestrator on the JOLNET, set to true the parameter `jolnet_mode` in the section `[jolnet]`. In this section, you must also edit the parameter `jolnet_networks`, so that it contains the OpenStack networks to be used.
 
 Finally, in the `[openstack_orchestrator]` section, you have to set the field `identity_api_version` to `2`. 
+
+
+# Adding the WEB GUI on top of the SDN domain orchestrator
+
+It is possible to configure the [FROG4 GUI](https://github.com/netgroup-polito/fg-gui), so that it can be used to interact with the SDN domain orchestrator (e.g., to deploye new service graphs, or to read the service graphs currently deployed).
+To install the GUI, follows the [instructions](https://github.com/netgroup-polito/fg-gui/blob/master/README_INSTALL.md) provided with the repository.
         
 # Run the domain orchestrator
-You can launch this domain orchestrator by executing the following script in the domain orchestrator root folder, optionally specifying the configuration file (example: conf/config.ini):
+You can launch this domain orchestrator by executing the following script in the domain orchestrator root folder, optionally specifying the configuration file (example: [conf/config.ini](conf/config.ini)):
         
         ./start_orchestrator.sh [--d conf-file]
 

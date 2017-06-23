@@ -26,7 +26,7 @@ This are the steps to install it:
 `Note that later we will use an URL path, within a configuration file, which is changed from "onos/openstackswitching" to "onos/openstacknetworking" since 1.8.0.`
 		
 	$ cd /opt
-	$ export ONOS_VERSION=1.8.0
+	$ export ONOS_VERSION=1.8.4
 	$ sudo wget -c http://downloads.onosproject.org/release/onos-$ONOS_VERSION.tar.gz
 	$ sudo tar xzf onos-$ONOS_VERSION.tar.gz
 	$ sudo mv onos-$ONOS_VERSION onos

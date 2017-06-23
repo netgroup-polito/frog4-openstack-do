@@ -20,7 +20,7 @@ Now you have to clone this repository _and_ all the submodules. Submodules inclu
         $ cd frog4-openstack-do
         $ git submodule init && git submodule update
 	
-# ONOS support
+## ONOS support
 
 In order to use ONOS as network controller for the Openstack domain, you have to install the [ovsdb-rest](https://github.com/netgroup-polito/onos-applications/tree/master/ovsdb-rest) application. Just follow the [guide](https://github.com/netgroup-polito/onos-applications/blob/master/ovsdb-rest/README.md) in that repository.
 

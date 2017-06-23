@@ -27,7 +27,7 @@ The SDN domain orchestrator uses the [DoubleDecker](https://github.com/Acreo/Dou
 		$ git clone https://github.com/Acreo/DoubleDecker-py.git		
 		$ cd DoubleDecker-py
 		$ git reset --hard dc556c7eb30e4c90a66e2e00a70dfb8833b2a652
-		$ cp -r [frog4-sdn-do]/patches .
+		$ cp -r [frog4-os-do]/patches .
 		$ git am patches/doubledecker_client_python/0001-version-protocol-rollbacked-to-v3.patch
 		
 Now you can install the DubleDeker as follows:

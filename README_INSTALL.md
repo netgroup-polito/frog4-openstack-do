@@ -10,7 +10,7 @@ Note that ONOS is optional but highly recommended.
 ## Required packages
 First, you need to install all the required ubuntu packages. For this, please follow the steps below:
     
-        $ sudo apt-get install python3-dev python3-setuptools python3-pip python3-sqlalchemy libmysqlclient-dev        
+        $ sudo apt-get install python3-dev python3-setuptools python3-pip python3-sqlalchemy libmysqlclient-dev git   
         $ sudo pip3 install --upgrade requests gunicorn jsonschema pymysql flask flasgger
 
 ## Clone the code

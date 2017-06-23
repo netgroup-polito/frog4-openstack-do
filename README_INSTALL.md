@@ -37,6 +37,39 @@ Now you can install the DubleDeker as follows:
 		$ sudo apt-get install python3-setuptools python3-nacl python3-zmq python3-urwid python3-tornado
 		# install the doubledecker module and scripts
 		$ sudo python3 setup.py install
+		
+## Create the SQL database
+The FROG4 OpenStack Domain Orchestrator uses a local mySQL database that has to be created and initialized by executing the steps below.
+
+- Create database and user for OpenStack orchestrator database:
+	    
+        mysql -u root -p
+        mysql> CREATE DATABASE openstack_orchestrator;
+        mysql> GRANT ALL PRIVILEGES ON openstack_orchestrator.* TO 'orchestrator-user'@'localhost' IDENTIFIED BY 'orchestrator-pwd';
+        mysql> GRANT ALL PRIVILEGES ON openstack_orchestrator.* TO 'orchestrator-user'@'%' IDENTIFIED BY 'rchestrator-pwd';	
+        mysql> exit;
+    
+    where `orchestrator-user` and orchestrator-pwd can be replaced respectively by the username and the password that the FROG4-orchestator will use to access to the SQL database.
+    
+- Create tables in the domain orchestrator db (all the initialization parameters are stored in the ``db.sql`` file):
+    
+        mysql -u orchestrator-user -p -Dopenstack_orchestrator < db.sql
+	
+When it asks the password, enter that used above (i.e., `orchestrator-pwd)`. The process may take some seconds.
+
+The script above also adds in the database the `admin` user (`username:admin`, `password:admin`, `tenant:admin_tenant`).
+
+- Change the the parameters used to connect to the database in the configuration file:
+
+        [db]
+        # Mysql DB
+        connection = mysql+pymysql://orchestrator:ORCH_DBPASS@127.0.0.1/openstack_orchestrator
+
+On the last OpenStack version username and tenantnane must be the same to avoid authentication error
+
+### Create a new user
+
+TODO
 
 ## OpenStack domain orchestrator configuration file
 
@@ -55,34 +88,13 @@ In the section `[templates]`, in case the NFs templates are stored in the Datast
 
 If you are using ONOS as SDN controller, edit the section `[onos]` with the proper information. Instead, if you are using OpenDaylight, edit the `[odl]` section.
 
+In the `[db]` section, you have to edit the `connection` parameter so that it includes the `orchestrator-user` and `orchestrator-pwd` chosen before when configuring the SQL database.
+
 ### JOLNET considerations
 
 If you are going to execute the OpenStack domain orchestrator on the JOLNET, set to true the parameter `jolnet_mode` in the section `[jolnet]`. In this section, you must also edit the parameter `jolnet_networks`, so that it contains the OpenStack networks to be used.
 
 Finally, in the `[openstack_orchestrator]` section, you have to set the field `identity_api_version` to `2`. 
-
-## Create the SQL database
-The FROG4 OpenStack Domain Orchestrator uses a local mySQL database that has to be created and initialized by executing the steps below.
-
-- Create database and user for OpenStack orchestrator database:
-	    
-        mysql -u root -p
-        mysql> CREATE DATABASE openstack_orchestrator;
-        mysql> GRANT ALL PRIVILEGES ON openstack_orchestrator.* TO 'orchestrator'@'localhost' IDENTIFIED BY 'ORCH_DBPASS';
-        mysql> GRANT ALL PRIVILEGES ON openstack_orchestrator.* TO 'orchestrator'@'%' IDENTIFIED BY 'ORCH_DBPASS';	
-        mysql> exit;
-    
-- Create tables in the domain orchestrator db (all the initialization parameters are stored in the ``db.sql`` file):
-    
-        mysql -u orchestrator -p -Dopenstack_orchestrator < db.sql
-
-- Change the the parameters used to connect to the database in the configuration file:
-
-        [db]
-        # Mysql DB
-        connection = mysql+pymysql://orchestrator:ORCH_DBPASS@127.0.0.1/openstack_orchestrator
-
-On the last OpenStack version username and tenantnane must be the same to avoid authentication error
         
 # Run the domain orchestrator
 You can launch this domain orchestrator by executing the following script in the domain orchestrator root folder, optionally specifying the configuration file (example: conf/config.ini):

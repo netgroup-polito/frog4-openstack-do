@@ -48,7 +48,7 @@ To fix that problem, shutdown as follows
 	
 The types the following commands: 
 
-	$ sudo gedit /etc/environment
+	$ sudo nano /etc/environment
 
 	#Add this line at the end of the file:
 	$ JAVA_HOME=/usr/lib/jvm/java-8-oracle

@@ -143,8 +143,8 @@ If some apps still missing, type those commands:
 * **OpenstackNetworking** application is in charge of managing virtual network states and providing a network connectivity to virtual machines by setting flow rules to compute and gateway node's OvS. This application also expose REST API, previously configure in neutron conf file, which are called by networking-onos. So OpenstackNetworking handle East-West traffic in each compute node(remember that North-South traffic is not handled).
 * Each application has its own configuration file, an example for each app is provided within config folder.
 ---
-Now we have to configure OpenstackInterface and OpenstackNode applications. Once you have a running ONOS instance with all the required apps running, you can configure SONA:
-First of all write your configuration files. In the OpenstackNode's config file add all of your compute nodes, assigning a different id to each integration bridge. Also update "devices" section with all the integration bridge, one for each compute node.
+Now we have to configure OpenstackInterface and OpenstackNode applications. Once you have a running ONOS instance with all the required apps running, you can configure SONA.
+First of all write your configuration files. In the OpenstackNode config file add all of your compute nodes, assigning a different id to each integration bridge. Also update "devices" section with all the integration bridge, one for each compute node.
 
 About OpenstackInterface's config file, unfortunately it uses the old v2 keystone and neutron api. So you have to make ONOS able to authenticate through keystone:
 

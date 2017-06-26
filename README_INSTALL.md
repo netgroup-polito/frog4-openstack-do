@@ -22,7 +22,8 @@ Now you have to clone this repository _and_ all the submodules. Submodules inclu
 	
 ## ONOS support
 
-In order to use ONOS as network controller for the Openstack domain, you have to install the [ovsdb-rest](https://github.com/netgroup-polito/onos-applications/tree/master/ovsdb-rest) application. Just follow the [guide](https://github.com/netgroup-polito/onos-applications/blob/master/ovsdb-rest/README.md) in that repository.
+In order to use ONOS as network controller for the Openstack domain, you have to install the [ovsdb-rest](https://github.com/netgroup-polito/onos-applications/tree/master/ovsdb-rest) application in the SDN controller. 
+To this purpose, follow the [guide](https://github.com/netgroup-polito/onos-applications/blob/master/ovsdb-rest/README.md) in that repository.
 
 * Remember to update the ovsdb-rest configuration. In the guide mentioned above, it's described a configuration file. Edit the file based on  your environment, i.e. leave the port as it is (6640) and update the ovsdbIp with the IP address of your compute node. If you have more than one compute node, add an entry (ovsdbIP + ovsdbPort) within the nodes array in the config file, one for each compute node.
 * Within the guide mentioned above, it's described the installation process of the ovsdb-rest app using the "onos-app" command. This command usually is not available, so you have to clone the ONOS git at https://github.com/opennetworkinglab/onos in your home folder:

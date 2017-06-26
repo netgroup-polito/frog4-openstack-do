@@ -97,8 +97,9 @@ Edit [./default-config.ini](/config/default-config.ini) following the instructio
 The most important fields that you have to consider are described in the following.
 
 In the section `[openstack_orchestrator]`, set the field `port` to the TCP port to be used to interact with the OpenStack domain orchestrator through its REST API.
-
-In this section, you must also configure the IP address of your OpenStack installation (`openstack_ip` field).
+Moreover, in this section you must configure the `availability_zone`, to select the OpenStack availability zone that the Domain Orchestrator have to use to deploy the network functions.
+If you do not specify the availability zone, this will be selected by the OpenStack Nova component.
+Finally, in the `[openstack_orchestrator]` section you must also configure the IP address of your OpenStack installation (`openstack_ip` field).
 
 In the [config](/config/) folder, make a new copy of the file `ResourceDescription.json` and rename it (e.g. `MyResourceDescription.json`). Then, in the [configuration file](/config/default-config.ini) section `[domain_description]`, change the path in the `file` field so that it points to the new file (e.g. `file = config/MyResourceDescription.json`).
 

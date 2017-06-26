@@ -25,7 +25,9 @@ The component that have to be installed are the following:
 		
 Extras: we suggest also to install phpmyadmin on controller node, to get database operations easier
 
-You can follow the official guide to install all these components except for the Networking service whose instructions are presented below. Therefore this is a partial guide and we assume that you have already installed all the required services. Moreover this guide will introduce the installation and configuration for using Opendaylight as network controller. If you plan to use ONOS, jump "Configure OpenDaylight" section and keep following this guide while at some point you will be redirect on another one.
+You can follow the official guide to install all these components except for the Networking service whose instructions are presented below. Therefore this is a partial guide and we assume that you have already installed all the required services. 
+
+Moreover this guide will introduce the installation and configuration for using Opendaylight as network controller. If you plan to use ONOS, jump "Configure OpenDaylight" section and keep following this guide while at some point you will be redirect on another one.
 
 ### Configure OpenDaylight
 We recommend to install OpenDaylight on a separate VM with at least 2 core and 2GB of memory and to place it on the controller node. Of course you can also install it as a separate server, in case you don't care about saving space. Furthermore you can also install OpenDaylight directly on the controller node if you cannot deploy it in a fresh Ubuntu.
@@ -143,6 +145,7 @@ Here are the steps required to install and configure the Neutron module on a Ope
 #### Configure ONOS
 If you plan to use ONOS as network controller, jump to the [ONOS guide](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/README_ONOS.md). Then come back here and continue on [this link](#onos)
 
+#### Configure OpenDaylight
 
 - Configure the Modular Layer 2 (ML2) plug-in to use OpenDaylight as a mechanism driver:
     - Edit the /etc/neutron/plugins/ml2/ml2_conf.ini file and complete the following actions:

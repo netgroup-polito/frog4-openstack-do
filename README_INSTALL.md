@@ -57,8 +57,8 @@ The FROG4 OpenStack Domain Orchestrator uses a local mySQL database that has to 
 	    
         mysql -u root -p
         mysql> CREATE DATABASE openstack_orchestrator;
-        mysql> GRANT ALL PRIVILEGES ON openstack_orchestrator.* TO 'orchestrator-user'@'localhost' IDENTIFIED BY 'orchestrator-pwd';
-        mysql> GRANT ALL PRIVILEGES ON openstack_orchestrator.* TO 'orchestrator-user'@'%' IDENTIFIED BY 'rchestrator-pwd';	
+        mysql> GRANT ALL PRIVILEGES ON openstack_orchestrator.* TO 'orch-user'@'localhost' IDENTIFIED BY 'orch-pwd';
+        mysql> GRANT ALL PRIVILEGES ON openstack_orchestrator.* TO 'orch-user'@'%' IDENTIFIED BY 'orch-pwd';	
         mysql> exit;
     
     where `orchestrator-user` and `orchestrator-pwd` can be replaced respectively by the username and the password that the FROG4-orchestator will use to access to the SQL database.
@@ -66,9 +66,9 @@ The FROG4 OpenStack Domain Orchestrator uses a local mySQL database that has to 
 - Create tables in the domain orchestrator db (all the initialization parameters are stored in the ``db.sql`` file):
     
         $ cd [frog4-os-do]
-        $ mysql -u orchestrator-user -p -Dopenstack_orchestrator < db.sql
+        $ mysql -u orch-user -p -Dopenstack_orchestrator < db.sql
 	
-When it asks the password, enter that used above (i.e., `orchestrator-pwd)`. The process may take some seconds.
+When it asks the password, enter that used above (i.e., `orch-pwd)`. The process may take some seconds.
 
 The script above also adds in the database the `admin` user (`username:admin`, `password:admin`, `tenant:admin_tenant`).
 
@@ -76,7 +76,7 @@ The script above also adds in the database the `admin` user (`username:admin`, `
 
         [db]
         # Mysql DB
-        connection = mysql+pymysql://orchestrator:ORCH_DBPASS@127.0.0.1/openstack_orchestrator
+        connection = mysql+pymysql://orch:orch_pwd@127.0.0.1/openstack_orchestrator
 
 On the last OpenStack version username and tenantnane must be the same to avoid authentication error
 
@@ -108,7 +108,7 @@ In the section `[templates]`, in case the NFs templates are stored in the Datast
 
 If you are using ONOS as SDN controller, edit the section `[onos]` with the proper information. Instead, if you are using OpenDaylight, edit the `[odl]` section.
 
-In the `[db]` section, you have to edit the `connection` parameter so that it includes the `orchestrator-user` and `orchestrator-pwd` chosen before when configuring the SQL database.
+In the `[db]` section, you have to edit the `connection` parameter so that it includes the `orch-user` and `orch-pwd` chosen before when configuring the SQL database.
 
 ### JOLNET considerations
 

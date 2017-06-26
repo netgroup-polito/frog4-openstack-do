@@ -25,7 +25,7 @@ class Singleton(type):
 class DD_client(ClientSafe):
 
     def __init__(self, name, dealerurl, customer, keyfile, topic, message):
-        super().__init__(name=name, dealerurl=dealerurl, customer=customer, keyfilekeyfile)
+        super().__init__(name=name, dealerurl=dealerurl, customer=customer, keyfile=keyfile)
         self._registered = False
         self.topic = topic
         self.message = message

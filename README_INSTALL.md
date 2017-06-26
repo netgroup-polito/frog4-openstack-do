@@ -72,12 +72,6 @@ When it asks the password, enter that used above (i.e., `orch-pwd)`. The process
 
 The script above also adds in the database the `admin` user (`username:admin`, `password:admin`, `tenant:admin_tenant`).
 
-- Change the the parameters used to connect to the database in the configuration file:
-
-        [db]
-        # Mysql DB
-        connection = mysql+pymysql://orch:orch_pwd@127.0.0.1/openstack_orchestrator
-
 On the last OpenStack version username and tenantnane must be the same to avoid authentication error
 
 ### Create a new user

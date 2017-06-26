@@ -305,7 +305,9 @@ class UserAuth(MethodView):
             credentials = json.loads(request.data.decode())
             
             token = UserAuthentication().authenticateUserFromCredentials(credentials)
-            return token
+            resp_token = Response(response = token, status=200,
+                                  mimetype="application/token")
+            return resp_token
         
         except wrongRequest as err:
             logging.exception(err)

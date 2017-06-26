@@ -45,7 +45,7 @@ class Configuration(object, metaclass=Singleton):
             self._JOLNET_MODE = config.getboolean('jolnet', 'jolnet_mode')
 
             if self._JOLNET_MODE is True:
-                self._JOLNET_NETWORKS = [e.strip() for e in config.get('networks', 'jolnet_networks').split(',')]
+                self._JOLNET_NETWORKS = [e.strip() for e in config.get('jolnet', 'jolnet_networks').split(',')]
             else:
                 self._JOLNET_NETWORKS = None
 

@@ -1,5 +1,5 @@
 import requests, json
-
+# This script is used to send a graph to the OpenStak-DO. Change the "data_file" variable with the path of your graph.
 username = "admin"
 password = "admin"
 tenant = "admin"

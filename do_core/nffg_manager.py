@@ -68,7 +68,7 @@ class NFFG_Manager(object):
         return self.getDictFromFile(base_folder+"/graphs/", filename)
     
     def getTemplateDict(self, uri):  
-        if TEMPLATE_SOURCE == "vnf-repository":
+        if TEMPLATE_SOURCE == "datastore":
             if uri in self.stored_templates:
                 return self.stored_templates[uri]
             return self.getDictFromVNFRepository(uri)

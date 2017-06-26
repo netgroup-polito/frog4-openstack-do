@@ -1,5 +1,5 @@
-from orchestrator_core.sql.sql_server import get_session
-from orchestrator_core.sql.user import UserModel, TenantModel
+from do_core.sql.sql_server import get_session
+from do_core.sql.user import UserModel, TenantModel
 from sqlalchemy.sql import func
 import sys
 

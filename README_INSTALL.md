@@ -122,9 +122,10 @@ It is possible to configure the [FROG4 GUI](https://github.com/netgroup-polito/f
 To install the GUI, follows the [instructions](https://github.com/netgroup-polito/fg-gui/blob/master/README_INSTALL.md) provided with the repository.
         
 # Run the domain orchestrator
-You can launch this domain orchestrator by executing the following script in the domain orchestrator root folder, optionally specifying the configuration file (example: [conf/config.ini](conf/config.ini)):
+You can launch this domain orchestrator as follows, optionally specifying the configuration file (example: [conf/config.ini](conf/config.ini)):
         
-        ./start_orchestrator.sh [--d conf-file]
+        cd [frog4-openstack-do]
+        $ ./start_orchestrator.sh [-d conf-file]
 
 # Useful scripts
 You can find some helpful scripts inside the [scripts](scripts) folder. For example, if you need to clean all sessions and graphs currently stored in the database, you can launch the following script in the domain orchestrator root folder:

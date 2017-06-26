@@ -82,6 +82,13 @@ On the last OpenStack version username and tenantnane must be the same to avoid 
 
 TODO
 
+## OpenStack domain description
+
+The file [ResourceDescription.json](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/config/ResourceDescription.json) contains the description of the domain, both from the *networking* (e.g., information about boundary interfaces) and *computing* (i.e., functional capabilities) points of view.
+
+You have to edit this file so that it actually decribes the domain under the responsibility of the OpenStack domain orchestrator. 
+Please, note that the functional capabilties should correspond to those available in the Datastore used by the OpenStack domain orchestrator.
+
 ## OpenStack domain orchestrator configuration file
 
 Edit [./default-config.ini](/config/default-config.ini) following the instructions that you find inside the file itself.
@@ -91,7 +98,7 @@ In the section `[openstack_orchestrator]`, set the field `port` to the TCP port 
 
 In this section, you must also configure the IP address of your OpenStack installation (`openstack_ip` field).
 
-In the [config](/config/) folder, make a new copy of the file `ResourceDescription.json` and rename it (e.g. `ResourceDescription.json`). Then, in the [configuration file](/config/default-config.ini) section `[domain_description]`, change the path in the `file` field so that it points to the new file (e.g. `file = configMyResourceDescription.json`).
+In the [config](/config/) folder, make a new copy of the file `ResourceDescription.json` and rename it (e.g. `MyResourceDescription.json`). Then, in the [configuration file](/config/default-config.ini) section `[domain_description]`, change the path in the `file` field so that it points to the new file (e.g. `file = config/MyResourceDescription.json`).
 
 In the section `[doubledecker]`, you have to configure the connection towards the broker (note that this guide supposes that, if you need a broker, you have already installed it). Particularly, you can set the URL to be used to contact such a module (`broker_address`) and the file containing the key to be used (`dd_keyfile`).
 
@@ -106,13 +113,6 @@ In the `[db]` section, you have to edit the `connection` parameter so that it in
 If you are going to execute the OpenStack domain orchestrator on the JOLNET, set to true the parameter `jolnet_mode` in the section `[jolnet]`. In this section, you must also edit the parameter `jolnet_networks`, so that it contains the OpenStack networks to be used.
 
 Finally, in the `[openstack_orchestrator]` section, you have to set the field `identity_api_version` to `2`. 
-
-## Domain description
-
-As mentioned above, the file `MyResourceDescription.json` contains the decsription of the domain, both from the *networking* (e.g., information about boundary interfaces) and *computing* (i.e., functional capabilities) points of view.
-
-Note that the functional capabilties should correspond to those available in the Datastore used by the OpenStack domain orchestrator.
-
 
 # Adding the WEB GUI on top of the SDN domain orchestrator
 

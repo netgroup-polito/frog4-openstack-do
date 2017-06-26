@@ -65,7 +65,8 @@ The FROG4 OpenStack Domain Orchestrator uses a local mySQL database that has to 
     
 - Create tables in the domain orchestrator db (all the initialization parameters are stored in the ``db.sql`` file):
     
-        mysql -u orchestrator-user -p -Dopenstack_orchestrator < db.sql
+        $ cd [frog4-os-do]
+        $ mysql -u orchestrator-user -p -Dopenstack_orchestrator < db.sql
 	
 When it asks the password, enter that used above (i.e., `orchestrator-pwd)`. The process may take some seconds.
 

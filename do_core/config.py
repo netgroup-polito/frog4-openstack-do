@@ -85,7 +85,7 @@ class Configuration(object, metaclass=Singleton):
             else:
                 self._TEMPLATE_PATH = None
             if config.has_option('templates', 'repository_url'):
-                self._TEMPLATE_REPOSITORY_URL = config.get('templates', 'repository_url')
+                self._TEMPLATE_REPOSITORY_URL = config.get('templates', 'datastore_url')
             else:
                 self._TEMPLATE_REPOSITORY_URL = None
                 

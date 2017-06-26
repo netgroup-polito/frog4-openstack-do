@@ -89,7 +89,8 @@ Moreover, in the last OpenStack releases, `username` and `tenantnane` must be th
 The file [ResourceDescription.json](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/config/ResourceDescription.json) contains the description of the domain, both from the *networking* (e.g., information about boundary interfaces) and *computing* (i.e., functional capabilities) points of view.
 
 You have to edit this file so that it actually decribes the domain under the responsibility of the OpenStack domain orchestrator. 
-Please, note that the functional capabilties should correspond to those available in the Datastore used by the OpenStack domain orchestrator.
+
+**IMPORTANT** Please, note that the functional capabilties must be written manually and must correspond to those available in the Datastore used by the OpenStack domain orchestrator.
 
 ## OpenStack domain orchestrator configuration file
 

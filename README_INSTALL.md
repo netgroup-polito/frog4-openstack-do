@@ -104,7 +104,7 @@ In the [config](/config/) folder, make a new copy of the file `ResourceDescripti
 
 In the section `[doubledecker]`, you have to configure the connection towards the broker (note that this guide supposes that, if you need a broker, you have already installed it). Particularly, you can set the URL to be used to contact such a module (`broker_address`) and the file containing the key to be used (`dd_keyfile`).
 
-In the section `[templates]`, in case the NFs templates are stored in the Datastore, you have to set the field `source = vnf-repository`, while the field `epository_ur` must contain the URL to be used to contact the datastore itself.
+In the section `[templates]`, in case the NFs templates are stored in the Datastore, you have to set the field `source = vnf-repository`, while the field `repository_ur` must contain the URL to be used to contact the datastore itself.
 
 If you are using ONOS as SDN controller, edit the section `[onos]` with the proper information. Instead, if you are using OpenDaylight, edit the `[odl]` section.
 

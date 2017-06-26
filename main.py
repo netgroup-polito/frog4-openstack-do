@@ -8,7 +8,7 @@ from flasgger import Swagger
 
 from do_core.config import Configuration
 from do_core.orchestrator import OpenstackOrchestrator, NFFGStatus, UserAuth
-# from do_core.messaging import Messaging
+from do_core.messaging import Messaging
 
 conf = Configuration()
 

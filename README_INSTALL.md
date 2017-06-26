@@ -61,7 +61,7 @@ The FROG4 OpenStack Domain Orchestrator uses a local mySQL database that has to 
         mysql> GRANT ALL PRIVILEGES ON openstack_orchestrator.* TO 'orch-user'@'%' IDENTIFIED BY 'orch-pwd';	
         mysql> exit;
     
-    where `orchestrator-user` and `orchestrator-pwd` can be replaced respectively by the username and the password that the FROG4-orchestator will use to access to the SQL database.
+    where `orch-user` and `orch-pwd` can be replaced respectively by the username and the password that the FROG4-orchestator will use to access to the SQL database.
     
 - Create tables in the domain orchestrator db (all the initialization parameters are stored in the ``db.sql`` file):
     

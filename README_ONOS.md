@@ -1,5 +1,5 @@
 # Install and configure ONOS (Open Network Operating System)
-The installation instructions below have been tested on ubuntu 16.10.
+The installation instructions below have been tested on ubuntu 16.10 and 16.04.2.
 
 ## Preliminaries
 
@@ -73,7 +73,7 @@ As an additional step we need to install networking-onos, a Neutron ML2 plug-in 
 
 ### Configuring the OpenStack Modular Layer 2 plug-in
 
-The Modular Layer 2 (ML2) plug-in in OpenStack must be configured to use ONOS as a mechanism driver:  
+The Modular Layer 2 (ML2) plug-in in OpenStack must be configured to use networking-onos as a mechanism driver:  
 
 * Edit the /etc/neutron/plugins/ml2/ml2_conf.ini file and complete the following actions:
 	

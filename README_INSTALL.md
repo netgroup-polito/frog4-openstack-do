@@ -110,7 +110,7 @@ If you are going to execute the OpenStack domain orchestrator on the JOLNET, set
 
 In addition, in the `[openstack_orchestrator]` section, you have to set the field `identity_api_version` to `2`. 
 
-Please, note that the JOLNET does not use any SDN controller in the OpenStack domain, then you have to edit neither the `[onon]`, nor the `[odl]` sections.
+Please, note that the JOLNET does not use any SDN controller in the OpenStack domain, then you have to edit neither the `[onos]`, nor the `[odl]` sections.
 
 # Adding the WEB GUI on top of the SDN domain orchestrator
 

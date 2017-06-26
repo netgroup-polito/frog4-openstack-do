@@ -108,7 +108,9 @@ In the `[db]` section, you have to edit the `connection` parameter so that it in
 
 If you are going to execute the OpenStack domain orchestrator on the JOLNET, set to true the parameter `jolnet_mode` in the section `[jolnet]`. In this section, you must also edit the parameter `jolnet_networks`, so that it contains the OpenStack networks to be used.
 
-Finally, in the `[openstack_orchestrator]` section, you have to set the field `identity_api_version` to `2`. 
+In addition, in the `[openstack_orchestrator]` section, you have to set the field `identity_api_version` to `2`. 
+
+Please, note that the JOLNET does not use any SDN controller in the OpenStack domain, then you have to edit neither the `[onon]`, nor the `[odl]` sections.
 
 # Adding the WEB GUI on top of the SDN domain orchestrator
 

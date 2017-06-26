@@ -1,5 +1,5 @@
 import requests, json
-
+# This Script is used to delete a deployed graph within the Openstack-DO. Change the "orchestrator_endpoint" variable with the right FG id
 username = "admin"
 password = "admin"
 tenant = "admin"

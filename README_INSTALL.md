@@ -72,11 +72,17 @@ When it asks the password, enter that used above (i.e., `orch-pwd)`. The process
 
 The script above also adds in the database the `admin` user (`username:admin`, `password:admin`, `tenant:admin_tenant`).
 
-On the last OpenStack version username and tenantnane must be the same to avoid authentication error
-
 ### Create a new user
 
-TODO
+To create a new user from the main directory runs:
+
+    python3 -m scripts.create_user
+
+
+** IMPORTANT **
+In order to work, the OpenStack domain orchestrator requires that the database contains the same user (in terms of username, password and tenant) that is stored in the *Keystone* OpenStack module.
+
+Moreover, in the last OpenStack releases, `username` and `tenantnane` must be the same to avoid authentication error.
 
 ## OpenStack domain description
 

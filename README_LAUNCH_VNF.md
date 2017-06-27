@@ -203,7 +203,7 @@ In the description of the VNF, the most important parameters are:
 
 * `vnf_template`: this must correspond to the VNF ID returned by the Datastore when the VNF template has been uploaded. In our example, it is `IU9LBT`;
 * `functional-capability`: it must correspond to the functional capability implemented by the desired VNF, `bridge` in our use case.
-**WARNING** due to a bug, currently the `functional-capability` and the VNF `name` should be set to the same value.
+**WARNING** due to a [bug](https://github.com/netgroup-polito/frog4-orchestrator/issues/9) in the FROG orchestrator, currently the `functional-capability` and the VNF `name` should be set to the same value.
 
 You can deploy the NF-FG above through the [deploy_graph.py script](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/scripts/deploy_graph.py):
 

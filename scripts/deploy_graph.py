@@ -34,7 +34,7 @@ nffg = \
       {
         "type": "vlan",
         "vlan": {
-          "node-id": "of:000034dbfd3c1140",
+          "node-id": "openstack_domain",
           "vlan-id": "297",
           "if-name": "5097"
         },

@@ -132,64 +132,64 @@ The NF-FG must be written according to the [NF-FG library](https://github.com/ne
 
 An example of graph using our VNF is the following:
 
-{
-  "forwarding-graph": {
-    "id": "123",
-    "name": "Demo Graph 1",
-    "VNFs": [
-      {
-        "id": "00000001",
-        "name": "client",
-        "vnf_template":"IU9LBT",
-        "functional-capability":"bridge",
-        "ports": [
-          {
-            "id": "inout:0"
-          }
-        ]
-      }
-    ],
-    "end-points": [
-      {
-        "type": "vlan",
-        "vlan": {
-          "node-id": "of:000034dbfd3c1140",
-          "vlan-id": "297",
-          "if-name": "5097"
-        },
-        "id": "00000001"
-      }
-    ],
-    "big-switch": {
-      "flow-rules": [
-        {
-          "match": {
-            "port_in": "vnf:00000001:inout:0"
-          },
-          "actions": [
-            {
-              "output_to_port": "endpoint:00000001"
-            }
-          ],
-          "priority": 40001,
-          "id": "1"
-        },
-        {
-          "match": {
-            "port_in": "endpoint:00000001"
-          },
-          "actions": [
-            {
-              "output_to_port": "vnf:00000001:inout:0"
-            }
-          ],
-          "priority": 40001,
-          "id": "2"
-        }
-      ]
-    }
-  }
-}
+{  
+  "forwarding-graph": {  
+    "id": "123",  
+    "name": "Demo Graph 1",  
+    "VNFs": [  
+      {  
+        "id": "00000001",  
+        "name": "client",  
+        "vnf_template":"IU9LBT",  
+        "functional-capability":"bridge",  
+        "ports": [  
+          {  
+            "id": "inout:0"  
+          }  
+        ]  
+      }  
+    ],  
+    "end-points": [  
+      {  
+        "type": "vlan",  
+        "vlan": {  
+          "node-id": "of:000034dbfd3c1140",  
+          "vlan-id": "297",  
+          "if-name": "5097"  
+        },  
+        "id": "00000001"  
+      }  
+    ],  
+    "big-switch": {  
+      "flow-rules": [  
+        {  
+          "match": {  
+            "port_in": "vnf:00000001:inout:0"  
+          },  
+          "actions": [  
+            {  
+              "output_to_port": "endpoint:00000001"  
+            }  
+          ],  
+          "priority": 40001,  
+          "id": "1"  
+        },  
+        {  
+          "match": {  
+            "port_in": "endpoint:00000001"  
+          },  
+          "actions": [  
+            {  
+              "output_to_port": "vnf:00000001:inout:0"  
+            }  
+          ],  
+          "priority": 40001,  
+          "id": "2"  
+        }  
+      ]  
+    }  
+  }  
+}  
 
 In the description of the VNF, the most important parameters are:
 

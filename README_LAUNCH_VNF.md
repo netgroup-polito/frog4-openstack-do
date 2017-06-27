@@ -81,6 +81,7 @@ In the [ResourceDescription](https://github.com/netgroup-polito/frog4-openstack-
 
 Ad example is the following (not that the information about interfaces are omitted for the sake of clarity):
 
+```json
 {  
   "netgroup-domain:informations": {  
     "id": "001",  
@@ -121,6 +122,7 @@ Ad example is the following (not that the information about interfaces are omitt
     "type": "OS"  
   }  
 }  
+```
 
 The most important parameters are the following:
 
@@ -134,6 +136,7 @@ The NF-FG must be written according to the [NF-FG library](https://github.com/ne
 
 An example of graph using our VNF is the following:
 
+```json
 {  
   "forwarding-graph": {  
     "id": "123",  
@@ -193,6 +196,7 @@ An example of graph using our VNF is the following:
     }  
   }  
 }  
+```
 
 In the description of the VNF, the most important parameters are:
 

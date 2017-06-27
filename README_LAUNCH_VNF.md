@@ -22,36 +22,36 @@ The VNF template describes several aspects of the VNF, and must be written accor
 
 As example is the following:
 
-{
-  "CPUrequirements": {
-    "platformType": "x86",
-    "socket": [
-      {
-        "coreNumbers": 1
-      }
-    ]
-  },
-  "memory-size": 512,
-  "name": "my beatiful bridge",
-  "functional-capability": "bridge",
-  "ephemeral-file-system-size": 0,
-  "vnf-type": "virtual-machine-kvm",
-  "uri": "http://10.0.0.1:9292/v2/images/dfb458f9-e618-4901-8dc4-ee3eaa80349c",
-  "swap-disk-size": 0,
-  "uri-type": "remote-file",
-  "expandable": false,
-  "ports": [
-    {
-      "name": "eth",
-      "min": "1",
-      "label": "inout",
-      "ipv4-config": "none",
-      "position": "0-N",
-      "ipv6-config": "none"
-    }
-  ],
-  "root-file-system-size": 1
-}
+{  
+  "CPUrequirements": {  
+    "platformType": "x86",  
+    "socket": [  
+      {  
+        "coreNumbers": 1  
+      }  
+    ]  
+  },  
+  "memory-size": 512,  
+  "name": "my beatiful bridge",  
+  "functional-capability": "bridge",  
+  "ephemeral-file-system-size": 0,  
+  "vnf-type": "virtual-machine-kvm",  
+  "uri": "http://10.0.0.1:9292/v2/images/dfb458f9-e618-4901-8dc4-ee3eaa80349c",  
+  "swap-disk-size": 0,  
+  "uri-type": "remote-file",  
+  "expandable": false,  
+  "ports": [  
+    {  
+      "name": "eth",  
+      "min": "1",  
+      "label": "inout",  
+      "ipv4-config": "none",  
+      "position": "0-N",  
+      "ipv6-config": "none"  
+    }  
+  ],  
+  "root-file-system-size": 1  
+}  
 
 The most important parameters are the following:
 
@@ -79,46 +79,46 @@ In the [ResourceDescription](https://github.com/netgroup-polito/frog4-openstack-
 
 Ad example is the following (not that the information about interfaces are omitted for the sake of clarity):
 
-{
-  "netgroup-domain:informations": {
-    "id": "001",
-    "capabilities": {
-      "infrastructural-capabilities": {
-        "infrastructural-capability": [
-          {
-            "name": "x86-64",
-            "type": "cpu_architecture"
-          },
-          {
-            "name": "openstack",
-            "type": "compute_controller"
-          }
-        ]
-      },
-      "functional-capabilities": {
-        "functional-capability": [
-          {
-            "ready": "true",
-            "name": "my beatiful bridge",
-            "family": "Network",
-            "function-specifications": {
-              "function-specification": []
-            },
-            "type": "bridge"
-          }
-        ]
-      }
-    },
-    "hardware-informations": {
-      "interfaces": {
-		...
-      }
-    },
-    "name": "openstack",
-    "management-address": "192.168.0.100:9200",
-    "type": "OS"
-  }
-}
+{  
+  "netgroup-domain:informations": {  
+    "id": "001",  
+    "capabilities": {  
+      "infrastructural-capabilities": {  
+        "infrastructural-capability": [  
+          {  
+            "name": "x86-64",  
+            "type": "cpu_architecture"  
+          },  
+          {  
+            "name": "openstack",  
+            "type": "compute_controller"  
+          }  
+        ]  
+      },  
+      "functional-capabilities": {  
+        "functional-capability": [  
+          {  
+            "ready": "true",  
+            "name": "my beatiful bridge",  
+            "family": "Network",  
+            "function-specifications": {  
+              "function-specification": []  
+            },  
+            "type": "bridge"  
+          }  
+        ]  
+      }  
+    },  
+    "hardware-informations": {  
+      "interfaces": {  
+		...  
+      }  
+    },  
+    "name": "openstack",  
+    "management-address": "192.168.0.100:9200",  
+    "type": "OS"  
+  }  
+}  
 
 The most important parameters are the following:
 

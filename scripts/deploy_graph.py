@@ -1,6 +1,6 @@
 # This script can be used to send an NF-FG to the OpenStack domain orchestrator.
 # You can execute it through the following command
-# $ python putgraph.py
+# $ python put_graph.py
 
 import requests, json
 
@@ -72,9 +72,10 @@ nffg = \
   }
 }
 
-# Do not change the following code
-
+# Write here the URL to be used to reach the domain orchestrator and deploy the new graph
 orchestrator_endpoint = "http://127.0.0.1:9200/NF-FG/myGraph"
+
+# Do not change the following code
 headers = {'Content-Type': 'application/json', 'X-Auth-User': username, 'X-Auth-Pass': password, 'X-Auth-Tenant': tenant}
 
 authenticate = { "username": username, "password": password }

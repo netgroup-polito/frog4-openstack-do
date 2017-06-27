@@ -193,7 +193,7 @@ An example of graph using our VNF is the following:
 
 In the description of the VNF, the most important parameters are:
 
-* `vnf_template`: this must correspond to the VNF ID returned by the Datastore when the VNF template have been uploaded. In our example, it is `IU9LBT`;
+* `vnf_template`: this must correspond to the VNF ID returned by the Datastore when the VNF template has been uploaded. In our example, it is `IU9LBT`;
 * `functional-capability`: it must correspond to the functional capability implemented by the desired VNF, `bridge` in our use case.
 
 You can deploy the NF-FG above through the [deploy_graph.py script](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/scripts/deploy_graph.py):
@@ -201,7 +201,7 @@ You can deploy the NF-FG above through the [deploy_graph.py script](https://gith
         $ cd [frog4-os-do]/scripts
         $ python3 deploy_graph.py
 	
-Before running the script, edit it with your credential that must be used for the authentication in the OpenStack domain orchestrator, and set the proper VNF ID returned by the Datastore when the VNF template have been uploaded.
+Before running the script, edit it with your credential that must be used for the authentication in the OpenStack domain orchestrator, and set the proper VNF ID returned by the Datastore when the VNF template has been uploaded.
 Note that you can also deploy other graphs, by properly editing the script.
 
 After running the script, you can check that your VNF is running through the OpenStack Horizon dashboard:

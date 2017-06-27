@@ -203,7 +203,13 @@ You can deploy the NF-FG above through the [deploy_graph.py script](https://gith
 	
 Before running the script, edit it with your credential that must be used for the authentication in the OpenStack domain orchestrator.
 You can also deploy other graphs, by properly editing the script.
-	
+
+After running the script, you can check that your VNF is running through the OpenStack Horizon dashboard:
+* Logs in in Horizon;
+* On the right, click on the `Instances` tab.
+
+From the `Network` -> `Network Topology` tab, you can instad check that your VM is connected to one of the OpenStack networks, as required by the NF-FG.
+
 This graph can then be deleted through the [delete_graph.py script](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/scripts/delete_graph.py):
 
 

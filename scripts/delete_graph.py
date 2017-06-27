@@ -1,13 +1,22 @@
+# This script can be used to delete an NF-FG from the OpenStack domain.
+# You can execute it through the following command
+# $ python delete_graph.py
+
 import requests, json
-# This Script is used to delete a deployed graph within the Openstack-DO. Change the "orchestrator_endpoint" variable with the right FG id
+
+# Write here the cretential to be used for authentication
 username = "admin"
 password = "admin"
 tenant = "admin"
-orchestrator_endpoint = "http://127.0.0.1:9200/NF-FG/40400"
+
+# Write here the URL to be used to reach the domain orchestrator in order to delete the graph
+orchestrator_endpoint = "http://127.0.0.1:9200/NF-FG/myGraph"
+
+# Do not change the following code
+
 headers = {'Content-Type': 'application/json', 'X-Auth-User': username, 'X-Auth-Pass': password, 'X-Auth-Tenant': tenant}
 
 authenticate = { "username": username, "password": password }
-print(authenticate)
 
 r = requests.post('http://127.0.0.1:9200/login', json.dumps(authenticate))
 print(r.text)

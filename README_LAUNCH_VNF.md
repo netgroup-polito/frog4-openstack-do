@@ -129,7 +129,7 @@ The most important parameters are the following:
 
 * `management-address`: the URL to be used to interact with the OpenStack domain orchestrator;
 * `type`: indicates the domain type, which is `OS` (i.e., OpenStack) in our case;
-* `functional-capability`-`type`: the functional capability associated with your VNF. In our example, our VNF image implements a `bridge`.
+* `functional-capability`/`type`: the functional capability associated with your VNF. In our example, our VNF image implements a `bridge`.
 
 ## Write and deploy your NF-FG
 

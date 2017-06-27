@@ -135,13 +135,13 @@ An example of graph using our VNF is the following:
 {  
   "forwarding-graph": {  
     "id": "123",  
-    "name": "Demo Graph 1",  
+    "name": "my graph",  
     "VNFs": [  
       {  
         "id": "00000001",  
-        "name": "client",  
-        "vnf_template":"IU9LBT",  
-        "functional-capability":"bridge",  
+        "name": "bridge",  
+        "vnf_template":"JJT643",  
+       "functional-capability":"bridge",  
         "ports": [  
           {  
             "id": "inout:0"  
@@ -152,10 +152,11 @@ An example of graph using our VNF is the following:
     "end-points": [  
       {  
         "type": "vlan",  
+        "domain": "openstack_domain",  
         "vlan": {  
-          "node-id": "of:000034dbfd3c1140",  
-          "vlan-id": "297",  
-          "if-name": "5097"  
+          "node-id": "openstack_domain",  
+          "vlan-id": "282",  
+          "if-name": "of:000028c7ce9f66040/5104"  
         },  
         "id": "00000001"  
       }  

@@ -13,64 +13,65 @@ tenant = "admin"
 
 # This NF-FG simply deploy a VNF connected to VLAN endpoint
 nffg = \
-{
-  "forwarding-graph": {
-    "id": "123",
-    "name": "Demo Graph 1",
-    "VNFs": [
-      {
-        "id": "00000001",
-        "name": "client",
-        "vnf_template":"IU9LBT",
-       "functional-capability":"bridge",
-        "ports": [
-          {
-            "id": "inout:0"
-          }
-        ]
-      }
-    ],
-    "end-points": [
-      {
-        "type": "vlan",
-        "vlan": {
-          "node-id": "openstack_domain",
-          "vlan-id": "297",
-          "if-name": "5097"
-        },
-        "id": "00000001"
-      }
-    ],
-    "big-switch": {
-      "flow-rules": [
-        {
-          "match": {
-            "port_in": "vnf:00000001:inout:0"
-          },
-          "actions": [
-            {
-              "output_to_port": "endpoint:00000001"
-            }
-          ],
-          "priority": 40001,
-          "id": "1"
-        },
-        {
-          "match": {
-            "port_in": "endpoint:00000001"
-          },
-          "actions": [
-            {
-              "output_to_port": "vnf:00000001:inout:0"
-            }
-          ],
-          "priority": 40001,
-          "id": "2"
-        }
-      ]
-    }
-  }
-}
+{  
+  "forwarding-graph": {  
+    "id": "123",  
+    "name": "my graph",  
+    "VNFs": [  
+      {  
+        "id": "00000001",  
+        "name": "bridge",  
+        "vnf_template":"JJT643",  
+       "functional-capability":"bridge",  
+        "ports": [  
+          {  
+            "id": "inout:0"  
+          }  
+        ]  
+      }  
+    ],  
+    "end-points": [  
+      {  
+        "type": "vlan",  
+        "domain": "openstack_domain",  
+        "vlan": {  
+          "node-id": "openstack_domain",  
+          "vlan-id": "282",  
+          "if-name": "of:000028c7ce9f66040/5104"  
+        },  
+        "id": "00000001"  
+      }  
+    ],  
+    "big-switch": {  
+      "flow-rules": [  
+        {  
+          "match": {  
+            "port_in": "vnf:00000001:inout:0"  
+          },  
+          "actions": [  
+            {  
+              "output_to_port": "endpoint:00000001"  
+            }  
+          ],  
+          "priority": 40001,  
+          "id": "1"  
+        },  
+        {  
+          "match": {  
+            "port_in": "endpoint:00000001"  
+          },  
+          "actions": [  
+            {  
+              "output_to_port": "vnf:00000001:inout:0"  
+            }  
+          ],  
+          "priority": 40001,  
+          "id": "2"  
+        }  
+      ]  
+    }  
+  }  
+}  
 
 # Write here the URL to be used to reach the domain orchestrator and deploy the new graph
 orchestrator_endpoint = "http://127.0.0.1:9200/NF-FG/myGraph"

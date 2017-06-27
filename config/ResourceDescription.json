@@ -10,7 +10,7 @@
             "name": "nat",
             "ready": "true",
             "type": "nat",
-            "template": "http://130.192.225.92:8080/v2/nf_template/natVM",
+            "template": "http://10.0.0.28:8080/v2/nf_template/natVM",
             "function-specifications": {
               "function-specification": [
                 {

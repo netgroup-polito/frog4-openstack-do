@@ -74,9 +74,10 @@ The script above also adds in the database the `admin` user (`username:admin`, `
 
 ### Create a new user
 
-To create a new user from the main directory runs:
+To create a new user, run:
 
-    python3 -m scripts.create_user
+    $ cd [frog4-os-do]
+    $ python3 -m scripts.create_user
 
 
 **IMPORTANT**

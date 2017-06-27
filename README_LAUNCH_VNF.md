@@ -5,7 +5,7 @@ This document details how to deploy and run a Virtual Network Function (VNF) in 
 * Upload the VNF image in the OpenStack Glance component;
 * Write the [VNF template](https://github.com/netgroup-polito/vnf-template-library) and upload it in the [FROG4 Datastore](https://github.com/netgroup-polito/frog4-datastore);
 * In the ResourceDescription file exported by the OpenStack domain orchestrator, specify that the domain supports the functional capability implemented by the VNF;
-* Write your NF-FG that uses the VNF.
+* Write your [NF-FG](https://github.com/netgroup-polito/nffg-library) that uses the VNF.
 
 ## Upload the VNF image
 
@@ -78,50 +78,51 @@ At this point you will get the VNF ID to be used in the NF-FG to be deployed in 
 ## Edit the ResourceDescription file
 
 In the [ResourceDescription](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/README_INSTALL.md#openstack-domain-description) file you must specify that the domain is able to implement the functional capability associated with your VNF, e.g., `bridge` in our example.
+Note that this file must be written according to the [domain information library](https://github.com/netgroup-polito/domain-information-library). 
 
 Ad example is the following (not that the information about interfaces are omitted for the sake of clarity):
 
 ```json
-{  
-  "netgroup-domain:informations": {  
-    "id": "001",  
-    "capabilities": {  
-      "infrastructural-capabilities": {  
-        "infrastructural-capability": [  
-          {  
-            "name": "x86-64",  
-            "type": "cpu_architecture"  
-          },  
-          {  
-            "name": "openstack",  
-            "type": "compute_controller"  
-          }  
-        ]  
-      },  
-      "functional-capabilities": {  
-        "functional-capability": [  
-          {  
-            "ready": "true",  
-            "name": "my beatiful bridge",  
-            "family": "Network",  
-            "function-specifications": {  
-              "function-specification": []  
-            },  
-            "type": "bridge"  
-          }  
-        ]  
-      }  
-    },  
-    "hardware-informations": {  
-      "interfaces": {  
-		...  
-      }  
-    },  
-    "name": "openstack",  
-    "management-address": "192.168.0.100:9200",  
-    "type": "OS"  
-  }  
-}  
+{
+  "netgroup-domain:informations": {
+    "id": "00000001",
+    "name": "openstack_domain",
+    "type": "OS",
+    "management-address": "130.192.225.106:9200",
+    "hardware-informations": {
+      "":""
+    },    
+    "capabilities": {
+      "infrastructural-capabilities": {
+        "infrastructural-capability": [
+          {
+            "type": "cpu_architecture",
+            "name": "x86-64"
+          },
+           {
+            "type": "compute_controller",
+            "name": "openstack"
+          }
+        ]
+      },
+      "functional-capabilities": {
+        "functional-capability": [
+          {
+            "type": "bridge",
+            "name": "bridge",
+            "ready": true,
+            "template": "bridge-template.json",
+            "family": "Network",
+            "function-specifications": {
+              "function-specification": []
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+
 ```
 
 The most important parameters are the following:
@@ -146,7 +147,7 @@ An example of graph using our VNF is the following:
         "id": "00000001",  
         "name": "bridge",  
         "vnf_template":"JJT643",  
-       "functional-capability":"bridge",  
+        "functional-capability":"bridge",  
         "ports": [  
           {  
             "id": "inout:0"  

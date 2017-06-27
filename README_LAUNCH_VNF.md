@@ -22,6 +22,7 @@ The VNF template describes several aspects of the VNF, and must be written accor
 
 As example is the following:
 
+```json
 {  
   "CPUrequirements": {  
     "platformType": "x86",  
@@ -52,6 +53,7 @@ As example is the following:
   ],  
   "root-file-system-size": 1  
 }  
+```
 
 The most important parameters are the following:
 

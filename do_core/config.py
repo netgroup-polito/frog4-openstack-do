@@ -36,7 +36,6 @@ class Configuration(object, metaclass=Singleton):
             self._ORCH_IP = config.get('openstack_orchestrator','ip')
             self._ORCH_TIMEOUT = config.get('openstack_orchestrator','timeout')
             self._OPENSTACK_IP = config.get('openstack_orchestrator','openstack_ip')
-            self._DEBUG_MODE = config.getboolean('openstack_orchestrator', 'debug_mode')
             self._IDENTITY_API_VERSION = config.getint('openstack_orchestrator','identity_api_version')
             self._AVAILABILITY_ZONE = config.get('openstack_orchestrator','availability_zone')
 
@@ -130,11 +129,7 @@ class Configuration(object, metaclass=Singleton):
     
     @property
     def DD_KEYFILE(self):
-        return self._DD_KEYFILE    
-    
-    @property
-    def DEBUG_MODE(self):
-        return self._DEBUG_MODE
+        return self._DD_KEYFILE
 
     @property
     def JOLNET_MODE(self):

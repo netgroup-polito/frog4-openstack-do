@@ -39,18 +39,22 @@
                 }
               ]
             },
-             "openconfig-if-ethernet:ethernet": {
-              "openconfig-vlan:vlan": {
-                "openconfig-vlan:config": {
-                  "interface-mode": "TRUNK",
-                  "trunk-vlans": ["223"]
-                }
+            "netgroup-if-ethernet:ethernet": {
+              "netgroup-vlan:vlans": {
+                "netgroup-vlan:vlans": [
+                  {
+                    "netgroup-vlan:config": {
+                      "netgroup-vlan:vlan-id": 223
+                    },
+                    "netgroup-vlan:vlan-id": 223
+                  }
+                ]
               }
             }
           }
         ]
       }
-    },    
+    },
     "capabilities": {
       "infrastructural-capabilities": {
         "infrastructural-capability": [
@@ -58,7 +62,7 @@
             "type": "cpu_architecture",
             "name": "x86-64"
           },
-           {
+          {
             "type": "compute_controller",
             "name": "openstack"
           }
@@ -81,4 +85,3 @@
     }
   }
 }
-

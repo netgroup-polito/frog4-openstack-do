@@ -131,6 +131,8 @@ The most important parameters are the following:
 * `type`: indicates the domain type, which is `OS` (i.e., OpenStack) in our case;
 * `functional-capability`/`type`: the functional capability associated with your VNF. In our example, our VNF image implements a `bridge`.
 
+Other example can be found [here](https://github.com/netgroup-polito/frog4-openstack-do/tree/master/config/ResourceDescriptions).
+
 ## Write and deploy your NF-FG
 
 The NF-FG must be written according to the [NF-FG library](https://github.com/netgroup-polito/nffg-library).

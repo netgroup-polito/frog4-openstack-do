@@ -1,0 +1,69 @@
+{
+  "netgroup-domain:informations": {
+    "id":"111",
+    "name": "openstack_domain-one",
+    "management-address": "192.168.0.25:9200",
+    "type": "OS",
+    "hardware-informations": {
+      "interfaces": {
+        "interface": [
+         {
+            "index": 1,
+            "name": "192.168.0.24/eth1",
+            "netgroup-neighbor:neighbors": {
+              "netgroup-neighbor:neighbor": [
+                {
+                  "remote-interface": "192.168.0.28/eth1",
+                  "domain-name": "openstack_domain-two",
+                  "neighbor-type": "domain"
+                }
+              ]
+            },
+            "subinterfaces": {
+              "subinterface": [
+                {
+                  "index": 1,
+                  "netgroup-if-capabilities:capabilities": {
+                    "netgroup-if-capabilities:gre": true
+                  },
+                  "netgroup-if-gre:gre": [],
+                  "config": {
+                    "name": "eth1"
+                  }
+                }
+              ]
+            },
+            "config": {
+              "enabled": true
+            }
+          }
+        ]
+      }
+    },
+    "capabilities": {
+      "infrastructural-capabilities": {
+        "infrastructural-capability": [
+          {
+            "name": "x86-64",
+            "type": "cpu_architecture"
+          }
+
+        ]
+      },
+      "functional-capabilities": {
+        "functional-capability": [
+          {
+            "type": "bridge",
+            "name": "my beatiful bridge",
+            "ready": true,
+            "template": "bridge-template.json",
+            "family": "Network",
+            "function-specifications": {
+              "function-specification": []
+            }
+          }
+        ]
+      }
+    }
+  }
+}

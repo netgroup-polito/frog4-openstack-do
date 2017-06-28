@@ -3,7 +3,7 @@ This orchestrator controls an OpenStack domain. It is able to deploy service gra
 In addition to the creation of NFV service chains, it allows to steer traffic from an OpenStack port to another OpenStack port or to an external port and viceversa (e.g., a port that connects to the user located outside the OpenStack domain).
 This result is achieved by interacting with the SDN controller which in turn has to be configured as the mechanism driver of the OpenStack's Neutron module. 
 
-Currently this domain orchestrator works with OpenStack Mitaka and OpenDaylight Beryllium as Neutron driver, but it should be compatible also with other versions (not OpenDaylight Hydrogen)
+Currently, this domain orchestrator works with OpenStack Mitaka and Onos 1.9 as (optional) SDN controller. Support fo OpenDaylight is instead deprecated.
 
 ## REST API
 

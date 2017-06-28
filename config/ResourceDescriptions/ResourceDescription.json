@@ -1,0 +1,83 @@
+{
+  "netgroup-domain:informations": {
+    "id": "00000001",
+    "name": "openstack_domain",
+    "type": "OS",
+    "management-address": "130.192.225.106:9200",
+    "hardware-informations": {
+      "interfaces": {
+        "interface": [
+          {
+            "index": 1,
+            "name": "of:000028c7ce9f66040/5104",
+            "netgroup-if-side:side": "core",
+            "config": {
+              "type": "ethernetCsmacd",
+              "enabled": true
+            },
+            "subinterfaces": {
+              "subinterface": [
+                {
+                  "config": {
+                    "name": "ens9",
+                    "enabled": true
+                  },
+                  "netgroup-if-capabilities:capabilities": {
+                    "netgroup-if-capabilities:gre": false
+                  },
+                  "netgroup-if-gre:gre": []
+                }
+              ]
+            },
+            "netgroup-neighbor:neighbors": {
+              "netgroup-neighbor:neighbor": [
+                {
+                  "domain-name": "my_home_network",
+                  "neighbor-type": "access-network",
+                  "remote-interface": "of:000028c7ce9f66040/5104"
+                }
+              ]
+            },
+             "openconfig-if-ethernet:ethernet": {
+              "openconfig-vlan:vlan": {
+                "openconfig-vlan:config": {
+                  "interface-mode": "TRUNK",
+                  "trunk-vlans": ["223"]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },    
+    "capabilities": {
+      "infrastructural-capabilities": {
+        "infrastructural-capability": [
+          {
+            "type": "cpu_architecture",
+            "name": "x86-64"
+          },
+           {
+            "type": "compute_controller",
+            "name": "openstack"
+          }
+        ]
+      },
+      "functional-capabilities": {
+        "functional-capability": [
+          {
+            "type": "bridge",
+            "name": "bridge",
+            "ready": true,
+            "template": "bridge-template.json",
+            "family": "Network",
+            "function-specifications": {
+              "function-specification": []
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+

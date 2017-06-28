@@ -24,7 +24,7 @@ from do_core.resource_description import ResourceDescription
 
 
 OPENSTACK_IP = Configuration().OPENSTACK_IP
-DEBUG_MODE = Configuration().DEBUG_MODE
+DEBUG_MODE = Configuration().DEBUG
 JOLNET_MODE = Configuration().JOLNET_MODE
 JOLNET_NETWORKS = Configuration().JOLNET_NETWORKS
 EXIT_SWITCH = Configuration().EXIT_SWITCH
@@ -528,7 +528,7 @@ class OpenstackOrchestratorController(object):
             json_req = flowj.getJSON()
 
             if DEBUG_MODE is True:
-                with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                     outfile.write(json_req)
             flow_id = self.onosBusiness.createFlow(json_req)
 
@@ -556,7 +556,7 @@ class OpenstackOrchestratorController(object):
             json_req = flowj.getJSON()
 
             if DEBUG_MODE is True:
-                with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                     outfile.write(json_req)
             flow_id = self.onosBusiness.createFlow(json_req)
 
@@ -699,7 +699,7 @@ class OpenstackOrchestratorController(object):
             json_req = flowj.getJSON()
 
             if DEBUG_MODE is True:
-                with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                     outfile.write(json_req)
             flow_id = self.onosBusiness.createFlow(json_req)
 
@@ -727,7 +727,7 @@ class OpenstackOrchestratorController(object):
             json_req = flowj.getJSON()
 
             if DEBUG_MODE is True:
-                with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                     outfile.write(json_req)
             flow_id = self.onosBusiness.createFlow(json_req)
 
@@ -1022,7 +1022,7 @@ class OpenstackOrchestratorController(object):
                         json_req = flowj.getJSON()
 
                         if DEBUG_MODE is True:
-                            with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                            with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                                 outfile.write(json_req)
                         flow_id = self.onosBusiness.createFlow(json_req)
                         
@@ -1053,7 +1053,7 @@ class OpenstackOrchestratorController(object):
                         json_req = flowj.getJSON()
 
                         if DEBUG_MODE is True:
-                            with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                            with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                                 outfile.write(json_req)
                         flow_id = self.onosBusiness.createFlow(json_req)
                         
@@ -1086,7 +1086,7 @@ class OpenstackOrchestratorController(object):
                         json_req = flowj.getJSON()
 
                         if DEBUG_MODE is True:
-                            with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                            with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                                 outfile.write(json_req)
                         flow_id = self.onosBusiness.createFlow(json_req)
 
@@ -1156,7 +1156,7 @@ class OpenstackOrchestratorController(object):
                     json_req = flowj.getJSON()
 
                     if DEBUG_MODE is True:
-                        with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                        with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                             outfile.write(json_req)
                     flow_id = self.onosBusiness.createFlow(json_req)
 
@@ -1187,7 +1187,7 @@ class OpenstackOrchestratorController(object):
                     json_req = flowj.getJSON()
 
                     if DEBUG_MODE is True:
-                        with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                        with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                             outfile.write(json_req)
                     flow_id = self.onosBusiness.createFlow(json_req)
 
@@ -1254,7 +1254,7 @@ class OpenstackOrchestratorController(object):
                         json_req = flowj.getJSON()
 
                         if DEBUG_MODE is True:
-                            with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                            with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                                 outfile.write(json_req)
                         flow_id = self.onosBusiness.createFlow(json_req)
 
@@ -1370,7 +1370,7 @@ class OpenstackOrchestratorController(object):
                     json_req = flowj.getJSON()
 
                     if DEBUG_MODE is True:
-                        with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                        with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                             outfile.write(json_req)
                     flow_id = self.onosBusiness.createFlow(json_req)
                 
@@ -1430,7 +1430,7 @@ class OpenstackOrchestratorController(object):
                     json_req = flowj.getJSON()
 
                     if DEBUG_MODE is True:
-                        with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                        with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                             outfile.write(json_req)
                     flow_id = self.onosBusiness.createFlow(json_req)
                     
@@ -1459,7 +1459,7 @@ class OpenstackOrchestratorController(object):
                     json_req = flowj.getJSON()
 
                     if DEBUG_MODE is True:
-                        with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                        with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                             outfile.write(json_req)
                     flow_id = self.onosBusiness.createFlow(json_req)
                     
@@ -1525,7 +1525,7 @@ class OpenstackOrchestratorController(object):
                         json_req = flowj.getJSON()
 
                         if DEBUG_MODE is True:
-                            with open('onos_flow_Endpoint.txt', 'w') as outfile:
+                            with open('onos_flow_Endpoint.txt', 'a+') as outfile:
                                 outfile.write(json_req)
                         flow_id = self.onosBusiness.createFlow(json_req)
                     

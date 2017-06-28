@@ -93,7 +93,7 @@ It is written according to the [domain information library](https://github.com/n
 
 You have to edit this file so that it actually decribes the domain under the responsibility of the OpenStack domain orchestrator. 
 
-**IMPORTANT** Please, note that the functional capabilties must be written manually and must correspond to those available in the [Datastore]() used by the OpenStack domain orchestrator.
+**IMPORTANT** Please, note that the functional capabilties must be written manually and must correspond to those available in the [Datastore](https://github.com/netgroup-polito/frog4-datastore/blob/master/README.md) used by the OpenStack domain orchestrator.
 
 ## OpenStack domain orchestrator configuration file
 

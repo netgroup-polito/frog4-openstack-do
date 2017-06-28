@@ -93,7 +93,7 @@ It is written according to the [domain information library](https://github.com/n
 
 You have to edit this file so that it actually decribes the domain under the responsibility of the OpenStack domain orchestrator. 
 
-**IMPORTANT** Please, note that the functional capabilties must be written manually and must correspond to those available in the Datastore used by the OpenStack domain orchestrator.
+**IMPORTANT** Please, note that the functional capabilties must be written manually and must correspond to those available in the [Datastore]() used by the OpenStack domain orchestrator.
 
 ## OpenStack domain orchestrator configuration file
 
@@ -122,6 +122,10 @@ If you are going to execute the OpenStack domain orchestrator on the JOLNET, set
 In addition, in the `[openstack_orchestrator]` section, you have to set the field `identity_api_version` to `2`. 
 
 Please, note that the JOLNET does not use any SDN controller in the OpenStack domain, then you have to edit neither the `[onos]`, nor the `[odl]` sections.
+
+# The FROG 4 datastore
+
+The [Datastore](https://github.com/netgroup-polito/frog4-datastore/) can be used by the OpenStack domain orchestrator to retrieve the VNF templates. To install this component, follow the instructions provided in the [Datastore repository](https://github.com/netgroup-polito/frog4-datastore/blob/master/README.md).
 
 # Adding the WEB GUI on top of the OpenStack domain orchestrator
 

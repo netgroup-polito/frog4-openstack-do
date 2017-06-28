@@ -105,7 +105,7 @@ Moreover, in this section you must configure the `availability_zone`, to select 
 If you do not specify the availability zone, this will be selected by the OpenStack Nova component.
 Finally, in the `[openstack_orchestrator]` section you must also configure the IP address of your OpenStack installation (`openstack_ip` field).
 
-In the [config](/config/) folder, make a new copy of the file `ResourceDescription.json` and rename it (e.g. `MyResourceDescription.json`). Then, in the [configuration file](/config/default-config.ini) section `[domain_description]`, change the path in the `file` field so that it points to the new file (e.g. `file = config/MyResourceDescription.json`).
+In the [config/ResourceDescriptions](/config/ResourceDescriptions) folder, make a new copy of the file `ResourceDescription.json` and rename it (e.g. `MyResourceDescription.json`). Then, in the [configuration file](/config/default-config.ini) section `[domain_description]`, change the path in the `file` field so that it points to the new file (e.g. `file = config/MyResourceDescription.json`).
 
 In the section `[doubledecker]`, you have to configure the connection towards the broker (note that this guide supposes that, if you need a broker, you have already installed it). Particularly, you can set the URL to be used to contact such a module (`broker_address`) and the file containing the key to be used (`dd_keyfile`).
 

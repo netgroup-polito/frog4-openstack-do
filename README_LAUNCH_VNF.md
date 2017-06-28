@@ -88,7 +88,7 @@ Ad example is the following (not that the information about interfaces are omitt
     "id": "00000001",
     "name": "openstack_domain",
     "type": "OS",
-    "management-address": "130.192.225.106:9200",
+    "management-address": "192.168.0.25:9200",
     "hardware-informations": {
       "":""
     },    

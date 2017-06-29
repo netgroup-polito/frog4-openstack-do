@@ -1583,8 +1583,8 @@ class OpenstackOrchestratorController(object):
         #Get the necessary info (glance URI and Nova flavor) and create a VNF object
         template = vnf.template
         cpuRequirements = template.cpu_requirements.socket
-        logging.debug(template.uri)
-        image = Glance().getImage(template.uri, self.token.get_token())
+        logging.debug(template.uri_image)
+        image = Glance().getImage(template.uri_image, self.token.get_token())
         flavor = self.findFlavor(int(template.memory_size), int(template.root_file_system_size),
             int(template.ephemeral_file_system_size), int(cpuRequirements[0]['coreNumbers']), self.token.get_token())
         if vnf.status is None:

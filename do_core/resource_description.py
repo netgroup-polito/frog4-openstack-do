@@ -13,8 +13,8 @@ class Singleton(type):
         return cls._instances[cls]
 
 class ResourceDescription(object, metaclass=Singleton):
-    def __init__(self, file):
-        self.file = file
+    def __init__(self, file_in):
+        self.file = file_in
         self.dict = None
         self.parse()
         self.endpoints = self.dict["netgroup-domain:informations"]["hardware-informations"]["interfaces"]["interface"]

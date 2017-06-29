@@ -28,10 +28,10 @@ class NFFG_Manager(object):
         Retrieve the Templates of all the VNFs in the graph
         '''
         for vnf in self.nffg.vnfs[:]:
-            if vnf.functional_capability is not None:
-                vnf_id = self.find_template_location(vnf.functional_capability)
-            else:
+            if vnf.vnf_template_location is not None:
                 vnf_id = vnf.vnf_template_location
+            else:
+                vnf_id = self.find_template_location(vnf.functional_capability)
             self.addTemplate(vnf, vnf_id)
    
     def addTemplate(self, vnf,  uri):

@@ -66,7 +66,7 @@ class Configuration(object, metaclass=Singleton):
                 
             self._LOG_FILE = config.get('log', 'log_file')
             self._VERBOSE = config.getboolean('log', 'verbose_level')
-            self._DEBUG = config.getboolean('log', 'debug_level')
+            self._DEBUG = config.getboolean('log', 'debug_mode')
             
             self._CONNECTION = config.get('db','connection')
             

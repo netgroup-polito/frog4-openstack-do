@@ -4,6 +4,7 @@ Created on 23 giu 2016
 @author: stefanopetrangeli
 '''
 import json, logging
+from domain_information_library.domain_info import DomainInfo
 
 class Singleton(type):
     _instances = {}

@@ -5,5 +5,5 @@
 	path = vnf_template_library
 	url = https://github.com/netgroup-polito/vnf-template-library.git
 [submodule "domain-information-library"]
-	path = domain-information-library
+	path = domain_information_library
 	url = https://github.com/netgroup-polito/domain-information-library.git

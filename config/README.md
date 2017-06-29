@@ -8,8 +8,8 @@ The [openstacknode.json](https://github.com/netgroup-polito/frog4-openstack-do/b
 
 The [ovsdbrest.json](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/config/ovsdbrest.json) file is an example of configuration requested by the Ovsdb-rest app. More information can be found [here](https://github.com/netgroup-polito/onos-applications/tree/master/ovsdb-rest).
 
-The [firstGraph.json](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/config/firstGraph.json) file describes a FG that connects two VNFs togheter.
+The [firstGraph.json](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/config/firstGraph.json) file describes an NF-FG that connects two VNFs togheter.
 
-The [SecondGraph.json](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/config/SecondGraph.json) file describes a FG that connects an endpoint with a VNF.
+The [SecondGraph.json](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/config/SecondGraph.json) file describes an NF-FG that connects an endpoint with a VNF.
 
 The [ResourceDescriptions](https://github.com/netgroup-polito/frog4-openstack-do/tree/master/config/ResourceDescriptions) folder contains some examples of domain descriptions, written according to the [domain information library](https://github.com/netgroup-polito/domain-information-library).

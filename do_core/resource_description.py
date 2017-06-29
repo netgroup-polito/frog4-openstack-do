@@ -22,8 +22,8 @@ class ResourceDescription(object, metaclass=Singleton):
                 
     def parse(self):
         try:
-            description_file = open(self.file,"r")
-            self.dict = json.loads(description_file.read())
+            self.domainInfo = DomainInfo.get_from_file(self.file)
+            self.dict = self.domainInfo.get_dict()
         except ValueError as ex:
             logging.error("Resource description file is not a valid json")
             raise ex
@@ -61,8 +61,7 @@ class ResourceDescription(object, metaclass=Singleton):
                 if vlan not in vlan_list:
                     # Add to free vlans the vlan_id of the endpoint removed
                     vlan_list.append(vlan)
-                    self.setFreeVlans(endpoint_desc, vlan_list)                    
-                
+                    self.setFreeVlans(endpoint_desc, vlan_list)
                 
     def supportsVlan(self, endpoint_desc):
         if 'netgroup-if-ethernet:ethernet' in endpoint_desc:

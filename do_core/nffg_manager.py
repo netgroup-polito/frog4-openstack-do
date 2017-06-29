@@ -13,6 +13,8 @@ from nffg_library.nffg import NF_FG
 TEMPLATE_SOURCE = Configuration().TEMPLATE_SOURCE
 TEMPLATE_REPOSITORY_URL = Configuration().TEMPLATE_REPOSITORY_URL
 TEMPLATE_PATH = Configuration().TEMPLATE_PATH
+GET_TEMPLATE = "nf_template/"
+GET_CAPABILITY = "nf_capability/"
 
 class NFFG_Manager(object):
     
@@ -26,7 +28,11 @@ class NFFG_Manager(object):
         Retrieve the Templates of all the VNFs in the graph
         '''
         for vnf in self.nffg.vnfs[:]:
-            self.addTemplate(vnf, vnf.vnf_template_location)
+            if vnf.functional_capability is not None:
+                vnf_id = self.find_template_location(vnf.functional_capability)
+            else:
+                vnf_id = vnf.vnf_template_location
+            self.addTemplate(vnf, vnf_id)
    
     def addTemplate(self, vnf,  uri):
         '''
@@ -96,11 +102,20 @@ class NFFG_Manager(object):
             if uri.endswith(".json"):
                 actual_uri = uri[:-len(".json")]
             headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
-            resp = requests.get(TEMPLATE_REPOSITORY_URL + actual_uri, headers=headers)
+            resp = requests.get(TEMPLATE_REPOSITORY_URL + GET_TEMPLATE + actual_uri, headers=headers)
             resp.raise_for_status()
             template_dict = resp.json()
             self.stored_templates[uri] = template_dict
             return template_dict
         except Exception as ex:
             raise VNFRepositoryError("An error occurred while contacting the VNF Repository")
-        
+
+    def find_template_location(self, functional_capability):
+        try:
+            headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
+            resp = requests.get(TEMPLATE_REPOSITORY_URL + GET_CAPABILITY + functional_capability, headers=headers)
+            resp.raise_for_status()
+            template_dict = resp.json()
+            return template_dict['list'].pop()['id']
+        except Exception as ex:
+            raise VNFRepositoryError("An error occurred while contacting the VNF Repository")

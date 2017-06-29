@@ -2,7 +2,7 @@ This folder contains some config file and Forwarding Graph example.
 
 The [default-config.ini](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/config/default-config.ini) file describes the default configuration for the Domain Orchestrator. The role of each field within that file is described in the file itself.
 
-The [openstackInterface.json](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/config/openstackInterface.json) file is used by SONA to be able to interact with the various Openstack submodules. This file is used only with ONOS <= 1.9.0 as pointed in the relative [guide](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/README_ONOS.md) within Sona Configuration section.
+The [openstackInterface.json](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/config/openstackInterface.json) file is used by SONA to be able to interact with the various Openstack submodules. This file is used only with ONOS <= 1.9.0 as pointed in the relative [guide](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/README_ONOS.md) within the Sona Configuration section.
 
 The [openstacknode.json](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/config/openstacknode.json) file is an example of the SONA configuration file pointed in this [guide](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/README_ONOS.md). In this example the file describes a domain made up of two compute nodes. This file can be generated using this [script](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/scripts/Generate_sona_openstack_conf.sh)
 

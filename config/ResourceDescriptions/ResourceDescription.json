@@ -41,7 +41,7 @@
             },
             "netgroup-if-ethernet:ethernet": {
               "netgroup-vlan:vlans": {
-                "netgroup-vlan:vlans": [
+                "netgroup-vlan:vlan": [
                   {
                     "netgroup-vlan:config": {
                       "netgroup-vlan:vlan-id": 223

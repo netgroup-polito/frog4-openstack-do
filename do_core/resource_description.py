@@ -5,6 +5,13 @@ Created on 23 giu 2016
 '''
 import json, logging
 from domain_information_library.domain_info import DomainInfo
+from do_core.config import Configuration
+from do_core.exception import VNFRepositoryError
+import requests
+
+TEMPLATE_REPOSITORY_URL = Configuration().TEMPLATE_REPOSITORY_URL
+TEMPLATE_PATH = Configuration().TEMPLATE_PATH
+GET_TEMPLATE = "nf_template/"
 
 class Singleton(type):
     _instances = {}
@@ -24,6 +31,7 @@ class ResourceDescription(object, metaclass=Singleton):
         try:
             self.domainInfo = DomainInfo.get_from_file(self.file)
             self.dict = self.domainInfo.get_dict()
+            self.dict['netgroup-domain:informations']['capabilities']['functional-capabilities']['functional-capability'] = self.getFunctionalCapabilities()
         except ValueError as ex:
             logging.error("Resource description file is not a valid json")
             raise ex
@@ -114,3 +122,28 @@ class ResourceDescription(object, metaclass=Singleton):
     def writeToFile(self):
         description_file = open(self.file,"w")
         description_file.write(json.dumps(self.dict, indent=2, separators=(',', ': ')))
+
+    def getFunctionalCapabilities(self):
+        try:
+            headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
+            resp = requests.get(TEMPLATE_REPOSITORY_URL + GET_TEMPLATE, headers=headers)
+            templateList = resp.json()
+            capabilitiesList = []
+            for template in templateList['list']:
+                vnfTemplate = template['template']
+                functionalCapability = vnfTemplate['functional-capability']
+                newCapability = {
+                "type": functionalCapability,
+                "name": functionalCapability,
+                "ready": True,
+                "template": "bridge-template.json",
+                "family": "Network",
+                "function-specifications": {
+                    "function-specification": []
+                }
+                }
+                capabilitiesList.append(newCapability)
+        except:
+            raise VNFRepositoryError("An error occurred while contacting the VNF Repository")
+        return capabilitiesList
+

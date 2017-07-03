@@ -7,6 +7,7 @@ import json
 import logging
 from do_core.config import Configuration
 from threading import Thread
+from do_core.resource_description import ResourceDescription
 
 DD_NAME = Configuration().DD_NAME
 DD_CUSTOMER = Configuration().DD_CUSTOMER
@@ -79,8 +80,7 @@ class Messaging(object, metaclass=Singleton):
             raise Exception("DD client not registered") from None
         
     def readDomainDescriptionFile(self):
-        description_file = open(DOMAIN_DESCRIPTION_FILE,"r")
-        return description_file.read()
+        return json.dumps(ResourceDescription(DOMAIN_DESCRIPTION_FILE).dict)
 
     
     

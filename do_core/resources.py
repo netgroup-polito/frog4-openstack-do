@@ -737,7 +737,7 @@ class VNF(object):
         resource['server']['name'] = str(self.id)+'-'+str(self.name)
         resource['server']['imageRef'] = self.URIImage['id']
         resource['server']['flavorRef'] = self.flavor['id']
-        if resource['server']['availability_zone'] is not None:
+        if self.availability_zone is not None:
             resource['server']['availability_zone'] = self.availability_zone
         resource['server']['networks'] = []
         

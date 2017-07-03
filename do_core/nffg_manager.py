@@ -32,6 +32,7 @@ class NFFG_Manager(object):
                 vnf_id = vnf.vnf_template_location
             else:
                 vnf_id = self.find_template_location(vnf.functional_capability)
+                vnf.vnf_template_location = vnf_id
             self.addTemplate(vnf, vnf_id)
    
     def addTemplate(self, vnf,  uri):

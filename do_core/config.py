@@ -37,7 +37,10 @@ class Configuration(object, metaclass=Singleton):
             self._ORCH_TIMEOUT = config.get('openstack_orchestrator','timeout')
             self._OPENSTACK_IP = config.get('openstack_orchestrator','openstack_ip')
             self._IDENTITY_API_VERSION = config.getint('openstack_orchestrator','identity_api_version')
-            self._AVAILABILITY_ZONE = config.get('openstack_orchestrator','availability_zone')
+            if config.has_option('openstack_orchestrator', 'availability_zone'):
+                self._AVAILABILITY_ZONE = config.get('openstack_orchestrator','availability_zone')
+            else:
+                self._AVAILABILITY_ZONE = None
 
             self._TOKEN_EXPIRATION = config.get('authentication','token_expiration')
             

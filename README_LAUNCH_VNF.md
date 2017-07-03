@@ -107,16 +107,6 @@ Ad example is the following (not that the information about interfaces are omitt
       },
       "functional-capabilities": {
         "functional-capability": [
-          {
-            "type": "bridge",
-            "name": "bridge",
-            "ready": true,
-            "template": "bridge-template.json",
-            "family": "Network",
-            "function-specifications": {
-              "function-specification": []
-            }
-          }
         ]
       }
     }
@@ -129,7 +119,7 @@ The most important parameters are the following:
 
 * `management-address`: the URL to be used to interact with the OpenStack domain orchestrator;
 * `type`: indicates the domain type, which is `OS` (i.e., OpenStack) in our case;
-* `functional-capability`/`type`: the functional capability associated with your VNF. In our example, our VNF image implements a `bridge`.
+* `functional-capability`/`type`: the functional capability associated with your VNF. It will be filled automatically with the function on the datastore.
 
 Other example can be found [here](https://github.com/netgroup-polito/frog4-openstack-do/tree/master/config/ResourceDescriptions).
 
@@ -205,7 +195,7 @@ In the description of the VNF, the most important parameters are:
 
 * `functional-capability`: it must correspond to the functional capability implemented by the desired VNF, `bridge` in our use case.
 **WARNING** due to a [bug](https://github.com/netgroup-polito/frog4-orchestrator/issues/9) in the FROG orchestrator, currently the `functional-capability` and the VNF `name` should be set to the same value;
-* `vnf_template`: this must correspond to the VNF ID returned by the Datastore when the VNF template has been uploaded. In our example, it is `IU9LBT`. **WARNING** due to a [bug](https://github.com/netgroup-polito/frog4-openstack-do/issues/18) in the OpenStack domain orchestrator, this field is mandatory. In fact, the domain orchestrator is not able to exploit the functional capability.
+* `vnf_template`: this must correspond to the VNF ID returned by the Datastore when the VNF template has been uploaded. In our example, it is `IU9LBT`.
 
 You can deploy the NF-FG above through the [deploy_graph.py script](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/scripts/deploy_graph.py):
 

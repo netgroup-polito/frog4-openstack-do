@@ -262,7 +262,7 @@ CREATE TABLE `vnf_instance` (
   `graph_vnf_id` varchar(64) NOT NULL,
   `graph_id` int(64) NOT NULL,
   `name` varchar(64) NOT NULL,
-  `template_location` varchar(64) NOT NULL,
+  `template_location` varchar(64) DEFAULT NULL,
   `image_location` varchar(64) DEFAULT NULL,
   `location` varchar(64) DEFAULT NULL,
   `type` varchar(64) DEFAULT NULL,

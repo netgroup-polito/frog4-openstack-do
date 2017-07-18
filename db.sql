@@ -1,20 +1,14 @@
 -- phpMyAdmin SQL Dump
--- version 4.5.4.1deb2ubuntu1
+-- version 4.0.10deb1
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Creato il: Giu 30, 2016 alle 10:27
--- Versione del server: 5.7.12-0ubuntu1.1
--- Versione PHP: 7.0.4-7ubuntu2.1
+-- Generation Time: Jul 18, 2017 at 08:40 PM
+-- Server version: 5.5.55-0ubuntu0.14.04.1
+-- PHP Version: 5.5.9-1ubuntu4.21
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
 
 --
 -- Database: `openstack_orchestrator`
@@ -23,10 +17,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `action`
+-- Table structure for table `action`
 --
 
-CREATE TABLE `action` (
+CREATE TABLE IF NOT EXISTS `action` (
   `id` int(64) NOT NULL,
   `flow_rule_id` varchar(64) NOT NULL,
   `output_type` varchar(64) DEFAULT NULL,
@@ -43,44 +37,47 @@ CREATE TABLE `action` (
   `set_ip_tos` varchar(64) DEFAULT NULL,
   `set_l4_src_port` varchar(64) DEFAULT NULL,
   `set_l4_dst_port` varchar(64) DEFAULT NULL,
-  `output_to_queue` varchar(64) DEFAULT NULL
+  `output_to_queue` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `endpoint`
+-- Table structure for table `endpoint`
 --
 
-CREATE TABLE `endpoint` (
+CREATE TABLE IF NOT EXISTS `endpoint` (
   `id` int(64) NOT NULL,
   `internal_id` varchar(64) DEFAULT NULL,
   `graph_endpoint_id` varchar(64) NOT NULL,
   `graph_id` varchar(64) NOT NULL,
   `name` varchar(64) DEFAULT NULL,
   `type` varchar(64) DEFAULT NULL,
-  `location` varchar(64) DEFAULT NULL
+  `location` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `endpoint_resource`
+-- Table structure for table `endpoint_resource`
 --
 
-CREATE TABLE `endpoint_resource` (
+CREATE TABLE IF NOT EXISTS `endpoint_resource` (
   `endpoint_id` int(64) NOT NULL,
   `resource_type` varchar(64) NOT NULL,
-  `resource_id` int(64) NOT NULL
+  `resource_id` int(64) NOT NULL,
+  PRIMARY KEY (`endpoint_id`,`resource_type`,`resource_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `flow_rule`
+-- Table structure for table `flow_rule`
 --
 
-CREATE TABLE `flow_rule` (
+CREATE TABLE IF NOT EXISTS `flow_rule` (
   `id` int(64) NOT NULL,
   `internal_id` varchar(255) DEFAULT NULL,
   `graph_flow_rule_id` varchar(64) NOT NULL,
@@ -91,29 +88,32 @@ CREATE TABLE `flow_rule` (
   `table_id` int(11) DEFAULT NULL,
   `status` varchar(64) DEFAULT NULL,
   `creation_date` datetime NOT NULL,
-  `last_update` datetime DEFAULT NULL
+  `last_update` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `graph`
+-- Table structure for table `graph`
 --
 
-CREATE TABLE `graph` (
+CREATE TABLE IF NOT EXISTS `graph` (
   `id` int(64) NOT NULL,
   `session_id` varchar(64) NOT NULL,
   `node_id` varchar(64) DEFAULT NULL,
-  `partial` tinyint(1) DEFAULT NULL
+  `partial` tinyint(1) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `service_graph_id` (`session_id`,`node_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `match`
+-- Table structure for table `match`
 --
 
-CREATE TABLE `match` (
+CREATE TABLE IF NOT EXISTS `match` (
   `id` int(64) NOT NULL,
   `flow_rule_id` varchar(64) NOT NULL,
   `port_in_type` varchar(64) DEFAULT NULL,
@@ -128,41 +128,44 @@ CREATE TABLE `match` (
   `tos_bits` varchar(64) DEFAULT NULL,
   `source_port` varchar(64) DEFAULT NULL,
   `dest_port` varchar(64) DEFAULT NULL,
-  `protocol` varchar(64) DEFAULT NULL
+  `protocol` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `openstack_network`
+-- Table structure for table `openstack_network`
 --
 
-CREATE TABLE `openstack_network` (
+CREATE TABLE IF NOT EXISTS `openstack_network` (
   `id` varchar(64) NOT NULL,
   `name` varchar(64) NOT NULL,
   `status` varchar(64) NOT NULL,
-  `vlan_id` varchar(64) DEFAULT NULL
+  `vlan_id` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `openstack_subnet`
+-- Table structure for table `openstack_subnet`
 --
 
-CREATE TABLE `openstack_subnet` (
+CREATE TABLE IF NOT EXISTS `openstack_subnet` (
   `id` varchar(64) NOT NULL,
   `name` varchar(64) NOT NULL,
-  `os_network_id` varchar(64) NOT NULL
+  `os_network_id` varchar(64) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `port`
+-- Table structure for table `port`
 --
 
-CREATE TABLE `port` (
+CREATE TABLE IF NOT EXISTS `port` (
   `id` int(64) NOT NULL,
   `internal_id` varchar(64) DEFAULT NULL,
   `graph_port_id` varchar(64) DEFAULT NULL,
@@ -182,16 +185,18 @@ CREATE TABLE `port` (
   `local_ip` varchar(64) DEFAULT NULL,
   `remote_ip` varchar(64) DEFAULT NULL,
   `gre_key` varchar(64) DEFAULT NULL,
-  `internal_group` varchar(64) DEFAULT NULL
+  `internal_group` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `graph_port_id` (`graph_port_id`,`vnf_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `session`
+-- Table structure for table `session`
 --
 
-CREATE TABLE `session` (
+CREATE TABLE IF NOT EXISTS `session` (
   `id` varchar(64) NOT NULL,
   `user_id` varchar(64) DEFAULT NULL,
   `service_graph_id` varchar(63) NOT NULL,
@@ -200,63 +205,66 @@ CREATE TABLE `session` (
   `started_at` datetime DEFAULT NULL,
   `last_update` datetime DEFAULT NULL,
   `error` datetime DEFAULT NULL,
-  `ended` datetime DEFAULT NULL
+  `ended` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `tenant`
+-- Table structure for table `tenant`
 --
 
-CREATE TABLE `tenant` (
+CREATE TABLE IF NOT EXISTS `tenant` (
   `id` varchar(64) CHARACTER SET utf8 NOT NULL,
   `name` varchar(64) CHARACTER SET utf8 NOT NULL,
-  `description` varchar(128) CHARACTER SET utf8 NOT NULL
+  `description` varchar(128) CHARACTER SET utf8 NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
--- Dump dei dati per la tabella `tenant`
+-- Dumping data for table `tenant`
 --
 
 INSERT INTO `tenant` (`id`, `name`, `description`) VALUES
 ('0', 'demo', 'Demo tenant'),
 ('1', 'PoliTO_chain1', 'openstack'),
-('2', 'admin', 'Demo2 Tenant');
+('2', 'admin', 'admin_tenant');
 
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `user`
+-- Table structure for table `user`
 --
 
-CREATE TABLE `user` (
+CREATE TABLE IF NOT EXISTS `user` (
   `id` varchar(64) CHARACTER SET utf8 NOT NULL,
   `name` varchar(64) CHARACTER SET utf8 NOT NULL,
   `password` varchar(64) CHARACTER SET utf8 NOT NULL,
   `token` varchar(64) DEFAULT NULL,
   `token_timestamp` varchar(64) DEFAULT NULL,
   `tenant_id` varchar(64) CHARACTER SET utf8 NOT NULL,
-  `mail` varchar(64) CHARACTER SET utf8 DEFAULT NULL
+  `mail` varchar(64) CHARACTER SET utf8 DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
--- Dump dei dati per la tabella `user`
+-- Dumping data for table `user`
 --
 
 INSERT INTO `user` (`id`, `name`, `password`, `token`, `token_timestamp`, `tenant_id`, `mail`) VALUES
 ('0', 'demo', 'stack', NULL, NULL, '0', NULL),
 ('1', 'isp', 'stack', NULL, NULL, '1', NULL),
-('2', 'admin', 'stackstack', 'abc', '1466673553', '2', NULL),
-('3', 'AdminPoliTO', 'AdminPoliTO', 'abcdd', '1466673553', '1', NULL);
+('2', 'admin', 'admin', NULL, NULL, '2', NULL),
+('3', 'AdminPoliTO', 'AdminPoliTO', NULL, NULL, '1', NULL);
 
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `vnf_instance`
+-- Table structure for table `vnf_instance`
 --
 
-CREATE TABLE `vnf_instance` (
+CREATE TABLE IF NOT EXISTS `vnf_instance` (
   `id` int(64) NOT NULL,
   `internal_id` varchar(64) DEFAULT NULL,
   `graph_vnf_id` varchar(64) NOT NULL,
@@ -269,93 +277,6 @@ CREATE TABLE `vnf_instance` (
   `status` varchar(64) DEFAULT NULL,
   `creation_date` datetime NOT NULL,
   `last_update` datetime DEFAULT NULL,
-  `availability_zone` varchar(64) DEFAULT NULL
+  `availability_zone` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Indici per le tabelle scaricate
---
-
---
--- Indici per le tabelle `action`
---
-ALTER TABLE `action`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indici per le tabelle `endpoint`
---
-ALTER TABLE `endpoint`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indici per le tabelle `endpoint_resource`
---
-ALTER TABLE `endpoint_resource`
-  ADD PRIMARY KEY (`endpoint_id`,`resource_type`,`resource_id`);
-
---
--- Indici per le tabelle `flow_rule`
---
-ALTER TABLE `flow_rule`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indici per le tabelle `graph`
---
-ALTER TABLE `graph`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `service_graph_id` (`session_id`,`node_id`);
-
---
--- Indici per le tabelle `match`
---
-ALTER TABLE `match`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indici per le tabelle `openstack_network`
---
-ALTER TABLE `openstack_network`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indici per le tabelle `openstack_subnet`
---
-ALTER TABLE `openstack_subnet`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indici per le tabelle `port`
---
-ALTER TABLE `port`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `graph_port_id` (`graph_port_id`,`vnf_id`);
-
---
--- Indici per le tabelle `session`
---
-ALTER TABLE `session`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indici per le tabelle `tenant`
---
-ALTER TABLE `tenant`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indici per le tabelle `user`
---
-ALTER TABLE `user`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indici per le tabelle `vnf_instance`
---
-ALTER TABLE `vnf_instance`
-  ADD PRIMARY KEY (`id`);
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

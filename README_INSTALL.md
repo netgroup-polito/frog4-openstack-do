@@ -11,7 +11,7 @@ Note that ONOS is optional but highly recommended.
 First, you need to install all the required ubuntu packages. For this, please follow the steps below:
     
         $ sudo apt-get install python3-dev python3-setuptools python3-pip python3-sqlalchemy libmysqlclient-dev mysql-server git   
-        $ sudo pip3 install --upgrade requests gunicorn jsonschema pymysql flask flasgger
+        $ sudo pip3 install --upgrade requests gunicorn jsonschema pymysql flask flask-restplus Flask-SQLAlchemy
 
 ## Clone the code
 Now you have to clone this repository _and_ all the submodules. Submodules include components that are part of the domain orchestrator but that are being developed in different repositories. This lead to the necessity to clone them as well in the right folders. For this, please follow the steps below:

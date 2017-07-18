@@ -11,7 +11,7 @@ This domain orchestrator offers a REST API which is shared among all the domain 
 
 REST interface provides several URL to authenticate, to send/get/delete a graph and to get the status of a graph. 
 
-In order to discover which REST calls are supported you can see the API documentation at the URL `{Domain_Orchestrator_Address}/apidocs/index.html` once the domain orchestrator is installed and running.
+In order to discover which REST calls are supported you can see the API documentation at the URL `{Domain_Orchestrator_Address}/api_docs/` once the domain orchestrator is installed and running.
 
 ## Documentation
 

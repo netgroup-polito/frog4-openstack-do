@@ -35,6 +35,10 @@ This are the steps to install it:
 	$ sudo tar xzf onos-$ONOS_VERSION.tar.gz
 	$ sudo mv onos-$ONOS_VERSION onos
 	$ sudo chown -R sdn:sdn onos
+
+You need to export this variable
+	
+	$ export ONOS_IP= <ONOS_IP_ADDRESS>
 	
 Now you can run ONOS by typing in a terminal:
 		

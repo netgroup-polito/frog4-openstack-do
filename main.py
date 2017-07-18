@@ -4,6 +4,7 @@ from flask import Flask
 
 from do_core.api.api import root_blueprint
 from do_core.api.nffg import api as nffg_api
+from do_core.api.user import api as user_api
 
 
 from do_core.config import Configuration
@@ -34,7 +35,7 @@ logging.debug("Openstack Domain Orchestrator Starting")
 print("Welcome to the Openstack Domain Orchestrator")
 
 # Rest application
-if nffg_api is not None:
+if nffg_api is not None and user_api is not None:
     app = Flask(__name__)
     app.register_blueprint(root_blueprint)
     logging.info("Flask Successfully started")

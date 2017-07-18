@@ -88,12 +88,13 @@ class OpenstackOrchestratorController(object):
         
         return instantiated_nffgs[0].getJSON()          
         
-    def put(self, nf_fg):
-        logging.debug('Put from user '+self.userdata.username+" of tenant "+self.userdata.tenant)
+    def post(self, nf_fg):
+
+        logging.debug('Post from user '+self.userdata.username+" of tenant "+self.userdata.tenant)
 
         if self.checkNFFGStatus(nf_fg.id) is True:
             logging.debug('NF-FG already instantiated, trying to update it')
-            session_id = self.update(nf_fg)
+            session_id = self.put(nf_fg, nf_fg)
             logging.debug('Update completed')
         else:
             session_id  = uuid.uuid4().hex
@@ -127,7 +128,9 @@ class OpenstackOrchestratorController(object):
         
         return session_id
     
-    def update(self, nf_fg):
+    def put(self, nf_fg, nffg_id):
+
+        logging.debug('put from user ' + self.userdata.username + " of tenant " + self.userdata.tenant)
         session = Session().get_active_user_session_by_nf_fg_id(nf_fg.id, error_aware=True)
         Session().updateStatus(session.id, 'updating')
 

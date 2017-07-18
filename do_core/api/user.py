@@ -18,7 +18,6 @@ class UserAuth(Resource):
     @login_user.expect(login_user_model)
     @login_user.response(200, 'Login Successfully.')
     @login_user.response(400, 'Bad Request.')
-    @login_user.response(409, 'Validation Error.')
     @login_user.response(401, 'Unauthorized.')
     @login_user.response(500, 'Internal Error.')
     def post(self):

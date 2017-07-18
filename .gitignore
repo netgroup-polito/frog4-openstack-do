@@ -7,4 +7,5 @@
 *.DS_Store
 .DS_Store
 .settings
+.idea/
 OpenstackOrchestrator.log

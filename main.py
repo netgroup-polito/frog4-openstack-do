@@ -1,10 +1,10 @@
 import logging
-import os
-import inspect
-import json
 
 from flask import Flask
-from flasgger import Swagger
+
+from do_core.api.api import root_blueprint
+from do_core.api.nffg import api as nffg_api
+
 
 from do_core.config import Configuration
 from do_core.orchestrator import OpenstackOrchestrator, NFFGStatus, UserAuth
@@ -33,50 +33,12 @@ logging.basicConfig(filename=conf.LOG_FILE, level=log_level, format=log_format, 
 logging.debug("Openstack Domain Orchestrator Starting")
 print("Welcome to the Openstack Domain Orchestrator")
 
-app = Flask(__name__)
-
-swagger_config = {
-    "swagger_version": "2.0",
-    "title": "OpenStack Domain Orchestrator API",
-    "headers": [
-         ('Access-Control-Allow-Origin', '*')
-    ],
-    "specs": [
-        {
-            "version": "1.0.0",
-            "title": "OpenStack DO API",
-            "endpoint": 'v1_spec',
-            "route": '/v1/spec',
-        }
-    ],
-        "static_url_path": "/apidocs",
-        "static_folder": "swaggerui",
-        "specs_route": "/specs"
-}
-
-Swagger(app, config=swagger_config)
-
-orch = OpenstackOrchestrator.as_view('NF-FG')
-app.add_url_rule(
-    '/NF-FG/<nffg_id>',
-    view_func=orch,
-    methods=["GET", "PUT", "DELETE"]
-)
-
-login = UserAuth.as_view('login')
-app.add_url_rule(
-    '/login',
-    view_func=login,
-    methods=["POST"]
-)
-
-nffg_status = NFFGStatus.as_view('NFFGStatus')
-app.add_url_rule(
-    '/NF-FG/status/<nffg_id>',
-    view_func=nffg_status,
-    methods=["GET"]
-)
+# Rest application
+if nffg_api is not None:
+    app = Flask(__name__)
+    app.register_blueprint(root_blueprint)
+    logging.info("Flask Successfully started")
 
 Messaging().publishDomainDescription()
 
-logging.info("Flask Successfully started")
+

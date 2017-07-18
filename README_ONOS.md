@@ -176,7 +176,7 @@ Then run keystone DB sync:
 The last step is to configure ovs in each compute node to listen on port 6640, because after posting the configuration files, OpenstackNode apps will connect to OVSDB at each node and then will create an integration bridge setting your ONOS instance as Openflow controller:
 
 		$ sudo ovs-appctl -t ovsdb-server ovsdb-server/add-remote ptcp:6640:[compute_node_ip]
-	        $ sudo ovs-vsctl set-manager ptcp:6640
+	        $ sudo ovs-vsctl set-manager ptcp:ONOS_IP:6640
 		
 Finally add the two configuration files:
 

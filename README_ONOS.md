@@ -36,7 +36,7 @@ This are the steps to install it:
 	$ sudo mv onos-$ONOS_VERSION onos
 	$ sudo chown -R sdn:sdn onos
 
-You need to export this variable
+You need to export this variable so that the ONOS instance will have an IP address where to be contacted
 	
 	$ export ONOS_IP= <ONOS_IP_ADDRESS>
 	

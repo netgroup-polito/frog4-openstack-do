@@ -12,7 +12,8 @@ from nffg_library.exception import NF_FGValidationError
 
 from do_core.controller import OpenstackOrchestratorController
 from do_core.userAuthentication import UserAuthentication
-from do_core.exception import wrongRequest, unauthorizedRequest, sessionNotFound, UserNotFound, UserTokenExpired
+from do_core.exception import wrongRequest, unauthorizedRequest, sessionNotFound, UserNotFound, UserTokenExpired,\
+    NoGraphFound
 
 nffg_ns = api.namespace('NF-FG', 'NFFG Resource')
 
@@ -23,7 +24,7 @@ class OpenstackOrchestrator(Resource):
 
     @nffg_ns.param("X-Auth-Token", "Authentication Token", "header", type="string", required=True)
     @nffg_ns.param("NFFG", "Graph to be updated", "body", type="string", required=True)
-    @nffg_ns.response(201, 'Graph correctly updated.')
+    @nffg_ns.response(202, 'Graph correctly updated.')
     @nffg_ns.response(400, 'Bad request.')
     @nffg_ns.response(401, 'Unauthorized.')
     @nffg_ns.response(500, 'Internal Error.')
@@ -41,7 +42,9 @@ class OpenstackOrchestrator(Resource):
             nffg.parseDict(nffg_dict)
 
             controller = OpenstackOrchestratorController(user_data)
-            return (controller.put(nffg, nffg_id), 201)
+            controller.put(nffg, nffg_id)
+            resp = Response(response=None, status=202, mimetype="application/json")
+            return resp
 
         except wrongRequest as err:
             logging.exception(err)
@@ -63,6 +66,9 @@ class OpenstackOrchestrator(Resource):
         except requests.ConnectionError as err:
             logging.exception(err)
             return (str(err), 500)
+        except NoGraphFound as err:
+            logging.exception(err)
+            return err.message, 404
         except Exception as err:
             logging.exception(err)
             return ("Contact the admin " + str(err), 500)
@@ -226,7 +232,8 @@ class NFFGResource(Resource):
             nffg.parseDict(nffg_dict)
 
             controller = OpenstackOrchestratorController(user_data)
-            return (controller.post(nffg), 202)
+            resp = Response(response=controller.post(nffg), status=201, mimetype="application/json")
+            return resp
 
         except wrongRequest as err:
             logging.exception(err)

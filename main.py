@@ -8,7 +8,6 @@ from do_core.api.user import api as user_api
 
 
 from do_core.config import Configuration
-from do_core.orchestrator import OpenstackOrchestrator, NFFGStatus, UserAuth
 from do_core.messaging import Messaging
 
 conf = Configuration()

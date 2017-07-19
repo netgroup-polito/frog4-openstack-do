@@ -7,7 +7,7 @@ import logging
 import uuid
 import time
 
-from do_core.exception import sessionNotFound, GraphError, StackError
+from do_core.exception import sessionNotFound, GraphError, StackError, NoGraphFound
 from do_core.sql.session import Session
 from do_core.sql.graph import Graph
 from do_core.config import Configuration
@@ -92,45 +92,60 @@ class OpenstackOrchestratorController(object):
 
         logging.debug('Post from user '+self.userdata.username+" of tenant "+self.userdata.tenant)
 
-        if self.checkNFFGStatus(nf_fg.id) is True:
-            logging.debug('NF-FG already instantiated, trying to update it')
-            session_id = self.put(nf_fg, nf_fg)
-            logging.debug('Update completed')
-        else:
-            session_id  = uuid.uuid4().hex
-            Session().inizializeSession(session_id, self.userdata.getUserID(), nf_fg.id, nf_fg.name)
+        # choose new id for the graph
+        while True:
+            new_nf_fg_id = uuid.uuid4()
+            old_nffg_id = Session().check_nffg_id(str(new_nf_fg_id))
+            if len(old_nffg_id) == 0:
+                nf_fg.id = str(new_nf_fg_id)
+                break
+
+        session_id  = uuid.uuid4().hex
+        Session().inizializeSession(session_id, self.userdata.getUserID(), nf_fg.id, nf_fg.name)
+
+        self.getAuthTokenAndEndpoints()
+
+        logging.debug("Forwarding graph: " + nf_fg.getJSON(extended=True))
+
+        try:
+            self.prepareNFFG(nf_fg)
+
+            Graph().addNFFG(nf_fg, session_id)
+
+            #Read the nf_fg JSON structure and map it into the proper objects and db entries
+            profile_graph = self.buildProfileGraph(nf_fg)
             
-            self.getAuthTokenAndEndpoints()
+            if JOLNET_MODE is False:
+                  self.instantiateEndpoints(nf_fg, nf_fg.db_id)
+            self.openstackResourcesInstantiation(profile_graph, nf_fg)
+            self.instantiateFlowrules(profile_graph, nf_fg.db_id)
+            logging.debug("Graph " + profile_graph.id + " correctly instantiated!")
 
-            logging.debug("Forwarding graph: " + nf_fg.getJSON(extended=True))
-            try:
-                self.prepareNFFG(nf_fg)
-                
-                Graph().addNFFG(nf_fg, session_id)
+            self.res_desc.writeToFile()
+            Messaging().publishDomainDescription()
 
-                #Read the nf_fg JSON structure and map it into the proper objects and db entries
-                profile_graph = self.buildProfileGraph(nf_fg)
-                if JOLNET_MODE is False:
-                      self.instantiateEndpoints(nf_fg, nf_fg.db_id)
-                self.openstackResourcesInstantiation(profile_graph, nf_fg)
-                self.instantiateFlowrules(profile_graph, nf_fg.db_id)
-                logging.debug("Graph " + profile_graph.id + " correctly instantiated!")
-                
-                self.res_desc.writeToFile()
-                Messaging().publishDomainDescription()
-                
-                Session().updateStatus(session_id, 'complete')
-            except Exception as ex:
-                logging.exception(ex)
-                #Graph().delete_graph(nffg.db_id)
-                Session().set_error(session_id)
-                raise ex
-        
-        return session_id
+            Session().updateStatus(session_id, 'complete')
+
+        except Exception as ex:
+            logging.exception(ex)
+            #Graph().delete_graph(nffg.db_id)
+            Session().set_error(session_id)
+            raise ex
+
+        # return the graph id
+        nffg_id = Session().get_nffg_id(session_id).service_graph_id
+        response_uuid = dict()
+        response_uuid["nffg-uuid"] = nffg_id
+        return json.dumps(response_uuid)
     
     def put(self, nf_fg, nffg_id):
 
         logging.debug('put from user ' + self.userdata.username + " of tenant " + self.userdata.tenant)
+        nf_fg.id = str(nffg_id)
+        if self.checkNFFGStatus(nf_fg.id) is False:
+            raise NoGraphFound("EXCEPTION - Please first insert this graph then try to update")
+
+        logging.debug('NF-FG already instantiated, trying to update it')
         session = Session().get_active_user_session_by_nf_fg_id(nf_fg.id, error_aware=True)
         Session().updateStatus(session.id, 'updating')
 
@@ -147,7 +162,7 @@ class OpenstackOrchestratorController(object):
             
             self.prepareNFFG(nf_fg)
             Graph().updateNFFG(updated_nffg, graph_id)
-    
+
             profile_graph = self.buildProfileGraph(updated_nffg)
             if JOLNET_MODE is False:
                   self.instantiateEndpoints(nf_fg, graph_id)
@@ -159,7 +174,7 @@ class OpenstackOrchestratorController(object):
 
             logging.debug("Graph " + old_nf_fg.id + " correctly updated!")
             Session().updateStatus(session.id, 'complete')
-        
+            logging.debug('Update completed')
         except Exception as ex:
             logging.exception(ex)
             #Graph().delete_graph(nffg.db_id)
@@ -201,7 +216,7 @@ class OpenstackOrchestratorController(object):
             session_id = Session().get_active_user_session_by_nf_fg_id(service_graph_id).id
         except sessionNotFound:
             return False
-        
+
         self.getAuthTokenAndEndpoints()
         status = self.getResourcesStatus(session_id)
         if status is None:

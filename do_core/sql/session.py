@@ -160,6 +160,15 @@ class Session(object):
     def get_service_graph_info(self,session_id):
         session = get_session()
         return session.query(SessionModel.service_graph_id, SessionModel.service_graph_name).filter_by(id = session_id).one()
+
+    def check_nffg_id(self, nffg_id):
+        session = get_session()
+        with session.begin():
+            return session.query(SessionModel).filter_by(service_graph_id = nffg_id).all()
+
+    def get_nffg_id(self, session_id):
+        session = get_session()
+        return session.query(SessionModel).filter_by(id = session_id).one()
         
     """ 
     def checkEgressNode(self, node, profile):

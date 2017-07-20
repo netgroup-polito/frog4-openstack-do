@@ -86,8 +86,31 @@ class OpenstackOrchestratorController(object):
         if not instantiated_nffgs:
             return None
         
-        return instantiated_nffgs[0].getJSON()          
-        
+        return instantiated_nffgs[0].getJSON()
+
+    @staticmethod
+    def get_nffgs():
+
+        logging.debug("Getting all graphs")
+        nffgs = {'NF-FG': []}
+        session_refs = Session().getAllNFFG()
+        for session in session_refs:
+            if session.status == 'complete':
+                nffg = {}
+                nffg['nffg-uuid'] = session.service_graph_id
+                graphs_ref = Graph().getGraphs(session.id)
+                instantiated_nffgs = []
+                for graph_ref in graphs_ref:
+                    instantiated_nffgs.append(Graph().get_nffg(graph_ref.id))
+                nffg['forwarding-graph'] = json.loads(instantiated_nffgs[0].getJSON())["forwarding-graph"]
+                nffgs['NF-FG'].append(nffg)
+        return nffgs
+
+
+
+        #if len(Session().getAllNFFG()) == 0:
+            #raise sessionNotFound("No active Graph")   ["forwarding-graph"]
+
     def post(self, nf_fg):
 
         logging.debug('Post from user '+self.userdata.username+" of tenant "+self.userdata.tenant)

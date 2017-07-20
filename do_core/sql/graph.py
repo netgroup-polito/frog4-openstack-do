@@ -970,7 +970,9 @@ class Graph(object):
     def _getEndpointID(self, graph_endpoint_id, graph_id):
         session = get_session()  
         try:
-            return session.query(EndpointModel).filter_by(graph_endpoint_id=graph_endpoint_id).filter_by(graph_id=graph_id).one().id
+            return session.query(EndpointModel).filter_by(graph_endpoint_id=graph_endpoint_id).filter_by\
+                (graph_id=graph_id).one().id
         except Exception as ex:
             logging.error(ex)
-            raise EndpointNotFound("Endpoint not found - graph_endpoint_id: "+str(graph_endpoint_id)+" - graph_id: "+str(graph_id))
+            raise EndpointNotFound("Endpoint not found - graph_endpoint_id: "+str(graph_endpoint_id)+" - graph_id: "
+                                   +str(graph_id))

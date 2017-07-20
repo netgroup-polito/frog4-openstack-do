@@ -121,9 +121,11 @@ class OpenstackOrchestrator(Resource):
         """
         try:
             user_data = UserAuthentication().authenticateUserFromRESTRequest(request)
-
             controller = OpenstackOrchestratorController(user_data)
-            resp = Response(response=controller.get(nffg_id), status=200, mimetype="application/json")
+            if nffg_id is None:
+                resp = Response(response=json.dumps(controller.get_nffgs()), status=200, mimetype="application/json")
+            else:
+                resp = Response(response=controller.get(nffg_id), status=200, mimetype="application/json")
             return resp
 
         except NoResultFound:

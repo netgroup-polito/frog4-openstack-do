@@ -6,8 +6,6 @@ from sqlalchemy import Column, DateTime, func, VARCHAR, Text, not_, desc
 from do_core.sql.sql_server import get_session
 from sqlalchemy.ext.declarative import declarative_base
 from do_core.exception import sessionNotFound
-
-
 import datetime
 import logging
 
@@ -169,27 +167,8 @@ class Session(object):
     def get_nffg_id(self, session_id):
         session = get_session()
         return session.query(SessionModel).filter_by(id = session_id).one()
-        
-    """ 
-    def checkEgressNode(self, node, profile):
-        '''
-        Return False if the only ingress point in the node
-        is that that we are deleting
-        '''
-        session = get_session()
-        egs = session.query(SessionModel).filter_by(egress_node = node).filter(not_(Session.profile.contains(profile))).all()
-        if egs is not None and len(egs) == 0:
-            return False
-        return True 
 
-    def checkIngressNode(self, node, profile):
-        '''
-        Return False if the only ingress point in the node
-        is that that we are deleting
-        '''
+
+    def getAllNFFG(self):
         session = get_session()
-        ings = session.query(SessionModel).filter_by(ingress_node = node).filter(not_(Session.profile.contains(profile))).all()
-        if ings is not None and len(ings) == 0:
-            return False
-        return True
-    """
+        return session.query(SessionModel).all()

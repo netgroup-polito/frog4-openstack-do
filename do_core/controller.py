@@ -106,11 +106,6 @@ class OpenstackOrchestratorController(object):
                 nffgs['NF-FG'].append(nffg)
         return nffgs
 
-
-
-        #if len(Session().getAllNFFG()) == 0:
-            #raise sessionNotFound("No active Graph")   ["forwarding-graph"]
-
     def post(self, nf_fg):
 
         logging.debug('Post from user '+self.userdata.username+" of tenant "+self.userdata.tenant)
@@ -165,6 +160,7 @@ class OpenstackOrchestratorController(object):
 
         logging.debug('put from user ' + self.userdata.username + " of tenant " + self.userdata.tenant)
         nf_fg.id = str(nffg_id)
+
         if self.checkNFFGStatus(nf_fg.id) is False:
             raise NoGraphFound("EXCEPTION - Please first insert this graph then try to update")
 
@@ -174,15 +170,16 @@ class OpenstackOrchestratorController(object):
 
         graphs_ref = Graph().getGraphs(session.id)
         old_nf_fg = Graph().get_nffg(graphs_ref[0].id)
-        
+        old_nf_fg.id = nffg_id
         graph_id = graphs_ref[0].id
 
         updated_nffg = old_nf_fg.diff(nf_fg)
         logging.debug("Diff: "+updated_nffg.getJSON(extended=True))
                 
         try:
+
             self.openstackResourcesControlledDeletion(updated_nffg, graph_id)
-            
+
             self.prepareNFFG(nf_fg)
             Graph().updateNFFG(updated_nffg, graph_id)
 
@@ -198,6 +195,7 @@ class OpenstackOrchestratorController(object):
             logging.debug("Graph " + old_nf_fg.id + " correctly updated!")
             Session().updateStatus(session.id, 'complete')
             logging.debug('Update completed')
+
         except Exception as ex:
             logging.exception(ex)
             #Graph().delete_graph(nffg.db_id)

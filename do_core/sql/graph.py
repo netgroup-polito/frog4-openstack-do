@@ -200,10 +200,6 @@ class Graph(object):
         graph_ref = session.query(GraphModel).filter_by(id = graph_id).one()
         service_graph_info_ref = Session().get_service_graph_info(graph_ref.session_id)
 
-        if graph_ref.partial is True:
-            nffg.id = graph_ref.id
-        else:
-            nffg.id = service_graph_info_ref.service_graph_id
         nffg.name = service_graph_info_ref.service_graph_name
         nffg.db_id = graph_ref.id
         

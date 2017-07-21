@@ -15,19 +15,6 @@ class OVSDB(object):
         self.odlusername = odl_username
         self.odlpassword = odl_password
         self.ovs_id = ovs_id
-        """
-        nodes = json.loads(ODL().getNodes(self.odlendpoint, self.odlusername, self.odlpassword))['node']
-        logging.debug("Opendaylight nodes: " + json.dumps(nodes))
-        node_id = None
-        for node in nodes:
-            if node['type'] == "OVS":
-                if ip_address is not None and ip_address == node['id'].split(':')[0]:
-                    node_id = node['id']
-        if node_id is None:
-            raise NodeNotFound("Node "+str(ip_address)+" not found.")
-        self.node_ip = node_id.split(":")[0]
-        self.ovsdb_port = node_id.split(":")[1]
-        """
 
     def getBridgeDPID(self, ovs_id, bridge_name):
         bridges = ODL().getOVSDBTopology(self.odlendpoint, self.odlusername, self.odlpassword)
@@ -60,21 +47,8 @@ class OVSDB(object):
         if node_id is None:
             raise OVSDBNodeNotFound("NO OVSDB Connection found for "+node_ip)
         return node_id
-    
-    def getPortUUID(self, ovs_id, port_name): 
-        bridges = ODL().getOVSDBTopology(self.odlendpoint, self.odlusername, self.odlpassword)
-        ports = json.loads(bridges)['topology'][0]['node']
-        for attribute, value in ports.iteritems():
-            if value['name'] == port_name:
-                return attribute
-    """      
-    def getInterfaceUUID(self, port_id, port_name):
-        interfaces = ODL().getInterfaces(self.odlendpoint, self.odlusername, self.odlpassword, port_id, self.node_ip, self.ovsdb_port)
-        interfaces = json.loads(interfaces)['rows']
-        for attribute, value in interfaces.iteritems():  
-            if value['name'] == port_name:
-                return attribute
-    """      
+
+
     def getOfPort(self, ovs_id, bridge_name, port_id):
         bridge_data = ODL().getBridge(self.odlendpoint, self.odlusername, self.odlpassword, ovs_id, bridge_name)
         #logging.debug(bridge_data)

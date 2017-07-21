@@ -53,30 +53,7 @@ class Session(object):
         session = get_session()  
         with session.begin():
             session.query(SessionModel).filter_by(id = session_id).filter_by(ended = None).filter_by(error = None).update({"user_id":user_id})
-    """
-    def updateSessionNode(self, session_id, ingress_node, egress_node):
-        '''
-        store the session in db
-        '''
-        session = get_session()  
-        with session.begin():
-            session.query(SessionModel).filter_by(id = session_id).filter_by(ended = None).filter_by(error = None).update({"last_update":datetime.datetime.now(), "ingress_node":ingress_node, "egress_node": egress_node})
-    
-    def updateSession(self, session_id, status, ingress_node = None, egress_node = None):
-        '''
-        store the session in db
-        '''
-        session = get_session()  
-        with session.begin():
-            session.query(SessionModel).filter_by(id = session_id).filter_by(ended = None).filter_by(error = None).update({"last_update":datetime.datetime.now(), "ingress_node":ingress_node, "egress_node": egress_node, 'status':status})
-    """            
-    '''   
-    def update_session(self, service_graph_id, profile, infrastructure):
-        session = get_session()  
-        with session.begin():
-            session.query(SessionModel).filter_by(service_graph_id = service_graph_id).filter_by(ended = None).filter_by(error = None).update({"last_update":datetime.datetime.now()})
-    '''
-            
+
     def get_active_user_session(self, user_id):
         '''
         returns if exists an active session of the user
@@ -94,16 +71,7 @@ class Session(object):
         session = get_session() 
         with session.begin():       
             session.query(SessionModel).filter_by(id=session_id).update({"ended":datetime.datetime.now()}, synchronize_session = False)
-    
-    def set_error_by_nffg_id(self, nffg_id):
-        '''
-        Set the error status for the active session associated to the nffg id passed
-        '''
-        session = get_session()
-        with session.begin():     
-            logging.debug("Put session for nffg "+str(nffg_id)+" in error")
-            session.query(SessionModel).filter_by(service_graph_id=nffg_id).filter_by(ended = None).filter_by(error = None).update({"error":datetime.datetime.now()}, synchronize_session = False)
-        
+
     def set_error(self, session_id):
         '''
         Set the error status for the active session associated to the user id passed
@@ -112,31 +80,7 @@ class Session(object):
         with session.begin():
             logging.debug("Put session for session "+str(session_id)+" in error")
             session.query(SessionModel).filter_by(id=session_id).filter_by(ended = None).filter_by(error = None).update({"error":datetime.datetime.now()}, synchronize_session = False)
-    
-    def checkSession(self, user_id, token, graph_id = None):
-        '''
-        return true if there is already an active session of the user
-        '''
-        session = get_session()
-        if graph_id is None:
-            user_session = session.query(SessionModel).filter_by(user_id = user_id).filter_by(ended = None).filter_by(error = None).first()
-        else:
-            # TODO:
-            raise NotImplemented()
-        
-        if user_session is None:
-            return False
-        else:
-            return True
-    
-    def get_active_user_session_from_id(self, session_id):
-        session = get_session()
-        with session.begin():  
-            user_session = session.query(SessionModel).filter_by(id=session_id).filter_by(ended = None).filter_by(error = None).first()
-            if not user_session:
-                raise sessionNotFound("Session Not Found") 
-        return user_session
-    
+
     def get_active_user_session_by_nf_fg_id(self, service_graph_id, error_aware=True):
         session = get_session()
         if error_aware:
@@ -146,15 +90,7 @@ class Session(object):
         if session_ref is None:
             raise sessionNotFound("Session Not Found, for servce graph id: "+str(service_graph_id))
         return session_ref
-    
-    def get_profile_id_from_active_user_session(self, user_id):
-        session = get_session()
-        session_ref = session.query(SessionModel.service_graph_id).filter_by(user_id = user_id).filter_by(ended = None).filter_by(error = None).first()
-        
-        if session_ref is None:
-            raise sessionNotFound("Session Not Found")
-        return session_ref.service_graph_id
-    
+
     def get_service_graph_info(self,session_id):
         session = get_session()
         return session.query(SessionModel.service_graph_id, SessionModel.service_graph_name).filter_by(id = session_id).one()

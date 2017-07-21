@@ -116,12 +116,14 @@ class OpenstackOrchestratorController(object):
         logging.debug('Post from user '+self.userdata.username+" of tenant "+self.userdata.tenant)
 
         # choose new id for the graph
+
         while True:
             new_nf_fg_id = uuid.uuid4()
             old_nffg_id = Session().check_nffg_id(str(new_nf_fg_id))
             if len(old_nffg_id) == 0:
                 nf_fg.id = str(new_nf_fg_id)
                 break
+
 
         session_id  = uuid.uuid4().hex
         Session().inizializeSession(session_id, self.userdata.getUserID(), nf_fg.id, nf_fg.name)
@@ -515,8 +517,9 @@ class OpenstackOrchestratorController(object):
     '''
 
     def manageIngressEndpoint(self, nffg, ingress_end_point, graph_id):
-        port_to_int_bridge = nffg.id + "-to-" + INTEGRATION_BRIDGE
-        port_to_exit_switch =  nffg.id + "-to-" + EXIT_SWITCH
+        nffg_uuid = str(uuid.uuid4().time_low)
+        port_to_int_bridge = nffg_uuid + "br"
+        port_to_exit_switch =  nffg_uuid + "ext"
 
         if ONOS_ENABLED is False:
         
@@ -686,9 +689,10 @@ class OpenstackOrchestratorController(object):
     '''
         
     def manageGreEndpoint(self, nffg, gre_end_point, graph_id):
-        gre_port = nffg.id + "-gre-" + gre_end_point.id
-        port_to_int_bridge = nffg.id + "-to-" + INTEGRATION_BRIDGE
-        port_to_exit_switch = nffg.id + "-to-" + EXIT_SWITCH
+        nffg_uuid = str(uuid.uuid4().time_low)
+        gre_port = nffg_uuid + "-gre"
+        port_to_int_bridge = nffg_uuid + "brGre"
+        port_to_exit_switch = nffg_uuid + "exGre"
 
         if ONOS_ENABLED is False:
         

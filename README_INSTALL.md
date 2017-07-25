@@ -87,7 +87,7 @@ Moreover, in the last OpenStack releases, `username` and `tenantnane` must be th
 
 ## OpenStack domain description
 
-The file [ResourceDescription.json](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/config/ResourceDescription.json) contains the description of the domain, both from the *networking* (e.g., information about boundary interfaces) and *computing* (i.e., functional capabilities) points of view.
+The file [ResourceDescription.json](https://github.com/netgroup-polito/frog4-openstack-do/blob/master/config/ResourceDescriptions/ResourceDescription.json) contains the description of the domain, both from the *networking* (e.g., information about boundary interfaces) and *computing* (i.e., functional capabilities) points of view.
 
 It is written according to the [domain information library](https://github.com/netgroup-polito/domain-information-library).
 

@@ -133,7 +133,7 @@ It is possible to configure the [FROG4 GUI](https://github.com/netgroup-polito/f
 To install the GUI, follows the [instructions](https://github.com/netgroup-polito/fg-gui/blob/master/README_INSTALL.md) provided with the repository.
         
 # Run the domain orchestrator
-You can launch this domain orchestrator as follows, optionally specifying the configuration file (example: [conf/config.ini](conf/config.ini)):
+You can launch this domain orchestrator as follows, optionally specifying the configuration file (example: [conf/config.ini](/config/default-config.ini)):
         
         cd [frog4-openstack-do]
         $ ./start_orchestrator.sh [-d conf-file]
